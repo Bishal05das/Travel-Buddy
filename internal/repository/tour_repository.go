@@ -45,3 +45,12 @@ func(h *TourRepositoryDB)UpdateTour(t domain.Tour) (*domain.Tour,error) {
 	}
 	return &t,nil
 }
+
+func(h *TourRepositoryDB)DeleteTour(tourID int) error {
+	query := `DELETE FROM tours WHERE id=$1;`
+	_,err := h.db.Exec(query,tourID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
