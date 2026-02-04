@@ -18,6 +18,6 @@ type Tour struct {
 type TourRepository interface {
 	CreateTour(tour *Tour) error
 	ListTour(agencyID int) ([]*Tour,error)
-	// UpdateTour(t Tour) (*Tour,error)
-	// DeleteTour(tourID int) error
+	UpdateTour(t *Tour) error
+	DeleteTour(tourID int) error
 }

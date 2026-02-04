@@ -36,14 +36,14 @@ func(h *TourRepositoryDB)ListTour(agencyID int) ([]*domain.Tour,error) {
 	return tours,nil
 }
 
-func(h *TourRepositoryDB)UpdateTour(t domain.Tour) (*domain.Tour,error) {
+func(h *TourRepositoryDB)UpdateTour(t *domain.Tour) error {
 	query := `UPDATE tours SET agencyID=$1,name=$2,startDate=$3,endDate=$4,description=$5,lastEnrollmentDate=$6,price=$7,discount=$8;`
 	row := h.db.QueryRow(query,t.AgencyID,t.Name,t.StartDate,t.EndDate,t.Description,t.LastEnrollmentDate,t.Price,t.Discount)
 	err := row.Err()
 	if err != nil {
-		return nil,err
+		return err
 	}
-	return &t,nil
+	return nil
 }
 
 func(h *TourRepositoryDB)DeleteTour(tourID int) error {
