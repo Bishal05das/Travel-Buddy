@@ -2,21 +2,21 @@ package tourusecase_test
 
 import (
 	"testing"
+
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/repository/mocks"
 	tourusecase "github.com/bishal05das/travelbuddy/internal/usecase/tour"
 )
 
-
-func TestListUseCase(t *testing.T) {
+func TestUpdateTourUseCase(t *testing.T) {
 	tests := []struct {
-		name          string
-		seedTours     []*domain.Tour
-		agencyID      int
-		expectedCount int
+		name        string
+		seedTours   []*domain.Tour
+		updateTour  *domain.Tour
+		expectedErr bool
 	}{
 		{
-			name: "returns tours for given agency",
+			name: "successfully upodates existing tour",
 			seedTours: []*domain.Tour{
 				{
 					AgencyID:           1,
@@ -49,28 +49,44 @@ func TestListUseCase(t *testing.T) {
 					Discount:           200,
 				},
 			},
-			agencyID:      2,
-			expectedCount: 1,
+			updateTour: &domain.Tour{
+				ID:                 3,
+				AgencyID:           2,
+				Name:               "sylhet Tour",
+				StartDate:          parseDate(t, "2026-12-10"),
+				EndDate:            parseDate(t, "2026-12-15"),
+				Description:        "blah blah blah",
+				LastEnrollmentDate: parseDate(t, "2026-12-05"),
+				Price:              10000,
+				Discount:           200,
+			},
+			expectedErr: false,
+		},
+		{
+			name:       "fails when tour does not exist",
+			seedTours:  []*domain.Tour{},
+			updateTour: &domain.Tour{ID: 99},
+			expectedErr: true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+
+	for _,tt := range tests{
+		t.Run(tt.name,func(t *testing.T){
 			repo := mocks.NewMockTourRepository()
 
-			for _, tour := range tt.seedTours {
+			for _,tour := range tt.seedTours {
 				err := repo.CreateTour(tour)
 				if err != nil {
-					t.Fatalf("failed to seed tour: %v", err)
+					t.Fatalf("failed to seed tour: %v",tour)
 				}
 			}
-
-			usecase := tourusecase.NewListTourUseCase(repo)
-			tours, err := usecase.Execute(tt.agencyID)
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
+			usecase := tourusecase.NewUpdateTourUseCase(repo)
+			err := usecase.Execute(tt.updateTour)
+			if tt.expectedErr && err == nil {
+				t.Fatalf("expected error,got nil")
 			}
-			if len(tours) != tt.expectedCount {
-				t.Fatalf("expected %d tours,got %d", tt.expectedCount, len(tours))
+			if !tt.expectedErr && err != nil {
+				t.Fatalf("unexpected error: %v",err)
 			}
 		})
 	}
