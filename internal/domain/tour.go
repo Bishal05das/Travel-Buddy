@@ -8,16 +8,10 @@ type Tour struct {
 	Name               string
 	StartDate          time.Time
 	EndDate            time.Time
+	AvailableSeat          int
 	Description        string
 	LastEnrollmentDate time.Time
 	Price              int
 	Discount           int
 	Status             string
-}
-
-type TourRepository interface {
-	CreateTour(tour *Tour) error
-	ListTour(agencyID int) ([]*Tour,error)
-	UpdateTour(t *Tour) error
-	DeleteTour(tourID int) error
 }

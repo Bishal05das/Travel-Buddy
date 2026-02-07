@@ -5,13 +5,14 @@ import (
 	"time"
 
 	"github.com/bishal05das/travelbuddy/internal/domain"
+	"github.com/bishal05das/travelbuddy/internal/usecase/port"
 )
 
 type CreateTourUseCase struct {
-	repo domain.TourRepository
+	repo port.TourRepository
 }
 
-func NewCreateTourUseCase(r domain.TourRepository) *CreateTourUseCase {
+func NewCreateTourUseCase(r port.TourRepository) *CreateTourUseCase {
 	return &CreateTourUseCase{
 		repo: r,
 	}
@@ -24,6 +25,7 @@ func (uc *CreateTourUseCase) Execute(tour *domain.Tour) error {
 		tour.Description == "" ||
 		tour.EndDate.IsZero() ||
 		tour.StartDate.IsZero() ||
+		tour.AvailableSeat <= 0 ||
 		tour.LastEnrollmentDate.IsZero() ||
 		tour.Price <= 0 {
 		return fmt.Errorf("invalid or missing tour data")

@@ -1,12 +1,15 @@
 package tourusecase
 
-import "github.com/bishal05das/travelbuddy/internal/domain"
+import (
+	"github.com/bishal05das/travelbuddy/internal/domain"
+	"github.com/bishal05das/travelbuddy/internal/usecase/port"
+)
 
 type ListTourUseCase struct {
-	repo domain.TourRepository
+	repo port.TourRepository
 }
 
-func NewListTourUseCase(repo domain.TourRepository) *ListTourUseCase {
+func NewListTourUseCase(repo port.TourRepository) *ListTourUseCase {
 	return &ListTourUseCase{
 		repo: repo,
 	}

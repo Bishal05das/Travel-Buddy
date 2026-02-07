@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/bishal05das/travelbuddy/config"
-	"github.com/bishal05das/travelbuddy/internal/delivary/handler"
+	"github.com/bishal05das/travelbuddy/internal/adapter/http/handler"
+	"github.com/bishal05das/travelbuddy/internal/adapter/http/router"
 	"github.com/bishal05das/travelbuddy/internal/repository"
-	route "github.com/bishal05das/travelbuddy/internal/routes"
 	tourusecase "github.com/bishal05das/travelbuddy/internal/usecase/tour"
 	"github.com/bishal05das/travelbuddy/pkg/db"
 )
@@ -24,7 +24,7 @@ func main(){
 	tourRepo := repository.NewTourRepositoryDB(db)
 	tourusecase := tourusecase.NewCreateTourUseCase(tourRepo)
 	tourHandler := handler.NewTourHandler(tourusecase)
-	router := route.NewRoutes(mux,tourHandler)
+	router := router.NewRoutes(mux,tourHandler)
 	router.RegisterRoutes()
 	fmt.Println("Listening to server on port 3000")
 	err = http.ListenAndServe(":3000",mux)

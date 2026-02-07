@@ -18,9 +18,9 @@ func NewTourRepositoryDB(db *sqlx.DB) *TourRepositoryDB {
 }
 
 func(h *TourRepositoryDB) CreateTour(tour *domain.Tour) error {
-	query := `INSERT INTO tours (agencyID,name,startDate,endDate,description,lastEnrollmentDate,price,discount) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id;`
+	query := `INSERT INTO tours (agencyID,name,startDate,endDate,totalSeat,description,lastEnrollmentDate,price,discount) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id;`
 
-	return h.db.QueryRow(query,tour.AgencyID,tour.Name,tour.StartDate,tour.EndDate,tour.Description,tour.LastEnrollmentDate,tour.Price,tour.Discount).Scan(&tour.ID)
+	return h.db.QueryRow(query,tour.AgencyID,tour.Name,tour.StartDate,tour.EndDate,tour.AvailableSeat,tour.Description,tour.LastEnrollmentDate,tour.Price,tour.Discount).Scan(&tour.ID)
 }
 
 func(h *TourRepositoryDB)ListTour(agencyID int) ([]*domain.Tour,error) {
