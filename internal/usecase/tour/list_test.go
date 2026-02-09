@@ -2,8 +2,9 @@ package tourusecase_test
 
 import (
 	"testing"
+
 	"github.com/bishal05das/travelbuddy/internal/domain"
-	"github.com/bishal05das/travelbuddy/internal/repository/mocks"
+	"github.com/bishal05das/travelbuddy/internal/infrastructure/postgres/mocks"
 	tourusecase "github.com/bishal05das/travelbuddy/internal/usecase/tour"
 )
 

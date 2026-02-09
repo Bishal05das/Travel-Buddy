@@ -1,10 +1,11 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS users (
-    user_id SERIAL PRIMARY KEY,
+    user_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
     password TEXT NOT NULL,
-    phone VARCHAR(20),
-    role VARCHAR(20) CHECK (role IN ('superadmin', 'admin', 'subadmin', 'user')) DEFAULT 'user',
+    phone VARCHAR(20) NOT NULL,
+    role VARCHAR(20) CHECK (role IN ('super','user')) DEFAULT 'user',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

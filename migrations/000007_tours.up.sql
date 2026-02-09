@@ -1,9 +1,10 @@
 CREATE TABLE IF NOT EXISTS tours (
-    tour_id SERIAL PRIMARY KEY,
-    agency_id INT REFERENCES travel_agencies(agency_id) ON DELETE CASCADE,
+    tour_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    agency_id UUID NOT NULL REFERENCES agency(agency_id) ON DELETE CASCADE,
     name VARCHAR(150) NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
+    available_seat INT NOT NULL,
     description TEXT NOT NULL,
     last_enrollment_date DATE NOT NULL,
     price NUMERIC(10,2) NOT NULL,

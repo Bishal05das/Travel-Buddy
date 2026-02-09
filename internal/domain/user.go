@@ -3,16 +3,17 @@ package domain
 type Role string
 
 const (
-	RoleAdmin Role = "ADMIN"
-	RoleUser Role = "USER"
+	RoleAdmin      Role = "ADMIN"
+	RoleUser       Role = "USER"
 	RoleSuperAdmin Role = "SUPER"
-	RoleSubAdmin Role = "SUB"
+	RoleSubAdmin   Role = "SUB"
 )
 
 type User struct {
-	Name string
-	Email string
+	ID       int
+	Name     string
+	Email    string
 	Password string
-	Phone int
-	role Role
+	Phone    int
+	Role     Role
 }

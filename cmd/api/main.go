@@ -7,9 +7,9 @@ import (
 	"github.com/bishal05das/travelbuddy/config"
 	"github.com/bishal05das/travelbuddy/internal/adapter/http/handler"
 	"github.com/bishal05das/travelbuddy/internal/adapter/http/router"
-	"github.com/bishal05das/travelbuddy/internal/repository"
+	db "github.com/bishal05das/travelbuddy/internal/infrastructure/postgres"
+	"github.com/bishal05das/travelbuddy/internal/infrastructure/postgres/repository"
 	tourusecase "github.com/bishal05das/travelbuddy/internal/usecase/tour"
-	"github.com/bishal05das/travelbuddy/pkg/db"
 )
 
 func main(){

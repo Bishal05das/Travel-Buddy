@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/bishal05das/travelbuddy/internal/domain"
-	"github.com/bishal05das/travelbuddy/internal/repository/mocks"
+	"github.com/bishal05das/travelbuddy/internal/infrastructure/postgres/mocks"
 	tourusecase "github.com/bishal05das/travelbuddy/internal/usecase/tour"
 )
 
@@ -27,10 +27,10 @@ func TestCreateTourUseCase(t *testing.T) {
 			tour: &domain.Tour{
 				AgencyID:           1,
 				Name:               "Bandarban tour",
-				StartDate:          parseDate(t,"2026-12-10"),
-				EndDate:            parseDate(t,"2026-12-15"),
+				StartDate:          parseDate(t, "2026-12-10"),
+				EndDate:            parseDate(t, "2026-12-15"),
 				Description:        "blah blah blah",
-				LastEnrollmentDate: parseDate(t,"2026-12-05"),
+				LastEnrollmentDate: parseDate(t, "2026-12-05"),
 				Price:              10000,
 				Discount:           200,
 			},
@@ -40,10 +40,10 @@ func TestCreateTourUseCase(t *testing.T) {
 			tour: &domain.Tour{
 				AgencyID:           1,
 				Name:               "",
-				StartDate:          parseDate(t,"2026-12-10"),
-				EndDate:            parseDate(t,"2026-12-15"),
+				StartDate:          parseDate(t, "2026-12-10"),
+				EndDate:            parseDate(t, "2026-12-15"),
 				Description:        "blah blah blah",
-				LastEnrollmentDate: parseDate(t,"2026-12-05"),
+				LastEnrollmentDate: parseDate(t, "2026-12-05"),
 				Price:              10000,
 				Discount:           200,
 			},
@@ -53,10 +53,10 @@ func TestCreateTourUseCase(t *testing.T) {
 			tour: &domain.Tour{
 				AgencyID:           1,
 				Name:               "",
-				StartDate:          parseDate(t,"2026-12-15"),
-				EndDate:            parseDate(t,"2026-12-10"),
+				StartDate:          parseDate(t, "2026-12-15"),
+				EndDate:            parseDate(t, "2026-12-10"),
 				Description:        "blah blah blah",
-				LastEnrollmentDate: parseDate(t,"2026-12-05"),
+				LastEnrollmentDate: parseDate(t, "2026-12-05"),
 				Price:              10000,
 				Discount:           200,
 			},
