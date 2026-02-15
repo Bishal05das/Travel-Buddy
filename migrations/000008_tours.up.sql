@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS tours (
     tour_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    agency_id UUID NOT NULL REFERENCES agency(agency_id) ON DELETE CASCADE,
+    agency_id UUID NOT NULL REFERENCES agency(agency_id) ,
     name VARCHAR(150) NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,

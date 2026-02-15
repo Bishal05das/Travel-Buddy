@@ -1,14 +1,18 @@
 package domain
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Tour struct {
-	ID                 int
+	TourID             uuid.UUID
 	AgencyID           int
 	Name               string
 	StartDate          time.Time
 	EndDate            time.Time
-	AvailableSeat          int
+	AvailableSeat      int
 	Description        string
 	LastEnrollmentDate time.Time
 	Price              int

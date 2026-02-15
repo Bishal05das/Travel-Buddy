@@ -1,12 +1,19 @@
 package port
 
-import "github.com/bishal05das/travelbuddy/internal/domain"
+import (
+	"context"
+
+	"github.com/bishal05das/travelbuddy/internal/domain"
+	"github.com/google/uuid"
+)
 
 type TourRepository interface {
 	CreateTour(tour *domain.Tour) error
 	ListTour(agencyID int) ([]*domain.Tour,error)
 	UpdateTour(t *domain.Tour) error
-	DeleteTour(tourID int) error
+	DeleteTour(tourID uuid.UUID) error
+	GetByID(ctx context.Context,tourID uuid.UUID) (*domain.Tour,error)
+	UpdateAvailableSeats(ctx context.Context, tourID uuid.UUID, seats int) error
 }
 
 type AgencyRepository interface {
@@ -26,4 +33,13 @@ type AgencyMemberRepository interface {
 	ListMember(agencyID int) ([]*domain.AgencyMember,error)
 	UpdateMember(member *domain.AgencyMember) error
 	DeleteMember(memberID int) error
+}
+
+type BookingRepository interface {
+	Create(ctx context.Context, booking *domain.Booking) error
+	GetByID(ctx context.Context, id uuid.UUID) (*domain.BookingResponse, error)
+	Update(ctx context.Context, booking *domain.Booking) error
+	Cancel(ctx context.Context, id uuid.UUID) error
+	GetOrCreateCustomerByUser(ctx context.Context, userID uuid.UUID) (uuid.UUID,error)
+	CreateCustomer(ctx context.Context, customer *domain.Customer) error
 }

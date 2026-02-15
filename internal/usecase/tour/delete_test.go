@@ -6,19 +6,24 @@ import (
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/infrastructure/postgres/mocks"
 	tourusecase "github.com/bishal05das/travelbuddy/internal/usecase/tour"
+	"github.com/google/uuid"
 )
 
 func TestDeleteTourUseCase(t *testing.T) {
+	tour1ID := uuid.New()
+	tour2ID := uuid.New()
+	tour3ID := uuid.New()
 	tests := []struct {
 		name      string
 		seedTours []*domain.Tour
-		tourID    int
+		tourID    uuid.UUID
 		expectErr bool
 	}{
 		{
 			name: "successful delete",
 			seedTours: []*domain.Tour{
 				{
+					TourID: tour1ID,
 					AgencyID:           1,
 					Name:               "Bandarban tour",
 					StartDate:          parseDate(t, "2026-12-10"),
@@ -29,6 +34,7 @@ func TestDeleteTourUseCase(t *testing.T) {
 					Discount:           200,
 				},
 				{
+					TourID: tour2ID,
 					AgencyID:           1,
 					Name:               "sundarban tour",
 					StartDate:          parseDate(t, "2026-12-11"),
@@ -39,6 +45,7 @@ func TestDeleteTourUseCase(t *testing.T) {
 					Discount:           200,
 				},
 				{
+					TourID: tour3ID,
 					AgencyID:           2,
 					Name:               "sylhet tour",
 					StartDate:          parseDate(t, "2026-12-10"),
@@ -49,24 +56,24 @@ func TestDeleteTourUseCase(t *testing.T) {
 					Discount:           200,
 				},
 			},
-			tourID: 1,
+			tourID:    tour1ID,
 			expectErr: false,
 		},
 		{
-			name:       "fails when tour does not exist",
-			seedTours:  []*domain.Tour{},
-			tourID: 1,
+			name:      "fails when tour does not exist",
+			seedTours: []*domain.Tour{},
+			tourID:    tour1ID,
 			expectErr: true,
 		},
 	}
-	for _,tt := range tests{
-		t.Run(tt.name,func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			repo := mocks.NewMockTourRepository()
 
-			for _,tour := range tt.seedTours {
+			for _, tour := range tt.seedTours {
 				err := repo.CreateTour(tour)
 				if err != nil {
-					t.Fatalf("failed to seed tour: %v",err)
+					t.Fatalf("failed to seed tour: %v", err)
 				}
 			}
 			usecase := tourusecase.NewDeleteTourUseCase(repo)
@@ -75,7 +82,7 @@ func TestDeleteTourUseCase(t *testing.T) {
 				t.Fatalf("expected error,got nil")
 			}
 			if !tt.expectErr && err != nil {
-				t.Fatalf("unexpected error: %v",err)
+				t.Fatalf("unexpected error: %v", err)
 			}
 		})
 	}

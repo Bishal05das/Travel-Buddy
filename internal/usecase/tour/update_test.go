@@ -6,9 +6,15 @@ import (
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/infrastructure/postgres/mocks"
 	tourusecase "github.com/bishal05das/travelbuddy/internal/usecase/tour"
+	"github.com/google/uuid"
 )
 
 func TestUpdateTourUseCase(t *testing.T) {
+
+	tour1ID := uuid.New()
+	tour2ID := uuid.New()
+	tour3ID := uuid.New()
+
 	tests := []struct {
 		name        string
 		seedTours   []*domain.Tour
@@ -16,9 +22,10 @@ func TestUpdateTourUseCase(t *testing.T) {
 		expectedErr bool
 	}{
 		{
-			name: "successfully upodates existing tour",
+			name: "successfully updates existing tour",
 			seedTours: []*domain.Tour{
 				{
+					TourID:             tour1ID,
 					AgencyID:           1,
 					Name:               "Bandarban tour",
 					StartDate:          parseDate(t, "2026-12-10"),
@@ -29,6 +36,7 @@ func TestUpdateTourUseCase(t *testing.T) {
 					Discount:           200,
 				},
 				{
+					TourID:             tour2ID,
 					AgencyID:           1,
 					Name:               "sundarban tour",
 					StartDate:          parseDate(t, "2026-12-11"),
@@ -39,6 +47,7 @@ func TestUpdateTourUseCase(t *testing.T) {
 					Discount:           200,
 				},
 				{
+					TourID:             tour3ID,
 					AgencyID:           2,
 					Name:               "sylhet tour",
 					StartDate:          parseDate(t, "2026-12-10"),
@@ -50,7 +59,7 @@ func TestUpdateTourUseCase(t *testing.T) {
 				},
 			},
 			updateTour: &domain.Tour{
-				ID:                 3,
+				TourID:             tour3ID,
 				AgencyID:           2,
 				Name:               "sylhet Tour",
 				StartDate:          parseDate(t, "2026-12-10"),
@@ -63,21 +72,21 @@ func TestUpdateTourUseCase(t *testing.T) {
 			expectedErr: false,
 		},
 		{
-			name:       "fails when tour does not exist",
-			seedTours:  []*domain.Tour{},
-			updateTour: &domain.Tour{ID: 99},
+			name:        "fails when tour does not exist",
+			seedTours:   []*domain.Tour{},
+			updateTour:  &domain.Tour{TourID: uuid.New()},
 			expectedErr: true,
 		},
 	}
 
-	for _,tt := range tests{
-		t.Run(tt.name,func(t *testing.T){
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			repo := mocks.NewMockTourRepository()
 
-			for _,tour := range tt.seedTours {
+			for _, tour := range tt.seedTours {
 				err := repo.CreateTour(tour)
 				if err != nil {
-					t.Fatalf("failed to seed tour: %v",tour)
+					t.Fatalf("failed to seed tour: %v", tour)
 				}
 			}
 			usecase := tourusecase.NewUpdateTourUseCase(repo)
@@ -86,7 +95,7 @@ func TestUpdateTourUseCase(t *testing.T) {
 				t.Fatalf("expected error,got nil")
 			}
 			if !tt.expectedErr && err != nil {
-				t.Fatalf("unexpected error: %v",err)
+				t.Fatalf("unexpected error: %v", err)
 			}
 		})
 	}

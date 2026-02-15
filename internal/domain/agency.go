@@ -1,8 +1,11 @@
 package domain
 
+import "github.com/google/uuid"
+
 type Agency struct {
-	ID              int
-	Name            string
-	Address         string
+	AgencyID       uuid.UUID
+	Name           string
+	Address        string
 	RegistrationID string
+	IsActive       bool
 }

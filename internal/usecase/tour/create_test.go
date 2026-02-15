@@ -7,6 +7,7 @@ import (
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/infrastructure/postgres/mocks"
 	tourusecase "github.com/bishal05das/travelbuddy/internal/usecase/tour"
+	"github.com/google/uuid"
 )
 
 func parseDate(t *testing.T, value string) time.Time {
@@ -75,7 +76,7 @@ func TestCreateTourUseCase(t *testing.T) {
 				t.Errorf("unexpected error: %v", err)
 			}
 			if !tt.wantErr {
-				if tt.tour.ID == 0 {
+				if tt.tour.TourID == uuid.Nil {
 					t.Error("expected tour ID to be set")
 				}
 			}
