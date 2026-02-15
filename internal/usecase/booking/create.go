@@ -13,9 +13,10 @@ import (
 type createbookingusecase struct {
 	bookingRepo port.BookingRepository
 	tourRepo    port.TourRepository
+	paymentRepo port.PaymentRepository
 }
 
-func NewCreateBookingUseCase(bookingRepo port.BookingRepository, tourRepo port.TourRepository) *createbookingusecase {
+func NewCreateBookingUseCase(bookingRepo port.BookingRepository, tourRepo port.TourRepository,paymentRepo port.PaymentRepository) *createbookingusecase {
 	return &createbookingusecase{
 		bookingRepo: bookingRepo,
 		tourRepo:    tourRepo,
@@ -80,6 +81,19 @@ func (uc *createbookingusecase) Execute(ctx context.Context, req *domain.Booking
 	if err := uc.tourRepo.UpdateAvailableSeats(ctx, tour.TourID, newSeats); err != nil {
 		return nil, err
 	}
+
+	//create payment
+	payment := &domain.Payment{
+		BookingID: booking.BookingID,
+		Amount: totalPrice,
+		Method: req.Method,
+		TransactionID: req.TransactionId,
+	}
+	err = uc.paymentRepo.Create(payment)
+	if err != nil {
+		return nil,err
+	}
+
 
 	return uc.bookingRepo.GetByID(ctx, booking.BookingID)
 

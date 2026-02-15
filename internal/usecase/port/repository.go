@@ -25,7 +25,8 @@ type AgencyRepository interface {
 type UserRepository interface {
 	CreateUser(user *domain.User) error
 	UpdateUser(user *domain.User) error
-	DeleteUser(userID int) error
+	DeleteUser(userID uuid.UUID) error
+	FindUser(email,pass string) (*domain.User,error)
 }
 
 type AgencyMemberRepository interface {
@@ -42,4 +43,8 @@ type BookingRepository interface {
 	Cancel(ctx context.Context, id uuid.UUID) error
 	GetOrCreateCustomerByUser(ctx context.Context, userID uuid.UUID) (uuid.UUID,error)
 	CreateCustomer(ctx context.Context, customer *domain.Customer) error
+}
+
+type PaymentRepository interface {
+	Create(payment *domain.Payment) error
 }

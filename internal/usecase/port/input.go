@@ -18,3 +18,7 @@ type CreateBooking interface {
 type CreateUser interface {
 	Execute(user *domain.User) error
 }
+
+type LoginUser interface {
+	Execute(user *domain.ReqLogin) (*string, error)
+}

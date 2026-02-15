@@ -11,7 +11,10 @@ import (
 
 type UserHandler struct {
 	createuc port.CreateUser
+	loginuc port.LoginUser
 }
+
+
 
 func(h *UserHandler) CreateUser(w http.ResponseWriter,r *http.Request) {
 	var newUser domain.User
@@ -29,4 +32,20 @@ func(h *UserHandler) CreateUser(w http.ResponseWriter,r *http.Request) {
 	}
 	util.SendDate(w,newUser,http.StatusCreated)
 
+}
+
+func(h *UserHandler) UserLogin(w http.ResponseWriter,r *http.Request) {
+	var reqLogin domain.ReqLogin
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&reqLogin)
+	if err != nil {
+		http.Error(w,"Invalid Request Data",http.StatusBadRequest)
+		return
+	}
+	token,err := h.loginuc.Execute(&reqLogin)
+	if err != nil {
+		util.SendDate(w,err.Error(),http.StatusInternalServerError)
+	}
+	util.SendDate(w,token,http.StatusCreated)
 }

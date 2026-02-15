@@ -42,6 +42,8 @@ type BookingRequest struct {
 	NumberOfPeople int
 	TotalPrice     int
 	Status         string
+	Method         string
+	TransactionId  string
 	CustomerName   string
 	CustomerEmail  string
 	CustomerPhone  int

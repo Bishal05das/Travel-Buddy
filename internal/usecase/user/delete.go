@@ -2,6 +2,7 @@ package userusecase
 
 import (
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
+	"github.com/google/uuid"
 )
 
 type DeleteUserUseCase struct {
@@ -14,6 +15,6 @@ func NewDeleteUserUseCase(repo port.UserRepository) *DeleteUserUseCase {
 	}
 }
 
-func(uc *DeleteUserUseCase) Execute(userID int) error {
+func(uc *DeleteUserUseCase) Execute(userID uuid.UUID) error {
 return uc.repo.DeleteUser(userID)
 }

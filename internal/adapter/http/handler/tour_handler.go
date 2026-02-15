@@ -20,7 +20,7 @@ func NewTourHandler(createUC port.CreateTour) *TourHandler {
 	}
 }
 
-func (h *TourHandler) Create(w http.ResponseWriter, r *http.Request) {
+func (h *TourHandler) Create(w http.ResponseWriter, r *http.Request)  {
 	var tour domain.Tour
 	err := json.NewDecoder(r.Body).Decode(&tour)
 	if err != nil {
