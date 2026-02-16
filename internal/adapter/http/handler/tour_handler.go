@@ -27,6 +27,6 @@ func (h *TourHandler) Create(w http.ResponseWriter, r *http.Request)  {
 		fmt.Println("Error: ", err)
 		return
 	}
-	h.createUC.Execute(&tour)
+	h.createUC.Execute(r.Context(),&tour)
 	util.SendDate(w, tour, http.StatusCreated)
 }

@@ -1,6 +1,8 @@
 package tourusecase
 
 import (
+	"context"
+
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
 )
@@ -15,6 +17,6 @@ func NewListTourUseCase(repo port.TourRepository) *ListTourUseCase {
 	}
 }
 
-func(uc *ListTourUseCase) Execute(agencyID int) ([]*domain.Tour,error) {
-	return uc.repo.ListTour(agencyID)
+func (uc *ListTourUseCase) Execute(ctx context.Context, agencyID int) ([]*domain.Tour, error) {
+	return uc.repo.ListTour(ctx, agencyID)
 }

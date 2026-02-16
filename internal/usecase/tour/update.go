@@ -1,6 +1,8 @@
 package tourusecase
 
 import (
+	"context"
+
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
 )
@@ -15,7 +17,7 @@ func NewUpdateTourUseCase(repo port.TourRepository) *UpdateTourUseCase {
 	}
 }
 
-func (uc *UpdateTourUseCase)Execute(tour *domain.Tour) error {
+func (uc *UpdateTourUseCase) Execute(ctx context.Context, tour *domain.Tour) error {
 
-	return uc.repo.UpdateTour(tour)
+	return uc.repo.UpdateTour(ctx, tour)
 }

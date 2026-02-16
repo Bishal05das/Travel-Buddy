@@ -1,6 +1,8 @@
 package agencyusecase
 
 import (
+	"context"
+
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
 )
@@ -15,7 +17,7 @@ func NewUpdateTourUseCase(repo port.AgencyRepository) *UpdateAgencyUseCase {
 	}
 }
 
-func (uc *UpdateAgencyUseCase)Execute(agency *domain.Agency) error {
+func (uc *UpdateAgencyUseCase) Execute(ctx context.Context, agency *domain.Agency) error {
 
-	return uc.repo.UpdateAgency(agency)
+	return uc.repo.UpdateAgency(ctx, agency)
 }

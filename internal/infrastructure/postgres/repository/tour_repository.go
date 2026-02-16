@@ -21,16 +21,16 @@ func NewTourRepositoryDB(db *sqlx.DB) port.TourRepository {
 	}
 }
 
-func(h *tourRepositoryDB) CreateTour(tour *domain.Tour) error {
+func(h *tourRepositoryDB) CreateTour(ctx context.Context,tour *domain.Tour) error {
 	query := `INSERT INTO tours (agency_id,name,start_date,end_date,available_seat,description,last_enrollment_date,price,discount) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id;`
 
-	return h.db.QueryRow(query,tour.AgencyID,tour.Name,tour.StartDate,tour.EndDate,tour.AvailableSeat,tour.Description,tour.LastEnrollmentDate,tour.Price,tour.Discount).Scan(&tour.TourID)
+	return h.db.QueryRowContext(ctx,query,tour.AgencyID,tour.Name,tour.StartDate,tour.EndDate,tour.AvailableSeat,tour.Description,tour.LastEnrollmentDate,tour.Price,tour.Discount).Scan(&tour.TourID)
 }
 
-func(h *tourRepositoryDB)ListTour(agencyID int) ([]*domain.Tour,error) {
+func(h *tourRepositoryDB)ListTour(ctx context.Context,agencyID int) ([]*domain.Tour,error) {
 	var tours []*domain.Tour
 	query := `SELECT name,start_date,end_date,available_seat,description,last_enrollment_date,price,discount FROM tours WHERE agency_id=$1;`
-	err := h.db.Select(&tours,query,agencyID)
+	err := h.db.SelectContext(ctx,&tours,query,agencyID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil,nil
@@ -40,9 +40,9 @@ func(h *tourRepositoryDB)ListTour(agencyID int) ([]*domain.Tour,error) {
 	return tours,nil
 }
 
-func(h *tourRepositoryDB)UpdateTour(t *domain.Tour) error {
+func(h *tourRepositoryDB)UpdateTour(ctx context.Context,t *domain.Tour) error {
 	query := `UPDATE tours SET agency_id=$1,name=$2,start_date=$3,end_date=$4,available_seat=$5,description=$6,last_enrollment_date=$7,price=$8,discount=$9;`
-	row := h.db.QueryRow(query,t.AgencyID,t.Name,t.StartDate,t.EndDate,t.AvailableSeat,t.Description,t.LastEnrollmentDate,t.Price,t.Discount)
+	row := h.db.QueryRowContext(ctx,query,t.AgencyID,t.Name,t.StartDate,t.EndDate,t.AvailableSeat,t.Description,t.LastEnrollmentDate,t.Price,t.Discount)
 	err := row.Err()
 	if err != nil {
 		return err
@@ -50,9 +50,9 @@ func(h *tourRepositoryDB)UpdateTour(t *domain.Tour) error {
 	return nil
 }
 
-func(h *tourRepositoryDB)DeleteTour(tourID uuid.UUID) error {
+func(h *tourRepositoryDB)DeleteTour(ctx context.Context,tourID uuid.UUID) error {
 	query := `DELETE FROM tours WHERE id=$1;`
-	_,err := h.db.Exec(query,tourID)
+	_,err := h.db.ExecContext(ctx,query,tourID)
 	if err != nil {
 		return err
 	}

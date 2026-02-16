@@ -1,6 +1,7 @@
 package tourusecase_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/bishal05das/travelbuddy/internal/domain"
@@ -59,14 +60,14 @@ func TestListUseCase(t *testing.T) {
 			repo := mocks.NewMockTourRepository()
 
 			for _, tour := range tt.seedTours {
-				err := repo.CreateTour(tour)
+				err := repo.CreateTour(context.Background(),tour)
 				if err != nil {
 					t.Fatalf("failed to seed tour: %v", err)
 				}
 			}
 
 			usecase := tourusecase.NewListTourUseCase(repo)
-			tours, err := usecase.Execute(tt.agencyID)
+			tours, err := usecase.Execute(context.Background(),tt.agencyID)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}

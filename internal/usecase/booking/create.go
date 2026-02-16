@@ -1,4 +1,4 @@
-package booking
+package bookingusecase
 
 import (
 	"context"
@@ -89,7 +89,7 @@ func (uc *createbookingusecase) Execute(ctx context.Context, req *domain.Booking
 		Method: req.Method,
 		TransactionID: req.TransactionId,
 	}
-	err = uc.paymentRepo.Create(payment)
+	err = uc.paymentRepo.Create(ctx,payment)
 	if err != nil {
 		return nil,err
 	}

@@ -1,8 +1,8 @@
 package userusecase
 
-
-
 import (
+	"context"
+
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
 )
@@ -17,8 +17,8 @@ func NewCreateUserUseCase(r port.UserRepository) *CreateUserUseCase {
 	}
 }
 
-func (uc *CreateUserUseCase) Execute(user *domain.User) error {
+func (uc *CreateUserUseCase) Execute(ctx context.Context, user *domain.User) error {
 	//add business logic here
 
-	return uc.repo.CreateUser(user)
+	return uc.repo.CreateUser(ctx, user)
 }

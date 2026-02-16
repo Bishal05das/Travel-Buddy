@@ -1,6 +1,7 @@
 package tourusecase
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -18,7 +19,7 @@ func NewCreateTourUseCase(r port.TourRepository) *CreateTourUseCase {
 	}
 }
 
-func (uc *CreateTourUseCase) Execute(tour *domain.Tour) error {
+func (uc *CreateTourUseCase) Execute(ctx context.Context, tour *domain.Tour) error {
 	//add business logic here
 	if tour.AgencyID <= 0 ||
 		tour.Name == "" ||
@@ -36,5 +37,5 @@ func (uc *CreateTourUseCase) Execute(tour *domain.Tour) error {
 	if tour.EndDate.Before(tour.StartDate) {
 		return fmt.Errorf("End Date can not be before start Date")
 	}
-	return uc.repo.CreateTour(tour)
+	return uc.repo.CreateTour(ctx, tour)
 }

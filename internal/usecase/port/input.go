@@ -8,7 +8,7 @@ import (
 )
 
 type CreateTour interface {
-	Execute(tour *domain.Tour) error
+	Execute(ctx context.Context,tour *domain.Tour) error
 }
 
 type CreateBooking interface {
@@ -16,9 +16,9 @@ type CreateBooking interface {
 }
 
 type CreateUser interface {
-	Execute(user *domain.User) error
+	Execute(ctx context.Context,user *domain.User) error
 }
 
 type LoginUser interface {
-	Execute(user *domain.ReqLogin) (*string, error)
+	Execute(ctx context.Context,user *domain.ReqLogin) (*string, error)
 }

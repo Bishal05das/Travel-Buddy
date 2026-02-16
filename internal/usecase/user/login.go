@@ -1,6 +1,7 @@
 package userusecase
 
 import (
+	"context"
 	"errors"
 
 	"github.com/bishal05das/travelbuddy/config"
@@ -14,10 +15,15 @@ type userLoginUseCase struct {
 	cnf      *config.Config
 }
 
-func NewUserLoginUseCase(userRepo port.UserRepository, cnf *config.Config) 
+func NewUserLoginUseCase(userRepo port.UserRepository, cnf *config.Config) port.LoginUser {
+	return &userLoginUseCase{
+		userRepo: userRepo,
+		cnf:      cnf,
+	}
+}
 
-func (uc *userLoginUseCase) Execute(user *domain.ReqLogin) (*string, error) {
-	usr, err := uc.userRepo.FindUser(user.Email, user.Password)
+func (uc *userLoginUseCase) Execute(ctx context.Context, user *domain.ReqLogin) (*string, error) {
+	usr, err := uc.userRepo.FindUser(ctx, user.Email, user.Password)
 	if usr == nil {
 		// http.Error(w, "Invalid Credentials", http.StatusBadRequest)
 		return nil, errors.New("Invalid Credentials")

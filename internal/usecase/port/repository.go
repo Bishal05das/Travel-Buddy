@@ -8,25 +8,25 @@ import (
 )
 
 type TourRepository interface {
-	CreateTour(tour *domain.Tour) error
-	ListTour(agencyID int) ([]*domain.Tour,error)
-	UpdateTour(t *domain.Tour) error
-	DeleteTour(tourID uuid.UUID) error
+	CreateTour(ctx context.Context,tour *domain.Tour) error
+	ListTour(ctx context.Context,agencyID int) ([]*domain.Tour,error)
+	UpdateTour(ctx context.Context,t *domain.Tour) error
+	DeleteTour(ctx context.Context,tourID uuid.UUID) error
 	GetByID(ctx context.Context,tourID uuid.UUID) (*domain.Tour,error)
 	UpdateAvailableSeats(ctx context.Context, tourID uuid.UUID, seats int) error
 }
 
 type AgencyRepository interface {
-	CreateAgency(agency *domain.Agency) error
-	UpdateAgency(agency *domain.Agency) error
-	DeleteAgency(agencyID int) error
+	CreateAgency(ctx context.Context,agency *domain.Agency) error
+	UpdateAgency(ctx context.Context,agency *domain.Agency) error
+	DeleteAgency(ctx context.Context,agencyID int) error
 }
 
 type UserRepository interface {
-	CreateUser(user *domain.User) error
-	UpdateUser(user *domain.User) error
-	DeleteUser(userID uuid.UUID) error
-	FindUser(email,pass string) (*domain.User,error)
+	CreateUser(ctx context.Context,user *domain.User) error
+	UpdateUser(ctx context.Context,user *domain.User) error
+	DeleteUser(ctx context.Context,userID uuid.UUID) error
+	FindUser(ctx context.Context,email,pass string) (*domain.User,error)
 }
 
 type AgencyMemberRepository interface {
@@ -46,5 +46,5 @@ type BookingRepository interface {
 }
 
 type PaymentRepository interface {
-	Create(payment *domain.Payment) error
+	Create(ctx context.Context,payment *domain.Payment) error
 }

@@ -1,6 +1,8 @@
 package agencyusecase
 
 import (
+	"context"
+
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
 )
 
@@ -14,6 +16,6 @@ func NewDeleteAgencyUseCase(repo port.AgencyRepository) *DeleteAgencyUseCase {
 	}
 }
 
-func (uc *DeleteAgencyUseCase) Execute(agencyID int) error {
-	return uc.repo.DeleteAgency(agencyID)
+func (uc *DeleteAgencyUseCase) Execute(ctx context.Context, agencyID int) error {
+	return uc.repo.DeleteAgency(ctx, agencyID)
 }

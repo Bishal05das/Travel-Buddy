@@ -1,6 +1,8 @@
 package userusecase
 
 import (
+	"context"
+
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
 	"github.com/google/uuid"
 )
@@ -15,6 +17,6 @@ func NewDeleteUserUseCase(repo port.UserRepository) *DeleteUserUseCase {
 	}
 }
 
-func(uc *DeleteUserUseCase) Execute(userID uuid.UUID) error {
-return uc.repo.DeleteUser(userID)
+func (uc *DeleteUserUseCase) Execute(ctx context.Context, userID uuid.UUID) error {
+	return uc.repo.DeleteUser(ctx,userID)
 }

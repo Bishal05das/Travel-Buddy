@@ -1,6 +1,8 @@
 package tourusecase
 
 import (
+	"context"
+
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
 	"github.com/google/uuid"
 )
@@ -15,6 +17,6 @@ func NewDeleteTourUseCase(repo port.TourRepository) *DeleteTourUseCase {
 	}
 }
 
-func(uc *DeleteTourUseCase) Execute(tourID uuid.UUID) error {
-return uc.repo.DeleteTour(tourID)
+func (uc *DeleteTourUseCase) Execute(ctx context.Context, tourID uuid.UUID) error {
+	return uc.repo.DeleteTour(ctx, tourID)
 }

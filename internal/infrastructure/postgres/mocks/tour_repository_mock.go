@@ -19,7 +19,7 @@ func NewMockTourRepository() *MockTourRepository {
 	}
 }
 
-func (m *MockTourRepository) CreateTour(tour *domain.Tour) error {
+func (m *MockTourRepository) CreateTour(ctx context.Context,tour *domain.Tour) error {
 	if m.err != nil {
 		return m.err
 	}
@@ -28,7 +28,7 @@ func (m *MockTourRepository) CreateTour(tour *domain.Tour) error {
 	return nil
 }
 
-func (m *MockTourRepository) ListTour(agencyID int) ([]*domain.Tour, error) {
+func (m *MockTourRepository) ListTour(ctx context.Context,agencyID int) ([]*domain.Tour, error) {
 	var result []*domain.Tour
 
 	for _, tour := range m.tours {
@@ -39,7 +39,7 @@ func (m *MockTourRepository) ListTour(agencyID int) ([]*domain.Tour, error) {
 	return result, nil
 }
 
-func (m *MockTourRepository) UpdateTour(t *domain.Tour) error {
+func (m *MockTourRepository) UpdateTour(ctx context.Context,t *domain.Tour) error {
 
 	existing, ok := m.tours[t.TourID]
 	if !ok {
@@ -57,7 +57,7 @@ func (m *MockTourRepository) UpdateTour(t *domain.Tour) error {
 	return nil
 }
 
-func (m *MockTourRepository) DeleteTour(tourID uuid.UUID) error {
+func (m *MockTourRepository) DeleteTour(ctx context.Context,tourID uuid.UUID) error {
 	if _, ok := m.tours[tourID]; !ok {
 		return errors.New("tour not found")
 	}

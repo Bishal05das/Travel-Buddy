@@ -14,7 +14,12 @@ type UserHandler struct {
 	loginuc port.LoginUser
 }
 
-
+func NewUserHandler(createuc port.CreateUser,loginuc port.LoginUser) *UserHandler {
+	return &UserHandler{
+		createuc: createuc,
+		loginuc: loginuc,
+	}
+}
 
 func(h *UserHandler) CreateUser(w http.ResponseWriter,r *http.Request) {
 	var newUser domain.User
@@ -24,8 +29,7 @@ func(h *UserHandler) CreateUser(w http.ResponseWriter,r *http.Request) {
 		http.Error(w,"Invalid Request Data",http.StatusBadRequest)
 		return
 	}
-
-	err = h.createuc.Execute(&newUser)
+	err = h.createuc.Execute(r.Context(),&newUser)
 	if err != nil {
 		http.Error(w,"Internal Server Error", http.StatusInternalServerError)
 		return
@@ -43,7 +47,7 @@ func(h *UserHandler) UserLogin(w http.ResponseWriter,r *http.Request) {
 		http.Error(w,"Invalid Request Data",http.StatusBadRequest)
 		return
 	}
-	token,err := h.loginuc.Execute(&reqLogin)
+	token,err := h.loginuc.Execute(r.Context(),&reqLogin)
 	if err != nil {
 		util.SendDate(w,err.Error(),http.StatusInternalServerError)
 	}

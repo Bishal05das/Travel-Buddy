@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS roles (
     role_id SERIAL PRIMARY KEY,
-    agency_id INT NOT NULL REFERENCES agency(agency_id) ON DELETE CASCADE,
+    agency_id UUID NOT NULL REFERENCES agency(agency_id) ON DELETE CASCADE,
     role_name VARCHAR(50) NOT NULL,
     description TEXT,
     is_system_role BOOLEAN DEFAULT FALSE,

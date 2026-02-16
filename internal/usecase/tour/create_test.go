@@ -1,6 +1,7 @@
 package tourusecase_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -68,7 +69,7 @@ func TestCreateTourUseCase(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			repo := mocks.NewMockTourRepository()
 			uc := tourusecase.NewCreateTourUseCase(repo)
-			err := uc.Execute(tt.tour)
+			err := uc.Execute(context.Background(),tt.tour)
 			if tt.wantErr && err == nil {
 				t.Error("expected error but got none")
 			}
