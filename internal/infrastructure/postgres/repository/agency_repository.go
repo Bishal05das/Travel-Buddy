@@ -2,10 +2,9 @@ package repository
 
 import (
 	"context"
-	"database/sql"
-
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -25,22 +24,22 @@ func (h *agencyRepositoryDB) CreateAgency(ctx context.Context, Agency *domain.Ag
 	return h.db.QueryRowContext(ctx, query, Agency.Name, Agency.Address, Agency.RegistrationID).Scan(&Agency.AgencyID)
 }
 
-func (h *agencyRepositoryDB) ListAgency(ctx context.Context, agencyID int) ([]*domain.Agency, error) {
-	var agencys []*domain.Agency
-	query := `SELECT name,rating FROM Agency WHERE agencyID=$1;`
-	err := h.db.SelectContext(ctx, &agencys, query, agencyID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return nil, err
-	}
-	return agencys, nil
-}
+// func (h *agencyRepositoryDB) ListAgency(ctx context.Context,agencyID int) ([]*domain.Agency,error) {
+// 	var agencys []*domain.Agency
+// 	query := `SELECT name,rating FROM Agency WHERE agencyID=$1;`
+// 	err := h.db.SelectContext(ctx, &agencys, query, agencyID)
+// 	if err != nil {
+// 		if err == sql.ErrNoRows {
+// 			return nil, nil
+// 		}
+// 		return nil, err
+// 	}
+// 	return agencys, nil
+// }
 
 func (h *agencyRepositoryDB) UpdateAgency(ctx context.Context, agency *domain.Agency) error {
-	query := `UPDATE Agencys SET name=$1,address=$2,registration_id=$3;`
-	row := h.db.QueryRowContext(ctx, query, agency.Name, agency.Address, agency.RegistrationID)
+	query := `UPDATE Agencys SET name=$1,address=$2,registration_id=$3 WHERE agency_id=$4;`
+	row := h.db.QueryRowContext(ctx, query, agency.Name, agency.Address, agency.RegistrationID,agency.AgencyID)
 	err := row.Err()
 	if err != nil {
 		return err
@@ -48,7 +47,7 @@ func (h *agencyRepositoryDB) UpdateAgency(ctx context.Context, agency *domain.Ag
 	return nil
 }
 
-func (h *agencyRepositoryDB) DeleteAgency(ctx context.Context, agencyID int) error {
+func (h *agencyRepositoryDB) DeleteAgency(ctx context.Context, agencyID uuid.UUID) error {
 	query := `DELETE FROM Agencys WHERE id=$1;`
 	_, err := h.db.ExecContext(ctx, query, agencyID)
 	if err != nil {

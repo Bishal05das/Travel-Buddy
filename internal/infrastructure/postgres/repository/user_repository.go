@@ -27,8 +27,8 @@ func (h *userRepositoryDB) CreateUser(ctx context.Context,user *domain.User) err
 }
 
 func (h *userRepositoryDB) UpdateUser(ctx context.Context,user *domain.User) error {
-	query := `UPDATE users SET name=$1,email=$2,password=$3,phone=$4,role=$5;`
-	row := h.db.QueryRowContext(ctx,query, user.Name, user.Email, user.Password, user.Phone, user.Role)
+	query := `UPDATE users SET name=$1,email=$2,password=$3,phone=$4,role=$5 WHERE user_id=$6;`
+	row := h.db.QueryRowContext(ctx,query, user.Name, user.Email, user.Password, user.Phone, user.Role,user.UserID)
 	err := row.Err()
 	if err != nil {
 		return err

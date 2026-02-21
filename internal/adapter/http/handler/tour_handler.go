@@ -28,5 +28,5 @@ func (h *TourHandler) Create(w http.ResponseWriter, r *http.Request)  {
 		return
 	}
 	h.createUC.Execute(r.Context(),&tour)
-	util.SendDate(w, tour, http.StatusCreated)
+	util.SendData(w, tour, http.StatusCreated)
 }

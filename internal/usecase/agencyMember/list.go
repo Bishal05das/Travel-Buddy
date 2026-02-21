@@ -1,8 +1,11 @@
-package agencymember
+package memberusecase
 
 import (
+	"context"
+
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
+	"github.com/google/uuid"
 )
 
 type ListAgencyMemberUseCase struct {
@@ -15,6 +18,6 @@ func NewListAgencyMemberUseCase(repo port.AgencyMemberRepository) *ListAgencyMem
 	}
 }
 
-func(uc *ListAgencyMemberUseCase) Execute(agencyID int) ([]*domain.AgencyMember,error) {
-	return uc.repo.ListMember(agencyID)
+func (uc *ListAgencyMemberUseCase) Execute(ctx context.Context, agencyID uuid.UUID) ([]*domain.AgencyMember, error) {
+	return uc.repo.ListMember(ctx, agencyID)
 }

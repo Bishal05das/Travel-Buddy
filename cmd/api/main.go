@@ -11,6 +11,8 @@ import (
 	"github.com/bishal05das/travelbuddy/internal/adapter/http/router"
 	db "github.com/bishal05das/travelbuddy/internal/infrastructure/postgres"
 	"github.com/bishal05das/travelbuddy/internal/infrastructure/postgres/repository"
+	agencyusecase "github.com/bishal05das/travelbuddy/internal/usecase/agency"
+	memberusecase "github.com/bishal05das/travelbuddy/internal/usecase/agencyMember"
 	bookingusecase "github.com/bishal05das/travelbuddy/internal/usecase/booking"
 	tourusecase "github.com/bishal05das/travelbuddy/internal/usecase/tour"
 	userusecase "github.com/bishal05das/travelbuddy/internal/usecase/user"
@@ -31,18 +33,40 @@ func main() {
 		os.Exit(1)
 	}
 	newHandler := middleware.Cors(mux)
+	txManager := repository.NewTxManager(dbCon)
+
+	//Repository
+
 	tourRepo := repository.NewTourRepositoryDB(dbCon)
-	createtouruc := tourusecase.NewCreateTourUseCase(tourRepo)
-	tourHandler := handler.NewTourHandler(createtouruc)
 	userRepo := repository.NewUserRepositoryDB(dbCon)
-	createuseruc := userusecase.NewCreateUserUseCase(userRepo)
-	loginUC := userusecase.NewUserLoginUseCase(userRepo,cfg)
-	userHandler := handler.NewUserHandler(createuseruc,loginUC)
 	bookingRepo := repository.NewBookingRepository(dbCon)
 	paymentRepo := repository.NewPaymentRepositoryDB(dbCon)
-	createBookingUC := bookingusecase.NewCreateBookingUseCase(bookingRepo,tourRepo,paymentRepo)
+	agencyRepo := repository.NewAgencyRepositoryDB(dbCon)
+	memberRepo := repository.NewAgencyMemberRepositoryDB(dbCon)
+	roleRepo := repository.NewRoleRepository(dbCon)
+
+	//UseCase
+
+	createtourUC := tourusecase.NewCreateTourUseCase(tourRepo)
+	createuserUC := userusecase.NewCreateUserUseCase(userRepo)
+	createBookingUC := bookingusecase.NewCreateBookingUseCase(txManager, bookingRepo, tourRepo, paymentRepo)
+	loginUC := userusecase.NewUserLoginUseCase(userRepo, cfg)
+	createAgencyUC := agencyusecase.NewCreateAgencyUseCase(agencyRepo)
+	deleteAgencyUC := agencyusecase.NewDeleteAgencyUseCase(agencyRepo)
+	updateAgencyUC := agencyusecase.NewUpdateAgencyUseCase(agencyRepo)
+	createMemberUC := memberusecase.NewCreateAgencyMemberUseCase(txManager, memberRepo, roleRepo)
+	deleteMemberUC := memberusecase.NewDeleteAgencyMemberUseCase(memberRepo)
+	listMemberUC := memberusecase.NewListAgencyMemberUseCase(memberRepo)
+	updatePermissionUC := memberusecase.NewUpdatePermissionUseCase(txManager, memberRepo, roleRepo)
+
+	//handler
+	tourHandler := handler.NewTourHandler(createtourUC)
+	userHandler := handler.NewUserHandler(createuserUC, loginUC)
 	bookingHandler := handler.NewBookingHandler(createBookingUC)
-	router := router.NewRoutes(mux, tourHandler,userHandler,bookingHandler)
+	agencyHandler := handler.NewAgencyHandler(createAgencyUC, updateAgencyUC, deleteAgencyUC)
+	memberHandler := handler.NewMemberHandler(createMemberUC, deleteMemberUC, listMemberUC, updatePermissionUC)
+
+	router := router.NewRoutes(mux, tourHandler, userHandler, bookingHandler, agencyHandler, memberHandler)
 	router.RegisterRoutes()
 	fmt.Println("Listening to server on port 3000")
 	err = http.ListenAndServe(":3000", newHandler)

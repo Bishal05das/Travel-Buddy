@@ -41,8 +41,8 @@ func(h *tourRepositoryDB)ListTour(ctx context.Context,agencyID int) ([]*domain.T
 }
 
 func(h *tourRepositoryDB)UpdateTour(ctx context.Context,t *domain.Tour) error {
-	query := `UPDATE tours SET agency_id=$1,name=$2,start_date=$3,end_date=$4,available_seat=$5,description=$6,last_enrollment_date=$7,price=$8,discount=$9;`
-	row := h.db.QueryRowContext(ctx,query,t.AgencyID,t.Name,t.StartDate,t.EndDate,t.AvailableSeat,t.Description,t.LastEnrollmentDate,t.Price,t.Discount)
+	query := `UPDATE tours SET agency_id=$1,name=$2,start_date=$3,end_date=$4,available_seat=$5,description=$6,last_enrollment_date=$7,price=$8,discount=$9 WHERE tour_id=$10;`
+	row := h.db.QueryRowContext(ctx,query,t.AgencyID,t.Name,t.StartDate,t.EndDate,t.AvailableSeat,t.Description,t.LastEnrollmentDate,t.Price,t.Discount,t.TourID)
 	err := row.Err()
 	if err != nil {
 		return err
@@ -76,4 +76,14 @@ func (h *tourRepositoryDB) UpdateAvailableSeats(ctx context.Context, tourID uuid
 	query := `UPDATE tours SET available_seat = $1, updated_at = CURRENT_TIMESTAMP WHERE tour_id = $2`
 	_, err := h.db.ExecContext(ctx, query, seats, tourID)
 	return err
+}
+
+func (h *tourRepositoryDB) GetByIDForUpdate(ctx context.Context, tourID uuid.UUID) (*domain.Tour,error) {
+	var tour domain.Tour
+	query := `SELECT * FROM tours WHERE tour_id=$1 FOR UPDATE`
+	err := h.db.Get(&tour,query,tourID)
+	if err != nil {
+		return nil,err
+	}
+	return &tour,nil
 }

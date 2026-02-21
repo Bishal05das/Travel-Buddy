@@ -11,7 +11,7 @@ type UpdateAgencyUseCase struct {
 	repo port.AgencyRepository
 }
 
-func NewUpdateTourUseCase(repo port.AgencyRepository) *UpdateAgencyUseCase {
+func NewUpdateAgencyUseCase(repo port.AgencyRepository) *UpdateAgencyUseCase {
 	return &UpdateAgencyUseCase{
 		repo: repo,
 	}

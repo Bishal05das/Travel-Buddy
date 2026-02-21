@@ -34,7 +34,7 @@ func(h *UserHandler) CreateUser(w http.ResponseWriter,r *http.Request) {
 		http.Error(w,"Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	util.SendDate(w,newUser,http.StatusCreated)
+	util.SendData(w,newUser,http.StatusCreated)
 
 }
 
@@ -49,7 +49,7 @@ func(h *UserHandler) UserLogin(w http.ResponseWriter,r *http.Request) {
 	}
 	token,err := h.loginuc.Execute(r.Context(),&reqLogin)
 	if err != nil {
-		util.SendDate(w,err.Error(),http.StatusInternalServerError)
+		util.SendData(w,err.Error(),http.StatusInternalServerError)
 	}
-	util.SendDate(w,token,http.StatusCreated)
+	util.SendData(w,token,http.StatusCreated)
 }

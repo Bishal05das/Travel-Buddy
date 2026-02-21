@@ -48,8 +48,8 @@ func (h *BookingHandler) CreateBooking(w http.ResponseWriter,r *http.Request) {
 		http.Error(w,"Invalid user type",403)
 	}
 	if err != nil {
-		util.SendDate(w,err.Error(),400)
+		util.SendData(w,err.Error(),400)
 		return
 	}
-	util.SendDate(w,result,http.StatusCreated)
+	util.SendData(w,result,http.StatusCreated)
 }

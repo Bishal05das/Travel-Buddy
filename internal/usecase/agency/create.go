@@ -12,7 +12,7 @@ type CreateAgencyUseCase struct {
 	repo port.AgencyRepository
 }
 
-func NewCreateTourUseCase(r port.AgencyRepository) *CreateAgencyUseCase {
+func NewCreateAgencyUseCase(r port.AgencyRepository) *CreateAgencyUseCase {
 	return &CreateAgencyUseCase{
 		repo: r,
 	}

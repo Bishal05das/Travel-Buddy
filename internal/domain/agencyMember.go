@@ -10,5 +10,19 @@ type AgencyMember struct {
 	Email    string
 	Phone    int
 	Password string
-	Role     Role
+}
+
+type CreateMemberRequest struct {
+	AgencyID    uuid.UUID
+	Name        string
+	Email       string
+	Phone       int
+	Password    string
+	RoleName    string
+	Permissions []int
+}
+
+type UpdatePermissionRequest struct {
+	MemberID    uuid.UUID
+	Permissions []int
 }

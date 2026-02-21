@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func SendDate(w http.ResponseWriter, data interface{}, statusCode int) {
+func SendData(w http.ResponseWriter, data interface{}, statusCode int) {
 	w.Header().Set("Content-Type","application/json")
 	w.WriteHeader(statusCode)
 	encoder := json.NewEncoder(w)

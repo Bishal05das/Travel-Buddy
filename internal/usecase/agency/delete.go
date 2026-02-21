@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
+	"github.com/google/uuid"
 )
 
 type DeleteAgencyUseCase struct {
@@ -16,6 +17,6 @@ func NewDeleteAgencyUseCase(repo port.AgencyRepository) *DeleteAgencyUseCase {
 	}
 }
 
-func (uc *DeleteAgencyUseCase) Execute(ctx context.Context, agencyID int) error {
+func (uc *DeleteAgencyUseCase) Execute(ctx context.Context, agencyID uuid.UUID) error {
 	return uc.repo.DeleteAgency(ctx, agencyID)
 }

@@ -11,90 +11,109 @@ import (
 )
 
 type createbookingusecase struct {
+	txManager   port.TxManager
 	bookingRepo port.BookingRepository
 	tourRepo    port.TourRepository
 	paymentRepo port.PaymentRepository
 }
 
-func NewCreateBookingUseCase(bookingRepo port.BookingRepository, tourRepo port.TourRepository,paymentRepo port.PaymentRepository) *createbookingusecase {
+func NewCreateBookingUseCase(txManager port.TxManager, bookingRepo port.BookingRepository, tourRepo port.TourRepository, paymentRepo port.PaymentRepository) *createbookingusecase {
 	return &createbookingusecase{
+		txManager:   txManager,
 		bookingRepo: bookingRepo,
 		tourRepo:    tourRepo,
+		paymentRepo: paymentRepo,
 	}
 }
 
 func (uc *createbookingusecase) Execute(ctx context.Context, req *domain.BookingRequest, userID *uuid.UUID, memberID *uuid.UUID) (*domain.BookingResponse, error) {
-	tour, err := uc.tourRepo.GetByID(ctx, req.TourID)
-	if err != nil {
-		return nil, err
-	}
-	if tour.Status != "open" {
-		return nil, errors.New("tour is not open for booking")
-	}
-	if tour.AvailableSeat <= 0 {
-		return nil, errors.New("Not enough seats available")
-	}
-	if time.Now().After(tour.LastEnrollmentDate) {
-		return nil, errors.New("enrollment deadline has passed")
-	}
-	//calculate price with discount
-	totalPrice := tour.Price
 
-	var customerID uuid.UUID
+	var response *domain.BookingResponse
 
-	if userID != nil {
-		customerID, err = uc.bookingRepo.GetOrCreateCustomerByUser(ctx, *userID)
+	err := uc.txManager.WithinTransaction(ctx, func(txCtx context.Context) error {
+
+		tour, err := uc.tourRepo.GetByID(txCtx, req.TourID)
 		if err != nil {
-			return nil, err
+			return  err
 		}
-	} else if memberID != nil {
-		if req.CustomerName == "" || req.CustomerEmail == "" || req.CustomerPhone == 0 {
-			return nil, errors.New("customer details required for guest booking")
+		if tour.Status != "open" {
+			return  errors.New("tour is not open for booking")
 		}
-		customer := &domain.Customer{
-			Name:  req.CustomerName,
-			Email: req.CustomerEmail,
-			Phone: req.CustomerPhone,
+		if tour.AvailableSeat <= req.NumberOfPeople {
+			return  errors.New("Not enough seats available")
 		}
-		if err := uc.bookingRepo.CreateCustomer(ctx, customer); err != nil {
-			return nil, err
+		if time.Now().After(tour.LastEnrollmentDate) {
+			return  errors.New("enrollment deadline has passed")
 		}
-		customerID = customer.CustomerID
-	} else {
-		return nil, errors.New("either user or member must be sppecified")
-	}
+		//calculate price with discount
+		totalPrice := tour.Price
 
-	booking := &domain.Booking{
-		CustomerID:     customerID,
-		UserID:         *userID,
-		MemberID:       *memberID,
-		TourID:         req.TourID,
-		NumberOfPeople: req.NumberOfPeople,
-		TotalPrice:     totalPrice,
-		Status:         "pending",
-	}
-	if err := uc.bookingRepo.Create(ctx, booking); err != nil {
-		return nil, err
-	}
-	//update available seats
-	newSeats := tour.AvailableSeat - req.NumberOfPeople
-	if err := uc.tourRepo.UpdateAvailableSeats(ctx, tour.TourID, newSeats); err != nil {
-		return nil, err
-	}
+		var customerID uuid.UUID
 
-	//create payment
-	payment := &domain.Payment{
-		BookingID: booking.BookingID,
-		Amount: totalPrice,
-		Method: req.Method,
-		TransactionID: req.TransactionId,
-	}
-	err = uc.paymentRepo.Create(ctx,payment)
+		if userID != nil {
+			customerID, err = uc.bookingRepo.GetOrCreateCustomerByUser(txCtx, *userID)
+			if err != nil {
+				return  err
+			}
+		} else if memberID != nil {
+			if req.CustomerName == "" || req.CustomerEmail == "" || req.CustomerPhone == 0 {
+				return  errors.New("customer details required for guest booking")
+			}
+			customer := &domain.Customer{
+				Name:  req.CustomerName,
+				Email: req.CustomerEmail,
+				Phone: req.CustomerPhone,
+			}
+			if err := uc.bookingRepo.CreateCustomer(txCtx, customer); err != nil {
+				return  err
+			}
+			customerID = customer.CustomerID
+		} else {
+			return errors.New("either user or member must be sppecified")
+		}
+
+		booking := &domain.Booking{
+			CustomerID:     customerID,
+			TourID:         req.TourID,
+			NumberOfPeople: req.NumberOfPeople,
+			TotalPrice:     totalPrice,
+			Status:         "pending",
+		}
+		if userID != nil {
+			booking.UserID = *userID
+		}
+		if memberID != nil {
+			booking.MemberID = *memberID
+		}
+
+		if err := uc.bookingRepo.Create(txCtx, booking); err != nil {
+			return err
+		}
+		//update available seats
+		newSeats := tour.AvailableSeat - req.NumberOfPeople
+		if err := uc.tourRepo.UpdateAvailableSeats(txCtx, tour.TourID, newSeats); err != nil {
+			return err
+		}
+
+		//create payment
+		payment := &domain.Payment{
+			BookingID:     booking.BookingID,
+			Amount:        totalPrice,
+			Method:        req.Method,
+			TransactionID: req.TransactionId,
+		}
+		err = uc.paymentRepo.Create(txCtx, payment)
+		if err != nil {
+			return err
+		}
+
+		response, err = uc.bookingRepo.GetByID(txCtx, booking.BookingID)
+		return err
+	})
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 
-
-	return uc.bookingRepo.GetByID(ctx, booking.BookingID)
+	return response, nil
 
 }

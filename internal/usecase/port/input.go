@@ -22,3 +22,31 @@ type CreateUser interface {
 type LoginUser interface {
 	Execute(ctx context.Context,user *domain.ReqLogin) (*string, error)
 }
+
+type CreateAgency interface {
+	Execute(ctx context.Context, agency *domain.Agency) error
+}
+
+type UpdateAgency interface {
+	Execute(ctx context.Context, agency *domain.Agency) error
+}
+
+type DeleteAgency interface {
+	Execute(ctx context.Context, agencyID uuid.UUID) error
+}
+
+type CreateAgencyMember interface {
+	Execute(ctx context.Context, req *domain.CreateMemberRequest) error
+}
+
+type UpdateAgencyMemberPermission interface {
+	Execute(ctx context.Context, req *domain.UpdatePermissionRequest) error
+}
+
+type DeleteAgencyMember interface {
+	Execute(ctx context.Context, agencyMemberID uuid.UUID) error
+}
+
+type ListAgencyMember interface {
+	Execute(ctx context.Context, agencyID uuid.UUID) ([]*domain.AgencyMember, error)
+}
