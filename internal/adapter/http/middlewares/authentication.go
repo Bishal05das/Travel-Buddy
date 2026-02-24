@@ -33,7 +33,7 @@ func (m *Middleware) Authentication(next http.Handler) http.Handler {
 
 		message := jwtHeader + "." + jwtPayload
 
-		byteArrSecret := []byte(m.cnf.JWTSecretkey)
+		byteArrSecret := []byte(m.cfg.JWTSecretkey)
 		byteArrMessage := []byte(message)
 
 		h := hmac.New(sha256.New, byteArrSecret)

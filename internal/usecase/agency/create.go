@@ -2,7 +2,7 @@ package agencyusecase
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
@@ -23,7 +23,7 @@ func (uc *CreateAgencyUseCase) Execute(ctx context.Context, agency *domain.Agenc
 	if agency.Name == "" ||
 		agency.Address == "" ||
 		agency.RegistrationID == "" {
-		return fmt.Errorf("invalid or missing agency data")
+		return errors.New("invalid or missing agency data")
 	}
 	return uc.repo.CreateAgency(ctx, agency)
 }

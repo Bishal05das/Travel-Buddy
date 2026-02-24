@@ -31,7 +31,7 @@ func(h *UserHandler) CreateUser(w http.ResponseWriter,r *http.Request) {
 	}
 	err = h.createuc.Execute(r.Context(),&newUser)
 	if err != nil {
-		http.Error(w,"Internal Server Error", http.StatusInternalServerError)
+		http.Error(w,err.Error(), http.StatusInternalServerError)
 		return
 	}
 	util.SendData(w,newUser,http.StatusCreated)
@@ -44,12 +44,13 @@ func(h *UserHandler) UserLogin(w http.ResponseWriter,r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&reqLogin)
 	if err != nil {
-		http.Error(w,"Invalid Request Data",http.StatusBadRequest)
+		http.Error(w,err.Error(),http.StatusBadRequest)
 		return
 	}
 	token,err := h.loginuc.Execute(r.Context(),&reqLogin)
 	if err != nil {
 		util.SendData(w,err.Error(),http.StatusInternalServerError)
+		return
 	}
 	util.SendData(w,token,http.StatusCreated)
 }

@@ -50,3 +50,11 @@ type DeleteAgencyMember interface {
 type ListAgencyMember interface {
 	Execute(ctx context.Context, agencyID uuid.UUID) ([]*domain.AgencyMember, error)
 }
+
+type CreatePermission interface {
+	Execute(ctx context.Context, p *domain.Permission) error
+}
+
+type DeletePermission interface {
+	Execute(ctx context.Context, id int) error
+}

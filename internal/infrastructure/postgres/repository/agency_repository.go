@@ -19,7 +19,7 @@ func NewAgencyRepositoryDB(db *sqlx.DB) port.AgencyRepository {
 }
 
 func (h *agencyRepositoryDB) CreateAgency(ctx context.Context, Agency *domain.Agency) error {
-	query := `INSERT INTO agency (name,address,registrationid) VALUES ($1,$2,$3) RETURNING id;`
+	query := `INSERT INTO agency (name,address,reg_id) VALUES ($1,$2,$3) RETURNING agency_id;`
 
 	return h.db.QueryRowContext(ctx, query, Agency.Name, Agency.Address, Agency.RegistrationID).Scan(&Agency.AgencyID)
 }
@@ -38,7 +38,7 @@ func (h *agencyRepositoryDB) CreateAgency(ctx context.Context, Agency *domain.Ag
 // }
 
 func (h *agencyRepositoryDB) UpdateAgency(ctx context.Context, agency *domain.Agency) error {
-	query := `UPDATE Agencys SET name=$1,address=$2,registration_id=$3 WHERE agency_id=$4;`
+	query := `UPDATE agency SET name=$1,address=$2,reg_id=$3 WHERE agency_id=$4;`
 	row := h.db.QueryRowContext(ctx, query, agency.Name, agency.Address, agency.RegistrationID,agency.AgencyID)
 	err := row.Err()
 	if err != nil {
@@ -48,7 +48,7 @@ func (h *agencyRepositoryDB) UpdateAgency(ctx context.Context, agency *domain.Ag
 }
 
 func (h *agencyRepositoryDB) DeleteAgency(ctx context.Context, agencyID uuid.UUID) error {
-	query := `DELETE FROM Agencys WHERE id=$1;`
+	query := `DELETE FROM agency WHERE agency_id=$1;`
 	_, err := h.db.ExecContext(ctx, query, agencyID)
 	if err != nil {
 		return err

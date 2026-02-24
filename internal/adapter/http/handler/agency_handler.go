@@ -10,14 +10,13 @@ import (
 	"github.com/google/uuid"
 )
 
-
 type AgencyHandler struct {
 	createUC port.CreateAgency
 	updateUC port.UpdateAgency
 	deleteUC port.DeleteAgency
 }
 
-func NewAgencyHandler(createUC port.CreateAgency,updateUC port.UpdateAgency,deleteUC port.DeleteAgency) *AgencyHandler{
+func NewAgencyHandler(createUC port.CreateAgency, updateUC port.UpdateAgency, deleteUC port.DeleteAgency) *AgencyHandler {
 	return &AgencyHandler{
 		createUC: createUC,
 		updateUC: updateUC,
@@ -25,47 +24,52 @@ func NewAgencyHandler(createUC port.CreateAgency,updateUC port.UpdateAgency,dele
 	}
 }
 
-func(h *AgencyHandler) CreateAgency(w http.ResponseWriter,r *http.Request){
+func (h *AgencyHandler) CreateAgency(w http.ResponseWriter, r *http.Request) {
 	var agency domain.Agency
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&agency)
 	if err != nil {
-		util.SendData(w,err.Error(),http.StatusBadRequest)
+		util.SendData(w, err.Error(), http.StatusBadRequest)
+		return
 	}
-	err = h.createUC.Execute(r.Context(),&agency)
+	err = h.createUC.Execute(r.Context(), &agency)
 	if err != nil {
-		util.SendData(w,err.Error(),http.StatusBadRequest)
+		util.SendData(w, err.Error(), http.StatusBadRequest)
+		return
 	}
-	util.SendData(w,"Agent Successfully Created",http.StatusCreated)
+	util.SendData(w, "Agent Successfully Created", http.StatusCreated)
 
 }
 
-func(h *AgencyHandler) UpdateAgency(w http.ResponseWriter,r *http.Request){
+func (h *AgencyHandler) UpdateAgency(w http.ResponseWriter, r *http.Request) {
 	var agency domain.Agency
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&agency)
 	if err != nil {
-		util.SendData(w,err.Error(),http.StatusBadRequest)
+		util.SendData(w, err.Error(), http.StatusBadRequest)
+		return
 	}
-	err = h.updateUC.Execute(r.Context(),&agency)
+	err = h.updateUC.Execute(r.Context(), &agency)
 	if err != nil {
-		util.SendData(w,err.Error(),http.StatusBadRequest)
+		util.SendData(w, err.Error(), http.StatusBadRequest)
+		return
 	}
-	util.SendData(w,"Agent Updated Created",http.StatusOK)
-	
+	util.SendData(w, "Agent Updated Successfully", http.StatusOK)
+
 }
 
-func(h *AgencyHandler) DeleteAgency(w http.ResponseWriter,r *http.Request){
-	var agencyID uuid.UUID
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&agencyID)
+func (h *AgencyHandler) DeleteAgency(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	agencyID, err := uuid.Parse(idStr)
 	if err != nil {
-		util.SendData(w,err.Error(),http.StatusBadRequest)
+		http.Error(w, "invalid agency id", http.StatusBadRequest)
+		return
 	}
-	err = h.deleteUC.Execute(r.Context(),agencyID)
+	err = h.deleteUC.Execute(r.Context(), agencyID)
 	if err != nil {
-		util.SendData(w,err.Error(),http.StatusBadRequest)
+		util.SendData(w, err.Error(), http.StatusBadRequest)
+		return
 	}
-	util.SendData(w,"Agent Deleted Created",http.StatusOK)
-	
+	util.SendData(w, "Agent Deleted Successfully", http.StatusOK)
+
 }

@@ -11,6 +11,12 @@ type permissionRepositoryDB struct {
 	db *sqlx.DB
 }
 
+func NewPermissionRepositoryDB(db *sqlx.DB) *permissionRepositoryDB{
+	return &permissionRepositoryDB{
+		db: db,
+	}
+}
+
 func (h *permissionRepositoryDB) CreatePermission(ctx context.Context, permisson *domain.Permission) error {
 	query := `INSERT INTO permissions (name,resource,action) VALUES ($1,$2,$3) RETURNING id;`
 

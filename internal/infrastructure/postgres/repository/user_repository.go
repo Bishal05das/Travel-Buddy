@@ -21,7 +21,8 @@ func NewUserRepositoryDB(db *sqlx.DB) port.UserRepository {
 }
 
 func (h *userRepositoryDB) CreateUser(ctx context.Context,user *domain.User) error {
-	query := `INSERT INTO users (name,email,password,phone) VALUES ($1,$2,$3,$4) RETURNING id;`
+
+	query := `INSERT INTO users (name,email,password,phone) VALUES ($1,$2,$3,$4) RETURNING user_id;`
 
 	return h.db.QueryRowContext(ctx,query, user.Name, user.Email, user.Password, user.Phone).Scan(&user.UserID)
 }

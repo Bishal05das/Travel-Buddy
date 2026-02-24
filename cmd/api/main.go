@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/bishal05das/travelbuddy/config"
 	"github.com/bishal05das/travelbuddy/internal/adapter/http/handler"
@@ -14,6 +15,7 @@ import (
 	agencyusecase "github.com/bishal05das/travelbuddy/internal/usecase/agency"
 	memberusecase "github.com/bishal05das/travelbuddy/internal/usecase/agencyMember"
 	bookingusecase "github.com/bishal05das/travelbuddy/internal/usecase/booking"
+	permissionusecase "github.com/bishal05das/travelbuddy/internal/usecase/permission"
 	tourusecase "github.com/bishal05das/travelbuddy/internal/usecase/tour"
 	userusecase "github.com/bishal05das/travelbuddy/internal/usecase/user"
 )
@@ -44,6 +46,7 @@ func main() {
 	agencyRepo := repository.NewAgencyRepositoryDB(dbCon)
 	memberRepo := repository.NewAgencyMemberRepositoryDB(dbCon)
 	roleRepo := repository.NewRoleRepository(dbCon)
+	permissionRepo := repository.NewPermissionRepositoryDB(dbCon)
 
 	//UseCase
 
@@ -58,6 +61,8 @@ func main() {
 	deleteMemberUC := memberusecase.NewDeleteAgencyMemberUseCase(memberRepo)
 	listMemberUC := memberusecase.NewListAgencyMemberUseCase(memberRepo)
 	updatePermissionUC := memberusecase.NewUpdatePermissionUseCase(txManager, memberRepo, roleRepo)
+	createPermissionsUC := permissionusecase.NewCreatePermissionUseCase(permissionRepo)
+	deletePermissionUC := permissionusecase.NewDeletePermissionUseCase(permissionRepo)
 
 	//handler
 	tourHandler := handler.NewTourHandler(createtourUC)
@@ -65,11 +70,18 @@ func main() {
 	bookingHandler := handler.NewBookingHandler(createBookingUC)
 	agencyHandler := handler.NewAgencyHandler(createAgencyUC, updateAgencyUC, deleteAgencyUC)
 	memberHandler := handler.NewMemberHandler(createMemberUC, deleteMemberUC, listMemberUC, updatePermissionUC)
+	permissionHandler := handler.NewPermissionHandler(createPermissionsUC, deletePermissionUC)
 
-	router := router.NewRoutes(mux, tourHandler, userHandler, bookingHandler, agencyHandler, memberHandler)
+	//middleware
+	middleware := middleware.NewMiddleware(cfg)
+
+	//router setup
+	router := router.NewRoutes(mux, middleware, tourHandler, userHandler, bookingHandler, agencyHandler, memberHandler, permissionHandler)
 	router.RegisterRoutes()
+
 	fmt.Println("Listening to server on port 3000")
-	err = http.ListenAndServe(":3000", newHandler)
+	addr := ":" + strconv.Itoa(cfg.HttpPort)
+	err = http.ListenAndServe(addr, newHandler)
 	if err != nil {
 		fmt.Println(fmt.Println("Server failed to start:", err))
 	}

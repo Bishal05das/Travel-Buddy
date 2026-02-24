@@ -3,11 +3,11 @@ package middleware
 import "github.com/bishal05das/travelbuddy/config"
 
 type Middleware struct {
-	cnf *config.Config
+	cfg *config.Config
 }
 
-func NewMiddleware(cnf *config.Config) *Middleware {
+func NewMiddleware(cfg *config.Config) *Middleware {
 	return &Middleware{
-		cnf: cnf,
+		cfg: cfg,
 	}
 }

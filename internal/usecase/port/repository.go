@@ -61,3 +61,9 @@ type RoleRepository interface {
 type TxManager interface {
 	WithinTransaction(ctx context.Context, fn func(ctx context.Context) error) error
 }
+
+
+type PermissionRepository interface {
+	CreatePermission(ctx context.Context, permisson *domain.Permission) error
+	DeletePermission(ctx context.Context,permissionID int) error
+}

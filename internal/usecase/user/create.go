@@ -3,6 +3,7 @@ package userusecase
 import (
 	"context"
 
+
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
 )

@@ -2,6 +2,7 @@ package agencyusecase
 
 import (
 	"context"
+	"errors"
 
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
 	"github.com/google/uuid"
@@ -18,5 +19,8 @@ func NewDeleteAgencyUseCase(repo port.AgencyRepository) *DeleteAgencyUseCase {
 }
 
 func (uc *DeleteAgencyUseCase) Execute(ctx context.Context, agencyID uuid.UUID) error {
+	if agencyID == uuid.Nil {
+		return errors.New("agencyID is required")
+	}
 	return uc.repo.DeleteAgency(ctx, agencyID)
 }

@@ -3,9 +3,11 @@ package domain
 import "github.com/google/uuid"
 
 type Agency struct {
-	AgencyID       uuid.UUID
-	Name           string
-	Address        string
-	RegistrationID string
-	IsActive       bool
+	AgencyID       uuid.UUID `json:"agency_id" db:"agency_id"`
+	Name           string    `json:"name" db:"name"`
+	Address        string    `json:"address" db:"address"`
+	RegistrationID string    `json:"reg_id" db:"reg_id"`
+	IsActive       bool      `json:"is_active" db:"is_active"`
 }
+
+
