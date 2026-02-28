@@ -14,6 +14,8 @@ func TestDeleteTourUseCase(t *testing.T) {
 	tour1ID := uuid.New()
 	tour2ID := uuid.New()
 	tour3ID := uuid.New()
+	agency1ID := uuid.New()
+	agency2ID := uuid.New()
 	tests := []struct {
 		name      string
 		seedTours []*domain.Tour
@@ -25,7 +27,7 @@ func TestDeleteTourUseCase(t *testing.T) {
 			seedTours: []*domain.Tour{
 				{
 					TourID: tour1ID,
-					AgencyID:           1,
+					AgencyID:           agency1ID,
 					Name:               "Bandarban tour",
 					StartDate:          parseDate(t, "2026-12-10"),
 					EndDate:            parseDate(t, "2026-12-15"),
@@ -36,7 +38,7 @@ func TestDeleteTourUseCase(t *testing.T) {
 				},
 				{
 					TourID: tour2ID,
-					AgencyID:           1,
+					AgencyID:           agency1ID,
 					Name:               "sundarban tour",
 					StartDate:          parseDate(t, "2026-12-11"),
 					EndDate:            parseDate(t, "2026-12-15"),
@@ -47,7 +49,7 @@ func TestDeleteTourUseCase(t *testing.T) {
 				},
 				{
 					TourID: tour3ID,
-					AgencyID:           2,
+					AgencyID:           agency2ID,
 					Name:               "sylhet tour",
 					StartDate:          parseDate(t, "2026-12-10"),
 					EndDate:            parseDate(t, "2026-12-15"),

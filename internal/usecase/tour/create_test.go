@@ -21,13 +21,14 @@ func parseDate(t *testing.T, value string) time.Time {
 }
 
 func TestCreateTourUseCase(t *testing.T) {
+	agency1ID := uuid.New()
 	tests := map[string]struct {
 		tour    *domain.Tour
 		wantErr bool
 	}{
 		"successful create": {
 			tour: &domain.Tour{
-				AgencyID:           1,
+				AgencyID:           agency1ID,
 				Name:               "Bandarban tour",
 				StartDate:          parseDate(t, "2026-12-10"),
 				EndDate:            parseDate(t, "2026-12-15"),
@@ -40,7 +41,7 @@ func TestCreateTourUseCase(t *testing.T) {
 		},
 		"missing name": {
 			tour: &domain.Tour{
-				AgencyID:           1,
+				AgencyID:           agency1ID,
 				Name:               "",
 				StartDate:          parseDate(t, "2026-12-10"),
 				EndDate:            parseDate(t, "2026-12-15"),
@@ -53,7 +54,7 @@ func TestCreateTourUseCase(t *testing.T) {
 		},
 		"start>end": {
 			tour: &domain.Tour{
-				AgencyID:           1,
+				AgencyID:           agency1ID,
 				Name:               "",
 				StartDate:          parseDate(t, "2026-12-15"),
 				EndDate:            parseDate(t, "2026-12-10"),

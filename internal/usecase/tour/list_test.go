@@ -7,21 +7,24 @@ import (
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/infrastructure/postgres/mocks"
 	tourusecase "github.com/bishal05das/travelbuddy/internal/usecase/tour"
+	"github.com/google/uuid"
 )
 
-
 func TestListUseCase(t *testing.T) {
+	agency1ID := uuid.New()
+	agency2ID := uuid.New()
+	agency3ID := uuid.New()
 	tests := []struct {
 		name          string
 		seedTours     []*domain.Tour
-		agencyID      int
+		agencyID      uuid.UUID
 		expectedCount int
 	}{
 		{
 			name: "returns tours for given agency",
 			seedTours: []*domain.Tour{
 				{
-					AgencyID:           1,
+					AgencyID:           agency1ID,
 					Name:               "Bandarban tour",
 					StartDate:          parseDate(t, "2026-12-10"),
 					EndDate:            parseDate(t, "2026-12-15"),
@@ -31,7 +34,7 @@ func TestListUseCase(t *testing.T) {
 					Discount:           200,
 				},
 				{
-					AgencyID:           1,
+					AgencyID:           agency2ID,
 					Name:               "sundarban tour",
 					StartDate:          parseDate(t, "2026-12-11"),
 					EndDate:            parseDate(t, "2026-12-15"),
@@ -41,7 +44,7 @@ func TestListUseCase(t *testing.T) {
 					Discount:           200,
 				},
 				{
-					AgencyID:           2,
+					AgencyID:           agency3ID,
 					Name:               "sylhet tour",
 					StartDate:          parseDate(t, "2026-12-10"),
 					EndDate:            parseDate(t, "2026-12-15"),
@@ -51,7 +54,7 @@ func TestListUseCase(t *testing.T) {
 					Discount:           200,
 				},
 			},
-			agencyID:      2,
+			agencyID:      agency3ID,
 			expectedCount: 1,
 		},
 	}
@@ -60,14 +63,14 @@ func TestListUseCase(t *testing.T) {
 			repo := mocks.NewMockTourRepository()
 
 			for _, tour := range tt.seedTours {
-				err := repo.CreateTour(context.Background(),tour)
+				err := repo.CreateTour(context.Background(), tour)
 				if err != nil {
 					t.Fatalf("failed to seed tour: %v", err)
 				}
 			}
 
 			usecase := tourusecase.NewListTourUseCase(repo)
-			tours, err := usecase.Execute(context.Background(),tt.agencyID)
+			tours, err := usecase.Execute(context.Background(), tt.agencyID)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}

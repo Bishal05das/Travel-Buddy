@@ -25,6 +25,7 @@ func (h *BookingHandler) CreateBooking(w http.ResponseWriter,r *http.Request) {
 	payload,err := util.GetPayload(r)
 	if err != nil {
 		http.Error(w,err.Error(),http.StatusUnauthorized)
+		return
 	}
 	userID := payload.UserID
 	role := payload.Role
@@ -32,20 +33,23 @@ func (h *BookingHandler) CreateBooking(w http.ResponseWriter,r *http.Request) {
 	var result *domain.BookingResponse
 	if role == "user" {
 		var req domain.BookingRequest
-		err := decoder.Decode(&req)
+		err = decoder.Decode(&req)
 		if err != nil {
 			http.Error(w,err.Error(),http.StatusBadRequest)
+			return
 		}
 		result,err = h.createuc.Execute(r.Context(),&req,&userID,nil)
 	}else if role == "admin" || role == "sub" {
 		var req domain.BookingRequest
-		err := decoder.Decode(&req)
+		err = decoder.Decode(&req)
 		if err != nil {
 			http.Error(w,err.Error(),http.StatusBadRequest)
+			return
 		}
 		result,err = h.createuc.Execute(r.Context(),&req,nil,&userID)
 	}else {
 		http.Error(w,"Invalid user type",403)
+		return
 	}
 	if err != nil {
 		util.SendData(w,err.Error(),400)

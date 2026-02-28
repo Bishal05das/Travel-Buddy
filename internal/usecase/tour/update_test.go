@@ -15,6 +15,8 @@ func TestUpdateTourUseCase(t *testing.T) {
 	tour1ID := uuid.New()
 	tour2ID := uuid.New()
 	tour3ID := uuid.New()
+	agency1ID := uuid.New()
+	agency2ID := uuid.New()
 
 	tests := []struct {
 		name        string
@@ -27,7 +29,7 @@ func TestUpdateTourUseCase(t *testing.T) {
 			seedTours: []*domain.Tour{
 				{
 					TourID:             tour1ID,
-					AgencyID:           1,
+					AgencyID:           agency1ID,
 					Name:               "Bandarban tour",
 					StartDate:          parseDate(t, "2026-12-10"),
 					EndDate:            parseDate(t, "2026-12-15"),
@@ -38,7 +40,7 @@ func TestUpdateTourUseCase(t *testing.T) {
 				},
 				{
 					TourID:             tour2ID,
-					AgencyID:           1,
+					AgencyID:           agency1ID,
 					Name:               "sundarban tour",
 					StartDate:          parseDate(t, "2026-12-11"),
 					EndDate:            parseDate(t, "2026-12-15"),
@@ -49,7 +51,7 @@ func TestUpdateTourUseCase(t *testing.T) {
 				},
 				{
 					TourID:             tour3ID,
-					AgencyID:           2,
+					AgencyID:           agency2ID,
 					Name:               "sylhet tour",
 					StartDate:          parseDate(t, "2026-12-10"),
 					EndDate:            parseDate(t, "2026-12-15"),
@@ -61,7 +63,7 @@ func TestUpdateTourUseCase(t *testing.T) {
 			},
 			updateTour: &domain.Tour{
 				TourID:             tour3ID,
-				AgencyID:           2,
+				AgencyID:           agency2ID,
 				Name:               "sylhet Tour",
 				StartDate:          parseDate(t, "2026-12-10"),
 				EndDate:            parseDate(t, "2026-12-15"),
@@ -85,13 +87,13 @@ func TestUpdateTourUseCase(t *testing.T) {
 			repo := mocks.NewMockTourRepository()
 
 			for _, tour := range tt.seedTours {
-				err := repo.CreateTour(context.Background(),tour)
+				err := repo.CreateTour(context.Background(), tour)
 				if err != nil {
 					t.Fatalf("failed to seed tour: %v", tour)
 				}
 			}
 			usecase := tourusecase.NewUpdateTourUseCase(repo)
-			err := usecase.Execute(context.Background(),tt.updateTour)
+			err := usecase.Execute(context.Background(), tt.updateTour)
 			if tt.expectedErr && err == nil {
 				t.Fatalf("expected error,got nil")
 			}

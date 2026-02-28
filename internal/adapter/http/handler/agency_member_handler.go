@@ -32,38 +32,42 @@ func (h *MemberHandler) CreateMember(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&req)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 	err = h.createMemberUC.Execute(r.Context(), &req)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 	util.SendData(w, "Successfully Created Member", http.StatusCreated)
 }
 
 func (h *MemberHandler) DeleteMember(w http.ResponseWriter, r *http.Request) {
-	var memberID uuid.UUID
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&memberID)
+	idStr := r.PathValue("member_id")
+	memberID, err := uuid.Parse(idStr)
 	if err != nil {
-		util.SendData(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "invalid agency id", http.StatusBadRequest)
+		return
 	}
 	err = h.deleteMemberUC.Execute(r.Context(), memberID)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 	util.SendData(w, "Successfully Deleted Member", http.StatusCreated)
 }
 
 func (h *MemberHandler) ListMember(w http.ResponseWriter, r *http.Request) {
-	var agencyID uuid.UUID
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&agencyID)
+	idStr := r.PathValue("agency_id")
+	agencyID, err := uuid.Parse(idStr)
 	if err != nil {
-		util.SendData(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "invalid agency id", http.StatusBadRequest)
+		return
 	}
 	result, err := h.listMemberUC.Execute(r.Context(), agencyID)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 	util.SendData(w, result, http.StatusCreated)
 }

@@ -27,7 +27,7 @@ func (r *bookingRepository) Create(ctx context.Context, booking *domain.Booking)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING booking_id, booking_date`
 
-	err := r.db.QueryRowContext(
+	err := r.executor(ctx).QueryRowxContext(
 		ctx, query,
 		booking.CustomerID, booking.UserID, booking.MemberID, booking.TourID,
 		booking.NumberOfPeople, booking.TotalPrice, booking.Status,
@@ -55,7 +55,7 @@ func (r *bookingRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.
 		WHERE b.booking_id = $1`
 
 	booking := &domain.BookingResponse{}
-	err := r.db.QueryRowContext(ctx, query, id).Scan(
+	err := r.executor(ctx).QueryRowxContext(ctx, query, id).Scan(
 		&booking.BookingID, &booking.CustomerID, &booking.CustomerName,
 		&booking.TourID, &booking.TourName, &booking.AgencyName,
 		&booking.BookingDate, &booking.NumberOfPeople, &booking.TotalPrice,
@@ -106,11 +106,11 @@ func (r *bookingRepository) Cancel(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (r *bookingRepository) GetOrCreateCustomerByUser(ctx context.Context, userID uuid.UUID) (uuid.UUID,error) {
+func (r *bookingRepository) GetOrCreateCustomerByUser(ctx context.Context, userID uuid.UUID) (uuid.UUID, error) {
 	var customerID uuid.UUID
 
 	query := `SELECT customer_id FROM customers WHERE user_id = $1`
-	err := r.db.QueryRowContext(ctx,query,userID).Scan(&customerID)
+	err := r.executor(ctx).QueryRowxContext(ctx, query, userID).Scan(&customerID)
 	if err == nil {
 		return customerID, nil
 	}
@@ -125,8 +125,11 @@ func (r *bookingRepository) GetOrCreateCustomerByUser(ctx context.Context, userI
 		VALUES ($1)
 		RETURNING customer_id`
 
-	err = r.db.QueryRowContext(ctx, insertQuery, userID).Scan(&customerID)
-	return customerID, err
+	err = r.executor(ctx).QueryRowxContext(ctx, insertQuery, userID).Scan(&customerID)
+	if err != nil {
+		return uuid.Nil,err
+	}
+	return customerID, nil
 }
 
 func (r *bookingRepository) CreateCustomer(ctx context.Context, customer *domain.Customer) error {
@@ -135,8 +138,15 @@ func (r *bookingRepository) CreateCustomer(ctx context.Context, customer *domain
 		VALUES ($1, $2, $3, $4)
 		RETURNING customer_id`
 
-	return r.db.QueryRowContext(
+	return r.executor(ctx).QueryRowxContext(
 		ctx, query,
 		customer.UserID, customer.Name, customer.Email, customer.Phone,
 	).Scan(&customer.CustomerID)
+}
+
+func (r *bookingRepository) executor(ctx context.Context) sqlx.ExtContext {
+	if tx, ok := GetTx(ctx); ok {
+		return tx
+	}
+	return r.db
 }

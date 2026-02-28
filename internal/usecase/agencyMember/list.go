@@ -18,6 +18,6 @@ func NewListAgencyMemberUseCase(repo port.AgencyMemberRepository) *ListAgencyMem
 	}
 }
 
-func (uc *ListAgencyMemberUseCase) Execute(ctx context.Context, agencyID uuid.UUID) ([]*domain.AgencyMember, error) {
+func (uc *ListAgencyMemberUseCase) Execute(ctx context.Context, agencyID uuid.UUID) ([]*domain.ListMemberResponse, error) {
 	return uc.repo.ListMember(ctx, agencyID)
 }

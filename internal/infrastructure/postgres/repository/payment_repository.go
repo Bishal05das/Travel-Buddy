@@ -21,5 +21,12 @@ func NewPaymentRepositoryDB(db *sqlx.DB) port.PaymentRepository {
 func (p *paymentRepositoryDB) Create(ctx context.Context, payment *domain.Payment) error {
 	query := `INSERT INTO payments (booking_id,transaction_id,amount,method) VALUES ($1,$2,$3,$4) RETURNING payment_id;`
 
-	return p.db.QueryRowContext(ctx, query, payment.BookingID, payment.TransactionID, payment.Amount, payment.Method).Scan(&payment.PaymentID)
+	return p.executor(ctx).QueryRowxContext(ctx, query, payment.BookingID, payment.TransactionID, payment.Amount, payment.Method).Scan(&payment.PaymentID)
+}
+
+func (p *paymentRepositoryDB) executor(ctx context.Context) sqlx.ExtContext {
+	if tx,ok :=GetTx(ctx); ok {
+		return tx
+	}
+	return p.db
 }

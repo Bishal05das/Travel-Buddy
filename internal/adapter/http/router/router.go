@@ -43,6 +43,9 @@ func NewRoutes(
 func (r *Router) RegisterRoutes() {
 	//tour
 	r.mux.HandleFunc("POST /tours", r.tourHandler.Create)
+	r.mux.HandleFunc("GET /tours/{agency_id}",r.tourHandler.List)
+	r.mux.HandleFunc("PUT /tours/{tour_id}",r.tourHandler.Update)
+	r.mux.HandleFunc("DELETE /tours/{tour_id}",r.tourHandler.Delete)
 
 	//user
 	r.mux.Handle("POST /users", http.HandlerFunc(r.userHandler.CreateUser))
@@ -59,9 +62,14 @@ func (r *Router) RegisterRoutes() {
 	//member
 	r.mux.HandleFunc("POST /member", r.memberHandler.CreateMember)
 	r.mux.HandleFunc("PUT /member/permissions", r.memberHandler.UpdateMemberPermissions)
-	r.mux.HandleFunc("DELETE /member", r.memberHandler.DeleteMember)
+	r.mux.HandleFunc("DELETE /member/{member_id}", r.memberHandler.DeleteMember)
+	r.mux.HandleFunc("GET /member/{agency_id}",r.memberHandler.ListMember)
 
 	//permissions
 	r.mux.HandleFunc("POST /permissions", r.permissionHandler.CreatePermission)
 	r.mux.HandleFunc("DELETE /permissions/{id}", r.permissionHandler.DeletePermission)
+
+
+
+
 }

@@ -5,10 +5,10 @@ import (
 )
 
 type Payment struct {
-	PaymentID     int
+	PaymentID     uuid.UUID
 	BookingID     uuid.UUID
 	TransactionID string
-	Amount        int
+	Amount        float64
 	Method        string
 	Status        string
 }

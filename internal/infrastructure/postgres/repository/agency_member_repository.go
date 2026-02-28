@@ -21,14 +21,14 @@ func NewAgencyMemberRepositoryDB(db *sqlx.DB) port.AgencyMemberRepository {
 }
 
 func (h *agencyMemberRepositoryDB) CreateMember(ctx context.Context, member *domain.AgencyMember) error {
-	query := `INSERT INTO agency_members (agency_id,role_id,name,email,phone,password) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id;`
+	query := `INSERT INTO agency_members (agency_id,role_id,name,email,phone,password) VALUES ($1,$2,$3,$4,$5,$6) RETURNING member_id;`
 
 	return h.db.QueryRowContext(ctx, query, member.AgencyID,member.RoleID,member.Name,member.Email,member.Phone,member.Password).Scan(&member.MemberID)
 }
 
-func (h *agencyMemberRepositoryDB) ListMember(ctx context.Context, agencyID uuid.UUID) ([]*domain.AgencyMember, error) {
-	var members []*domain.AgencyMember
-	query := `SELECT name,email,phone,password FROM Agency WHERE agency_id=$1;`
+func (h *agencyMemberRepositoryDB) ListMember(ctx context.Context, agencyID uuid.UUID) ([]*domain.ListMemberResponse, error) {
+	var members []*domain.ListMemberResponse
+	query := `SELECT name,email,phone,password FROM agency_members WHERE agency_id=$1;`
 	err := h.db.SelectContext(ctx, &members, query, agencyID)
 	if err != nil {
 		if err == sql.ErrNoRows {

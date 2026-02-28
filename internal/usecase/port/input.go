@@ -11,6 +11,18 @@ type CreateTour interface {
 	Execute(ctx context.Context,tour *domain.Tour) error
 }
 
+type ListTour interface {
+	Execute(ctx context.Context, agencyID uuid.UUID) ([]*domain.Tour, error)
+}
+
+type UpdateTour interface {
+	Execute(ctx context.Context, tour *domain.Tour) error
+}
+
+type DeleteTour interface {
+	Execute(ctx context.Context, tourID uuid.UUID) error
+}
+
 type CreateBooking interface {
 	Execute(ctx context.Context, req *domain.BookingRequest, userID *uuid.UUID, memberID *uuid.UUID) (*domain.BookingResponse, error)
 }
@@ -48,7 +60,7 @@ type DeleteAgencyMember interface {
 }
 
 type ListAgencyMember interface {
-	Execute(ctx context.Context, agencyID uuid.UUID) ([]*domain.AgencyMember, error)
+	Execute(ctx context.Context, agencyID uuid.UUID) ([]*domain.ListMemberResponse, error)
 }
 
 type CreatePermission interface {

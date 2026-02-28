@@ -31,8 +31,8 @@ func (uc *createbookingusecase) Execute(ctx context.Context, req *domain.Booking
 	var response *domain.BookingResponse
 
 	err := uc.txManager.WithinTransaction(ctx, func(txCtx context.Context) error {
-
-		tour, err := uc.tourRepo.GetByID(txCtx, req.TourID)
+		//starts by row level locking
+		tour, err := uc.tourRepo.GetByIDForUpdate(txCtx, req.TourID)
 		if err != nil {
 			return  err
 		}
@@ -80,12 +80,12 @@ func (uc *createbookingusecase) Execute(ctx context.Context, req *domain.Booking
 			Status:         "pending",
 		}
 		if userID != nil {
-			booking.UserID = *userID
+			booking.UserID = userID
 		}
 		if memberID != nil {
-			booking.MemberID = *memberID
+			booking.MemberID = memberID
 		}
-
+	
 		if err := uc.bookingRepo.Create(txCtx, booking); err != nil {
 			return err
 		}

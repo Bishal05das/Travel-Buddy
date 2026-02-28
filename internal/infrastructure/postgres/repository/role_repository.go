@@ -20,7 +20,7 @@ func NewRoleRepository(db *sqlx.DB) port.RoleRepository {
 }
 
 func (r *roleRepositoryDB) CreateRole(ctx context.Context, role *domain.Role) error {
-	query := `INSERT INTO roles (agency_id,role_name) VALUES ($1,$2) RETURNING id;`
+	query := `INSERT INTO roles (agency_id,role_name) VALUES ($1,$2) RETURNING role_id;`
 
 	return r.db.QueryRowContext(ctx, query, role.AgencyID, role.RoleName).Scan(&role.RoleID)
 }

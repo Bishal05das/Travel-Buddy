@@ -9,10 +9,11 @@ import (
 
 type TourRepository interface {
 	CreateTour(ctx context.Context, tour *domain.Tour) error
-	ListTour(ctx context.Context, agencyID int) ([]*domain.Tour, error)
+	ListTour(ctx context.Context, agencyID uuid.UUID) ([]*domain.Tour, error)
 	UpdateTour(ctx context.Context, t *domain.Tour) error
 	DeleteTour(ctx context.Context, tourID uuid.UUID) error
 	GetByID(ctx context.Context, tourID uuid.UUID) (*domain.Tour, error)
+	GetByIDForUpdate(ctx context.Context, tourID uuid.UUID) (*domain.Tour, error)
 	UpdateAvailableSeats(ctx context.Context, tourID uuid.UUID, seats int) error
 }
 
@@ -31,7 +32,7 @@ type UserRepository interface {
 
 type AgencyMemberRepository interface {
 	CreateMember(ctx context.Context, member *domain.AgencyMember) error
-	ListMember(ctx context.Context, agencyID uuid.UUID) ([]*domain.AgencyMember, error)
+	ListMember(ctx context.Context, agencyID uuid.UUID) ([]*domain.ListMemberResponse, error)
 	UpdateMember(ctx context.Context, member *domain.AgencyMember) error
 	DeleteMember(ctx context.Context, memberID uuid.UUID) error
 	GetRoleIDFromMemberID(ctx context.Context,memberID uuid.UUID) (*int,error)

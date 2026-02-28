@@ -3,8 +3,10 @@ package tourusecase
 import (
 	"context"
 
+
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
+	"github.com/google/uuid"
 )
 
 type ListTourUseCase struct {
@@ -17,6 +19,6 @@ func NewListTourUseCase(repo port.TourRepository) *ListTourUseCase {
 	}
 }
 
-func (uc *ListTourUseCase) Execute(ctx context.Context, agencyID int) ([]*domain.Tour, error) {
+func (uc *ListTourUseCase) Execute(ctx context.Context, agencyID uuid.UUID) ([]*domain.Tour, error) {
 	return uc.repo.ListTour(ctx, agencyID)
 }

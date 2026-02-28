@@ -7,6 +7,7 @@ import (
 
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
+	"github.com/google/uuid"
 )
 
 type CreateTourUseCase struct {
@@ -21,7 +22,7 @@ func NewCreateTourUseCase(r port.TourRepository) *CreateTourUseCase {
 
 func (uc *CreateTourUseCase) Execute(ctx context.Context, tour *domain.Tour) error {
 	//add business logic here
-	if tour.AgencyID <= 0 ||
+	if tour.AgencyID == uuid.Nil ||
 		tour.Name == "" ||
 		tour.Description == "" ||
 		tour.EndDate.IsZero() ||
