@@ -13,14 +13,16 @@ import (
 
 type TourHandler struct {
 	createUC port.CreateTour
+	getUC port.GetTour
 	listUC port.ListTour
 	updateUC port.UpdateTour
 	deleteUC port.DeleteTour
 }
 
-func NewTourHandler(createUC port.CreateTour,listUC port.ListTour,updateUC port.UpdateTour,deleteUC port.DeleteTour) *TourHandler {
+func NewTourHandler(createUC port.CreateTour,getUC port.GetTour,listUC port.ListTour,updateUC port.UpdateTour,deleteUC port.DeleteTour) *TourHandler {
 	return &TourHandler{
 		createUC: createUC,
+		getUC: getUC,
 		listUC: listUC,
 		updateUC: updateUC,
 		deleteUC: deleteUC,
@@ -40,6 +42,22 @@ func (h *TourHandler) Create(w http.ResponseWriter, r *http.Request)  {
 		return
 	}
 	util.SendData(w, tour, http.StatusCreated)
+}
+func (h *TourHandler) Get(w http.ResponseWriter, r *http.Request){
+	idStr :=r.PathValue("tour_id")
+	id,err :=uuid.Parse(idStr)
+
+	if err != nil {
+		http.Error(w,err.Error(),http.StatusBadRequest)
+		return
+	}
+	tour,err :=h.getUC.Execute(r.Context(),id)
+	if err != nil {
+		http.Error(w,err.Error(),http.StatusBadRequest)
+		return
+	}
+	util.SendData(w,tour,http.StatusOK)
+
 }
 
 func (h *TourHandler) List(w http.ResponseWriter, r *http.Request){

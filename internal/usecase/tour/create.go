@@ -10,17 +10,17 @@ import (
 	"github.com/google/uuid"
 )
 
-type CreateTourUseCase struct {
+type createTourUseCase struct {
 	repo port.TourRepository
 }
 
-func NewCreateTourUseCase(r port.TourRepository) *CreateTourUseCase {
-	return &CreateTourUseCase{
+func NewCreateTourUseCase(r port.TourRepository) port.CreateTour {
+	return &createTourUseCase{
 		repo: r,
 	}
 }
 
-func (uc *CreateTourUseCase) Execute(ctx context.Context, tour *domain.Tour) error {
+func (uc *createTourUseCase) Execute(ctx context.Context, tour *domain.Tour) error {
 	//add business logic here
 	if tour.AgencyID == uuid.Nil ||
 		tour.Name == "" ||

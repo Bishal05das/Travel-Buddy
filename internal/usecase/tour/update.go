@@ -7,17 +7,17 @@ import (
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
 )
 
-type UpdateTourUseCase struct {
+type updateTourUseCase struct {
 	repo port.TourRepository
 }
 
-func NewUpdateTourUseCase(repo port.TourRepository) *UpdateTourUseCase {
-	return &UpdateTourUseCase{
+func NewUpdateTourUseCase(repo port.TourRepository) port.UpdateTour {
+	return &updateTourUseCase{
 		repo: repo,
 	}
 }
 
-func (uc *UpdateTourUseCase) Execute(ctx context.Context, tour *domain.Tour) error {
+func (uc *updateTourUseCase) Execute(ctx context.Context, tour *domain.Tour) error {
 
 	return uc.repo.UpdateTour(ctx, tour)
 }

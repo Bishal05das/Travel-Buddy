@@ -1,19 +1,23 @@
 package tourusecase
 
-// import (
-// 	"github.com/bishal05das/travelbuddy/internal/domain"
-// )
+import (
+	"context"
 
-// type GetTourUseCase struct {
-// 	repo domain.TourRepository
-// }
+	"github.com/bishal05das/travelbuddy/internal/domain"
+	"github.com/bishal05das/travelbuddy/internal/usecase/port"
+	"github.com/google/uuid"
+)
 
-// func NewGetTourUseCase(repo domain.TourRepository) *GetTourUseCase {
-// 	return &GetTourUseCase{
-// 		repo: repo,
-// 	}
-// }
+type GetTourUseCase struct {
+	repo port.TourRepository
+}
 
-// func(uc *GetTourUseCase) Execute(tourID int) (*domain.Tour,error) {
-// 	return uc.repo
-// }
+func NewGetTourUseCase(repo port.TourRepository) *GetTourUseCase {
+	return &GetTourUseCase{
+		repo: repo,
+	}
+}
+
+func(uc *GetTourUseCase) Execute(ctx context.Context,tourID uuid.UUID) (*domain.Tour,error) {
+	return uc.repo.GetByID(ctx,tourID)
+}

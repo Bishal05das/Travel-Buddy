@@ -7,16 +7,16 @@ import (
 	"github.com/google/uuid"
 )
 
-type DeleteTourUseCase struct {
+type deleteTourUseCase struct {
 	repo port.TourRepository
 }
 
-func NewDeleteTourUseCase(repo port.TourRepository) *DeleteTourUseCase {
-	return &DeleteTourUseCase{
+func NewDeleteTourUseCase(repo port.TourRepository) port.DeleteTour {
+	return &deleteTourUseCase{
 		repo: repo,
 	}
 }
 
-func (uc *DeleteTourUseCase) Execute(ctx context.Context, tourID uuid.UUID) error {
+func (uc *deleteTourUseCase) Execute(ctx context.Context, tourID uuid.UUID) error {
 	return uc.repo.DeleteTour(ctx, tourID)
 }

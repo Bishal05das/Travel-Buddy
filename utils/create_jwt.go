@@ -3,8 +3,8 @@ package util
 import (
 	"crypto/hmac"
 	"crypto/sha256"
-	"encoding/json"
 	"encoding/base64"
+	"encoding/json"
 
 	"github.com/google/uuid"
 )
@@ -17,6 +17,7 @@ type Header struct {
 type Payload struct {
 	UserID uuid.UUID
 	Role   string
+	RoleID *int
 }
 
 func CreateJWT(secret string, data Payload) (string, error) {

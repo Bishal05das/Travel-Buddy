@@ -7,50 +7,93 @@ import (
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
 	util "github.com/bishal05das/travelbuddy/utils"
+	"github.com/google/uuid"
 )
 
 type UserHandler struct {
-	createuc port.CreateUser
-	loginuc port.LoginUser
+	createUC port.CreateUser
+	loginUC  port.LoginUser
+	deleteUC port.DeleteUser
+	updateUC port.UpdateUser
 }
 
-func NewUserHandler(createuc port.CreateUser,loginuc port.LoginUser) *UserHandler {
+func NewUserHandler(createuc port.CreateUser, loginuc port.LoginUser, deleteUC port.DeleteUser, updateUC port.UpdateUser) *UserHandler {
 	return &UserHandler{
-		createuc: createuc,
-		loginuc: loginuc,
+		createUC: createuc,
+		loginUC:  loginuc,
+		deleteUC: deleteUC,
+		updateUC: updateUC,
 	}
 }
 
-func(h *UserHandler) CreateUser(w http.ResponseWriter,r *http.Request) {
+func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var newUser domain.User
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&newUser)
 	if err != nil {
-		http.Error(w,"Invalid Request Data",http.StatusBadRequest)
+		http.Error(w, "Invalid Request Data", http.StatusBadRequest)
 		return
 	}
-	err = h.createuc.Execute(r.Context(),&newUser)
+	err = h.createUC.Execute(r.Context(), &newUser)
 	if err != nil {
-		http.Error(w,err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	util.SendData(w,newUser,http.StatusCreated)
+	util.SendData(w, newUser, http.StatusCreated)
 
 }
 
-func(h *UserHandler) UserLogin(w http.ResponseWriter,r *http.Request) {
+func (h *UserHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
 	var reqLogin domain.ReqLogin
 
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&reqLogin)
 	if err != nil {
-		http.Error(w,err.Error(),http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	token,err := h.loginuc.Execute(r.Context(),&reqLogin)
+	token, err := h.loginUC.Execute(r.Context(), &reqLogin)
 	if err != nil {
-		util.SendData(w,err.Error(),http.StatusInternalServerError)
+		util.SendData(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	util.SendData(w,token,http.StatusCreated)
+	util.SendData(w, token, http.StatusCreated)
+}
+
+func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("user_id")
+	userID, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "invalid agency id", http.StatusBadRequest)
+		return
+	}
+	err = h.deleteUC.Execute(r.Context(), userID)
+	if err != nil {
+		util.SendData(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	util.SendData(w, "Successfully Deleted User", http.StatusCreated)
+}
+
+func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("user_id")
+	userID, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "invalid agency id", http.StatusBadRequest)
+		return
+	}
+	var updateUser domain.UpdateUserReq
+	decoder := json.NewDecoder(r.Body)
+	err = decoder.Decode(&updateUser)
+	if err != nil {
+		http.Error(w,"Error in decoding request body",http.StatusBadRequest)
+		return
+	}
+
+	err = h.updateUC.Execute(r.Context(), userID,&updateUser)
+	if err != nil {
+		util.SendData(w, err.Error(), http.StatusBadRequest) 
+		return
+	}
+	util.SendData(w,"Succesfully Updated User", http.StatusOK)
 }

@@ -15,14 +15,16 @@ type MemberHandler struct {
 	deleteMemberUC           port.DeleteAgencyMember
 	listMemberUC             port.ListAgencyMember
 	updateMemberPermissionUC port.UpdateAgencyMemberPermission
+	loginUC                  port.LoginMember
 }
 
-func NewMemberHandler(createMemberUC port.CreateAgencyMember, deleteMemberUC port.DeleteAgencyMember, listMemberUC port.ListAgencyMember, updateMemberPermissionUC port.UpdateAgencyMemberPermission) *MemberHandler {
+func NewMemberHandler(createMemberUC port.CreateAgencyMember, deleteMemberUC port.DeleteAgencyMember, listMemberUC port.ListAgencyMember, updateMemberPermissionUC port.UpdateAgencyMemberPermission, loginUC port.LoginMember) *MemberHandler {
 	return &MemberHandler{
 		createMemberUC:           createMemberUC,
 		deleteMemberUC:           deleteMemberUC,
 		listMemberUC:             listMemberUC,
 		updateMemberPermissionUC: updateMemberPermissionUC,
+		loginUC:                  loginUC,
 	}
 }
 
@@ -73,15 +75,38 @@ func (h *MemberHandler) ListMember(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *MemberHandler) UpdateMemberPermissions(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("member_id")
+	memberID, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "invalid member id", http.StatusBadRequest)
+		return
+	}
 	var req domain.UpdatePermissionRequest
 	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&req)
+	err = decoder.Decode(&req)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 	}
-	err = h.updateMemberPermissionUC.Execute(r.Context(), &req)
+	err = h.updateMemberPermissionUC.Execute(r.Context(), memberID, &req)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 	}
 	util.SendData(w, "Successfully Updated Permission", http.StatusCreated)
+}
+
+func (h *MemberHandler) MemberLogin(w http.ResponseWriter, r *http.Request) {
+	var reqLogin domain.ReqLogin
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&reqLogin)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	token, err := h.loginUC.Execute(r.Context(), &reqLogin)
+	if err != nil {
+		util.SendData(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	util.SendData(w, token, http.StatusCreated)
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
+	"github.com/google/uuid"
 )
 
 type UpdateUserUseCase struct {
@@ -17,7 +18,14 @@ func NewUpdateUserUseCase(repo port.UserRepository) *UpdateUserUseCase {
 	}
 }
 
-func (uc *UpdateUserUseCase) Execute(ctx context.Context, user *domain.User) error {
+func (uc *UpdateUserUseCase) Execute(ctx context.Context,userID uuid.UUID, user *domain.UpdateUserReq) error {
+	updatedUser := &domain.User{
+		UserID: userID,
+		Name: user.Name,
+		Email: user.Email,
+		Password: user.Password,
+		Phone: user.Phone,
+	}
 
-	return uc.repo.UpdateUser(ctx, user)
+	return uc.repo.UpdateUser(ctx, updatedUser)
 }

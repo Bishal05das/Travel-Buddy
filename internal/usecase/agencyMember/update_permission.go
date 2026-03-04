@@ -5,6 +5,7 @@ import (
 
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
+	"github.com/google/uuid"
 )
 
 type UpdatPermissionUseCase struct {
@@ -21,10 +22,11 @@ func NewUpdatePermissionUseCase(txManager port.TxManager, agencyMemberRepo port.
 	}
 }
 
-func (uc *UpdatPermissionUseCase) Execute(ctx context.Context, req *domain.UpdatePermissionRequest) error {
+func (uc *UpdatPermissionUseCase) Execute(ctx context.Context,memberID uuid.UUID, req *domain.UpdatePermissionRequest) error {
 	var response error
 	err := uc.txManager.WithinTransaction(ctx, func(txCtx context.Context) error {
-		roleID, err := uc.agencyMemberRepo.GetRoleIDFromMemberID(txCtx, req.MemberID)
+		//apply row level locking
+		roleID, err := uc.agencyMemberRepo.GetRoleIDFromMemberIDForUpdate(txCtx,memberID)
 		if err != nil {
 			return err
 		}

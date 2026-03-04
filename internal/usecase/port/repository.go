@@ -7,6 +7,11 @@ import (
 	"github.com/google/uuid"
 )
 
+type HomeRepository interface {
+	GetTopTours(ctx context.Context, limit int) ([]domain.HomeTour, error)
+	GetTopAgencies(ctx context.Context, limit int) ([]domain.HomeAgency, error)
+}
+
 type TourRepository interface {
 	CreateTour(ctx context.Context, tour *domain.Tour) error
 	ListTour(ctx context.Context, agencyID uuid.UUID) ([]*domain.Tour, error)
@@ -35,7 +40,8 @@ type AgencyMemberRepository interface {
 	ListMember(ctx context.Context, agencyID uuid.UUID) ([]*domain.ListMemberResponse, error)
 	UpdateMember(ctx context.Context, member *domain.AgencyMember) error
 	DeleteMember(ctx context.Context, memberID uuid.UUID) error
-	GetRoleIDFromMemberID(ctx context.Context,memberID uuid.UUID) (*int,error)
+	GetRoleIDFromMemberIDForUpdate(ctx context.Context,memberID uuid.UUID) (*int,error)
+	FindMember(ctx context.Context,email,pass string) (*domain.AgencyMember,error)
 }
 
 type BookingRepository interface {

@@ -15,3 +15,11 @@ type ReqLogin struct {
 	Email    string `json:"email" db:"email"`
 	Password string `json:"password" db:"password"`
 }
+
+
+type UpdateUserReq struct {
+	Name     string    `json:"name" db:"name"`
+	Email    string    `json:"email" db:"email"`
+	Password string    `json:"password" db:"password"`
+	Phone    string    `json:"phone" db:"phone"`
+}

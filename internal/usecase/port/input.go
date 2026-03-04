@@ -7,12 +7,20 @@ import (
 	"github.com/google/uuid"
 )
 
+type Home interface {
+	GetHome(ctx context.Context) (*domain.HomeResponse, error)
+}
+
 type CreateTour interface {
 	Execute(ctx context.Context,tour *domain.Tour) error
 }
 
 type ListTour interface {
 	Execute(ctx context.Context, agencyID uuid.UUID) ([]*domain.Tour, error)
+}
+
+type GetTour interface {
+	Execute(ctx context.Context,tourID uuid.UUID) (*domain.Tour,error)
 }
 
 type UpdateTour interface {
@@ -35,6 +43,14 @@ type LoginUser interface {
 	Execute(ctx context.Context,user *domain.ReqLogin) (*string, error)
 }
 
+type DeleteUser interface {
+	Execute(ctx context.Context, userID uuid.UUID) error
+}
+
+type UpdateUser interface {
+	Execute(ctx context.Context,userID uuid.UUID, user *domain.UpdateUserReq) error
+}
+
 type CreateAgency interface {
 	Execute(ctx context.Context, agency *domain.Agency) error
 }
@@ -52,7 +68,7 @@ type CreateAgencyMember interface {
 }
 
 type UpdateAgencyMemberPermission interface {
-	Execute(ctx context.Context, req *domain.UpdatePermissionRequest) error
+	Execute(ctx context.Context,memberID uuid.UUID, req *domain.UpdatePermissionRequest) error
 }
 
 type DeleteAgencyMember interface {
@@ -61,6 +77,10 @@ type DeleteAgencyMember interface {
 
 type ListAgencyMember interface {
 	Execute(ctx context.Context, agencyID uuid.UUID) ([]*domain.ListMemberResponse, error)
+}
+
+type LoginMember interface {
+	Execute(ctx context.Context, member *domain.ReqLogin) (*string, error)
 }
 
 type CreatePermission interface {

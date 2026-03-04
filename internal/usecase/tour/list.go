@@ -9,16 +9,16 @@ import (
 	"github.com/google/uuid"
 )
 
-type ListTourUseCase struct {
+type listTourUseCase struct {
 	repo port.TourRepository
 }
 
-func NewListTourUseCase(repo port.TourRepository) *ListTourUseCase {
-	return &ListTourUseCase{
+func NewListTourUseCase(repo port.TourRepository) port.ListTour {
+	return &listTourUseCase{
 		repo: repo,
 	}
 }
 
-func (uc *ListTourUseCase) Execute(ctx context.Context, agencyID uuid.UUID) ([]*domain.Tour, error) {
+func (uc *listTourUseCase) Execute(ctx context.Context, agencyID uuid.UUID) ([]*domain.Tour, error) {
 	return uc.repo.ListTour(ctx, agencyID)
 }

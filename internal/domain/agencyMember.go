@@ -23,13 +23,13 @@ type CreateMemberRequest struct {
 }
 
 type ListMemberResponse struct {
+	MemberID    uuid.UUID `json:"member_id" db:"member_id"`
 	Name        string    `json:"name" db:"name"`
 	Email       string    `json:"email" db:"email"`
 	Phone       string    `json:"phone" db:"phone"`
-	Password    string    `json:"password" db:"password"`
+	Permissions []int     `json:"permissions"`
 }
 
 type UpdatePermissionRequest struct {
-	MemberID    uuid.UUID
 	Permissions []int
 }
