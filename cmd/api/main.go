@@ -17,6 +17,7 @@ import (
 	bookingusecase "github.com/bishal05das/travelbuddy/internal/usecase/booking"
 	homeusecase "github.com/bishal05das/travelbuddy/internal/usecase/home"
 	permissionusecase "github.com/bishal05das/travelbuddy/internal/usecase/permission"
+	searchusecase "github.com/bishal05das/travelbuddy/internal/usecase/search"
 	tourusecase "github.com/bishal05das/travelbuddy/internal/usecase/tour"
 	userusecase "github.com/bishal05das/travelbuddy/internal/usecase/user"
 )
@@ -49,9 +50,12 @@ func main() {
 	roleRepo := repository.NewRoleRepository(dbCon)
 	permissionRepo := repository.NewPermissionRepositoryDB(dbCon)
 	homeRepo := repository.NewHomeRepositoryDB(dbCon)
+	searchRepo := repository.NewSearchRepository(dbCon)
 
 	//UseCase
 	homeUC := homeusecase.NewHomeUseCase(homeRepo)
+
+	searchUC := searchusecase.NewSearchUseCase(searchRepo)
 
 	createTourUC := tourusecase.NewCreateTourUseCase(tourRepo)
 	getTourUC := tourusecase.NewGetTourUseCase(tourRepo)
@@ -80,6 +84,7 @@ func main() {
 
 	//handler
 	homeHandler := handler.NewHomeHandler(homeUC)
+	searchHandler := handler.NewSearchHandler(searchUC)
 	tourHandler := handler.NewTourHandler(createTourUC,getTourUC,listTourUC,updateTourUC,deleteTourUC)
 	userHandler := handler.NewUserHandler(createuserUC, loginUserUC,deleteUserUC,updateUserUC)
 	bookingHandler := handler.NewBookingHandler(createBookingUC)
@@ -91,7 +96,7 @@ func main() {
 	middleware := middleware.NewMiddleware(cfg)
 
 	//router setup
-	router := router.NewRoutes(mux, middleware,homeHandler, tourHandler, userHandler, bookingHandler, agencyHandler, memberHandler, permissionHandler)
+	router := router.NewRoutes(mux, middleware,homeHandler,searchHandler, tourHandler, userHandler, bookingHandler, agencyHandler, memberHandler, permissionHandler)
 	router.RegisterRoutes()
 
 	fmt.Println("Listening to server on port 3000")

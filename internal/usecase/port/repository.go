@@ -40,8 +40,8 @@ type AgencyMemberRepository interface {
 	ListMember(ctx context.Context, agencyID uuid.UUID) ([]*domain.ListMemberResponse, error)
 	UpdateMember(ctx context.Context, member *domain.AgencyMember) error
 	DeleteMember(ctx context.Context, memberID uuid.UUID) error
-	GetRoleIDFromMemberIDForUpdate(ctx context.Context,memberID uuid.UUID) (*int,error)
-	FindMember(ctx context.Context,email,pass string) (*domain.AgencyMember,error)
+	GetRoleIDFromMemberIDForUpdate(ctx context.Context, memberID uuid.UUID) (*int, error)
+	FindMember(ctx context.Context, email, pass string) (*domain.AgencyMember, error)
 }
 
 type BookingRepository interface {
@@ -69,8 +69,12 @@ type TxManager interface {
 	WithinTransaction(ctx context.Context, fn func(ctx context.Context) error) error
 }
 
-
 type PermissionRepository interface {
 	CreatePermission(ctx context.Context, permisson *domain.Permission) error
-	DeletePermission(ctx context.Context,permissionID int) error
+	DeletePermission(ctx context.Context, permissionID int) error
+}
+
+type SearchRepository interface {
+	SearchTours(ctx context.Context, filter domain.TourSearchFilter) ([]domain.TourSearchResponse, error)
+	SearchAgencies(ctx context.Context, query string, limit int) ([]domain.Agency, error)
 }

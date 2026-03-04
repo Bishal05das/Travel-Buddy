@@ -11,6 +11,7 @@ type Router struct {
 	mux               *http.ServeMux
 	middleware        *middleware.Middleware
 	homeHandler       *handler.HomeHandler
+	searchHandler     *handler.SearchHandler
 	tourHandler       *handler.TourHandler
 	userHandler       *handler.UserHandler
 	bookingHandler    *handler.BookingHandler
@@ -23,6 +24,7 @@ func NewRoutes(
 	mux *http.ServeMux,
 	middleware *middleware.Middleware,
 	homeHandler *handler.HomeHandler,
+	searchHandler     *handler.SearchHandler,
 	tourHandler *handler.TourHandler,
 	userHandler *handler.UserHandler,
 	bookingHandler *handler.BookingHandler,
@@ -34,6 +36,7 @@ func NewRoutes(
 		mux:               mux,
 		middleware:        middleware,
 		homeHandler:       homeHandler,
+		searchHandler: searchHandler,
 		tourHandler:       tourHandler,
 		userHandler:       userHandler,
 		bookingHandler:    bookingHandler,
@@ -46,6 +49,9 @@ func NewRoutes(
 func (r *Router) RegisterRoutes() {
 	//home
 	r.mux.HandleFunc("GET /home", r.homeHandler.GetHome)
+
+	//search
+	r.mux.HandleFunc("GET /search",r.searchHandler.Search)
 	//tour
 	r.mux.HandleFunc("POST /tours", r.tourHandler.Create)
 	r.mux.HandleFunc("GET /tours/{tour_id}", r.tourHandler.Get)

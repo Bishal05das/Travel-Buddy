@@ -11,6 +11,10 @@ type Home interface {
 	GetHome(ctx context.Context) (*domain.HomeResponse, error)
 }
 
+type Search interface {
+	Execute(ctx context.Context, filter domain.TourSearchFilter) (*domain.SearchResult, error)
+}
+
 type CreateTour interface {
 	Execute(ctx context.Context,tour *domain.Tour) error
 }
