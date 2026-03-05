@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
@@ -29,16 +30,19 @@ func (h *userRepositoryDB) CreateUser(ctx context.Context,user *domain.User) err
 
 func (h *userRepositoryDB) UpdateUser(ctx context.Context,user *domain.User) error {
 	query := `UPDATE users SET name=$1,email=$2,password=$3,phone=$4,role=$5 WHERE user_id=$6;`
-	row := h.db.QueryRowContext(ctx,query, user.Name, user.Email, user.Password, user.Phone, user.Role,user.UserID)
-	err := row.Err()
+	res,err := h.db.ExecContext(ctx,query, user.Name, user.Email, user.Password, user.Phone, user.Role,user.UserID)
 	if err != nil {
 		return err
+	}
+	rows, _ := res.RowsAffected()
+	if rows == 0 {
+		return errors.New("user not found")
 	}
 	return nil
 }
 
 func (h *userRepositoryDB) DeleteUser(ctx context.Context,UserID uuid.UUID) error {
-	query := `DELETE FROM users WHERE id=$1;`
+	query := `DELETE FROM users WHERE user_id=$1;`
 	_, err := h.db.ExecContext(ctx,query, UserID)
 	if err != nil {
 		return err

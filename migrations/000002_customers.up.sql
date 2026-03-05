@@ -12,3 +12,6 @@ CREATE TABLE IF NOT EXISTS customers (
         (user_id IS NOT NULL AND name IS NULL AND email IS NULL AND phone IS NULL)
     )
 );
+
+CREATE UNIQUE INDEX idx_customers_user
+ON customers(user_id);

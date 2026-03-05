@@ -26,7 +26,7 @@ func (r *roleRepositoryDB) CreateRole(ctx context.Context, role *domain.Role) er
 }
 
 func (r *roleRepositoryDB) DeleteRole(ctx context.Context, roleID int) error {
-	query := `DELETE FROM roles WHERE id=$1;`
+	query := `DELETE FROM roles WHERE role_id=$1;`
 	_, err := r.db.ExecContext(ctx, query, roleID)
 	if err != nil {
 		return err

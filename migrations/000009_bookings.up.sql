@@ -18,3 +18,15 @@ CREATE TABLE IF NOT EXISTS bookings (
         (user_id IS NULL AND member_id IS NOT NULL)
     )
 );
+
+CREATE INDEX idx_bookings_tour
+ON bookings(tour_id);
+
+CREATE INDEX idx_bookings_customer
+ON bookings(customer_id);
+
+CREATE INDEX idx_bookings_user
+ON bookings(user_id);
+
+CREATE INDEX idx_bookings_member
+ON bookings(member_id);

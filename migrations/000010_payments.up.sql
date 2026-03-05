@@ -7,3 +7,9 @@ CREATE TABLE IF NOT EXISTS payments (
     status VARCHAR(20) CHECK (status IN ('success', 'failed','pending')) DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX idx_payments_booking
+ON payments(booking_id);
+
+CREATE UNIQUE INDEX idx_payments_transaction
+ON payments(transaction_id);
