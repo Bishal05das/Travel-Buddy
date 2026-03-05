@@ -50,10 +50,10 @@ func (h *userRepositoryDB) DeleteUser(ctx context.Context,UserID uuid.UUID) erro
 	return nil
 }
 
-func (h *userRepositoryDB) FindUser(ctx context.Context,email,pass string) (*domain.User,error) {
+func (h *userRepositoryDB) FindUser(ctx context.Context,email string) (*domain.User,error) {
 	var user domain.User
-	query := `SELECT user_id,name,phone,role FROM users WHERE email=$1 AND password=$2`
-	err := h.db.GetContext(ctx,&user,query,email,pass)
+	query := `SELECT user_id,name,password,phone,role FROM users WHERE email=$1`
+	err := h.db.GetContext(ctx,&user,query,email)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil,nil

@@ -23,17 +23,22 @@ func NewUserLoginUseCase(userRepo port.UserRepository, cnf *config.Config) port.
 }
 
 func (uc *userLoginUseCase) Execute(ctx context.Context, user *domain.ReqLogin) (*string, error) {
-	usr, err := uc.userRepo.FindUser(ctx, user.Email, user.Password)
+	usr, err := uc.userRepo.FindUser(ctx, user.Email)
 	if usr == nil {
-		// http.Error(w, "Invalid Credentials", http.StatusBadRequest)
 		return nil, errors.New("Invalid Credentials")
 	}
+	reqHashedPassword, err := util.HashPassword(user.Password)
+	if err != nil {
+		return nil, errors.New("error in hashing password")
+	}
+	if reqHashedPassword != usr.Password {
+		return nil, errors.New("Invalid Password")
+	}  
 	accessToken, err := util.CreateJWT(uc.cnf.JWTSecretkey, util.Payload{
 		UserID: usr.UserID,
 		Role:   usr.Role,
 	})
 	if err != nil {
-		//http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return nil, err
 	}
 	return &accessToken, nil

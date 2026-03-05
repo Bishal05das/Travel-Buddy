@@ -32,7 +32,7 @@ type UserRepository interface {
 	CreateUser(ctx context.Context, user *domain.User) error
 	UpdateUser(ctx context.Context, user *domain.User) error
 	DeleteUser(ctx context.Context, userID uuid.UUID) error
-	FindUser(ctx context.Context, email, pass string) (*domain.User, error)
+	FindUser(ctx context.Context, email string) (*domain.User, error)
 }
 
 type AgencyMemberRepository interface {
