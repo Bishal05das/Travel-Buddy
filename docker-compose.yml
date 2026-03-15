@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: tourcontainer
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydb
+    ports:
+      - "5435:5432"
+    volumes:
+      - tour_data:/var/lib/postgresql/data
+
+volumes:
+  tour_data:
