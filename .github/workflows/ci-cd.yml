@@ -1,4 +1,4 @@
-name: CI/CD Docker Compose
+name: CI workflow
 
 on:
   workflow_dispatch:
