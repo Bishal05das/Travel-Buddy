@@ -30,7 +30,7 @@ func (h *tourRepositoryDB) CreateTour(ctx context.Context, tour *domain.Tour) er
 func (h *tourRepositoryDB) ListTour(ctx context.Context, agencyID uuid.UUID) ([]*domain.Tour, error) {
 
 	var tours []*domain.Tour
-	query := `SELECT name,start_date,end_date,available_seat,description,last_enrollment_date,price,discount FROM tours WHERE agency_id=$1;`
+	query := `SELECT tour_id,name,start_date,end_date,available_seat,description,last_enrollment_date,price,discount FROM tours WHERE agency_id=$1;`
 	err := h.db.SelectContext(ctx, &tours, query, agencyID)
 	if err != nil {
 		return nil, err
@@ -40,8 +40,8 @@ func (h *tourRepositoryDB) ListTour(ctx context.Context, agencyID uuid.UUID) ([]
 }
 
 func (h *tourRepositoryDB) UpdateTour(ctx context.Context, t *domain.Tour) error {
-	query := `UPDATE tours SET agency_id=$1,name=$2,start_date=$3,end_date=$4,available_seat=$5,description=$6,last_enrollment_date=$7,price=$8,discount=$9 WHERE tour_id=$10;`
-	res,err := h.db.ExecContext(ctx, query, t.AgencyID, t.Name, t.StartDate, t.EndDate, t.AvailableSeat, t.Description, t.LastEnrollmentDate, t.Price, t.Discount, t.TourID)
+	query := `UPDATE tours SET agency_id=$1,name=$2,start_date=$3,end_date=$4,available_seat=$5,description=$6,last_enrollment_date=$7,price=$8,discount=$9,updated_at=$10 WHERE tour_id=$11;`
+	res,err := h.db.ExecContext(ctx, query, t.AgencyID, t.Name, t.StartDate, t.EndDate, t.AvailableSeat, t.Description, t.LastEnrollmentDate, t.Price, t.Discount,t.UpdatedAt, t.TourID)
 	if err != nil {
 		return err
 	}

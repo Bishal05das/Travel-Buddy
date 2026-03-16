@@ -2,10 +2,11 @@ package db
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/bishal05das/travelbuddy/config"
 	"github.com/jmoiron/sqlx"
-	_"github.com/lib/pq"
+	_ "github.com/lib/pq"
 )
 
 func GetConnectionString(cnf *config.DBConfig) string {
@@ -20,7 +21,22 @@ func GetConnectionString(cnf *config.DBConfig) string {
 
 func NewConnection(cnf *config.Config) (*sqlx.DB, error) {
 	dbSource := GetConnectionString(cnf.DB)
-	db, err := sqlx.Connect("postgres", dbSource)
+	var db *sqlx.DB
+	var err error
+	for i := 0; i < 10; i++ {
+		db, err = sqlx.Connect("postgres", dbSource)
+		if err == nil {
+			err = db.Ping()
+		}
+
+		if err == nil {
+			fmt.Println("Database connected!")
+			break
+		}
+
+		fmt.Println("Waiting for DB, retrying in 2s...", i+1, err)
+		time.Sleep(2 * time.Second)
+	}
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

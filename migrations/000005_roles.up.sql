@@ -11,8 +11,3 @@ CREATE TABLE IF NOT EXISTS roles (
 CREATE INDEX idx_roles_agency
 ON roles(agency_id);
 
-CREATE UNIQUE INDEX idx_role_permissions_unique
-ON role_permissions(role_id, permission_id);
-
-CREATE INDEX idx_role_permissions_role
-ON role_permissions(role_id);

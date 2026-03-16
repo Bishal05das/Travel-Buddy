@@ -2,12 +2,9 @@ package tourusecase
 
 import (
 	"context"
-	"fmt"
-	"time"
 
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
-	"github.com/google/uuid"
 )
 
 type createTourUseCase struct {
@@ -21,22 +18,7 @@ func NewCreateTourUseCase(r port.TourRepository) port.CreateTour {
 }
 
 func (uc *createTourUseCase) Execute(ctx context.Context, tour *domain.Tour) error {
-	//add business logic here
-	if tour.AgencyID == uuid.Nil ||
-		tour.Name == "" ||
-		tour.Description == "" ||
-		tour.EndDate.IsZero() ||
-		tour.StartDate.IsZero() ||
-		tour.AvailableSeat <= 0 ||
-		tour.LastEnrollmentDate.IsZero() ||
-		tour.Price <= 0 {
-		return fmt.Errorf("invalid or missing tour data")
-	}
-	if tour.StartDate.Before(time.Now()) || tour.EndDate.Before(time.Now()) {
-		return fmt.Errorf("enter correct start date or end date")
-	}
-	if tour.EndDate.Before(tour.StartDate) {
-		return fmt.Errorf("End Date can not be before start Date")
-	}
+
+
 	return uc.repo.CreateTour(ctx, tour)
 }

@@ -30,7 +30,6 @@ type Config struct {
 func loadConfig() {
 	if err := godotenv.Load(); err != nil {
 		fmt.Println("No .env file found, relying on environment variables", err)
-		os.Exit(1)
 	}
 	version := os.Getenv("VERSION")
 	if version == "" {

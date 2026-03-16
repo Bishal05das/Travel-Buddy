@@ -56,7 +56,7 @@ func (uc *createbookingusecase) Execute(ctx context.Context, req *domain.Booking
 				return  err
 			}
 		} else if memberID != nil {
-			if req.CustomerName == "" || req.CustomerEmail == "" || req.CustomerPhone == 0 {
+			if req.CustomerName == "" || req.CustomerEmail == "" || req.CustomerPhone == "" {
 				return  errors.New("customer details required for guest booking")
 			}
 			customer := &domain.Customer{

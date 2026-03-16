@@ -7,5 +7,5 @@ type Customer struct {
 	UserID     uuid.UUID
 	Name       string
 	Email      string
-	Phone      int
+	Phone      string
 }

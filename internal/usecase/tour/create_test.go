@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/bishal05das/travelbuddy/internal/domain"
-	"github.com/bishal05das/travelbuddy/internal/infrastructure/postgres/mocks"
+	mocks "github.com/bishal05das/travelbuddy/internal/mocks/repository"
 	tourusecase "github.com/bishal05das/travelbuddy/internal/usecase/tour"
 	"github.com/google/uuid"
 )

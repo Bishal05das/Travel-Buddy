@@ -20,22 +20,14 @@ func NewCreateUserUseCase(r port.UserRepository) *CreateUserUseCase {
 }
 
 func (uc *CreateUserUseCase) Execute(ctx context.Context, user *domain.User) error {
-	//add business logic here
-	if user.Name == "" {
-		return errors.New("name is required")
+	usr, err := uc.repo.FindUserByEmail(ctx,user.Email)
+	if err != nil {
+		return err
+	}
+	if usr != nil {
+		return errors.New("email already exist")
 	}
 
-	if user.Email == "" {
-		return errors.New("email is required")
-	}
-
-	if user.Password == "" {
-		return errors.New("password is required")
-	}
-
-	if user.Phone == "" {
-		return errors.New("phone is required")
-	}
 	hashedPassword,err := util.HashPassword(user.Password)
 	if err != nil {
 		return errors.New("error in password hashing")
@@ -43,3 +35,4 @@ func (uc *CreateUserUseCase) Execute(ctx context.Context, user *domain.User) err
 	user.Password = hashedPassword
 	return uc.repo.CreateUser(ctx, user)
 }
+

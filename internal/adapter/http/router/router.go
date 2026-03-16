@@ -9,7 +9,7 @@ import (
 
 type Router struct {
 	mux               *http.ServeMux
-	middleware        *middleware.Middleware
+	middleware        *middleware.MiddlewareManager
 	homeHandler       *handler.HomeHandler
 	searchHandler     *handler.SearchHandler
 	tourHandler       *handler.TourHandler
@@ -22,9 +22,9 @@ type Router struct {
 
 func NewRoutes(
 	mux *http.ServeMux,
-	middleware *middleware.Middleware,
+	middleware *middleware.MiddlewareManager,
 	homeHandler *handler.HomeHandler,
-	searchHandler     *handler.SearchHandler,
+	searchHandler *handler.SearchHandler,
 	tourHandler *handler.TourHandler,
 	userHandler *handler.UserHandler,
 	bookingHandler *handler.BookingHandler,
@@ -36,7 +36,7 @@ func NewRoutes(
 		mux:               mux,
 		middleware:        middleware,
 		homeHandler:       homeHandler,
-		searchHandler: searchHandler,
+		searchHandler:     searchHandler,
 		tourHandler:       tourHandler,
 		userHandler:       userHandler,
 		bookingHandler:    bookingHandler,
@@ -46,42 +46,140 @@ func NewRoutes(
 	}
 }
 
+func (r *Router) public(h http.Handler) http.Handler {
+	return middleware.Chain(
+		h,
+		r.middleware.Logger,
+		r.middleware.RateLimiter,
+	)
+}
+
+func (r *Router) protected(h http.Handler) http.Handler {
+	return middleware.Chain(
+		h,
+		r.middleware.Logger,
+		r.middleware.RateLimiter,
+		r.middleware.Authentication,
+	)
+}
+
 func (r *Router) RegisterRoutes() {
-	//home
-	r.mux.HandleFunc("GET /home", r.homeHandler.GetHome)
 
-	//search
-	r.mux.HandleFunc("GET /search",r.searchHandler.Search)
-	//tour
-	r.mux.HandleFunc("POST /tours", r.tourHandler.Create)
-	r.mux.HandleFunc("GET /tours/{tour_id}", r.tourHandler.Get)
-	r.mux.HandleFunc("GET /tours/list/{agency_id}", r.tourHandler.List)
-	r.mux.HandleFunc("PUT /tours/{tour_id}", r.tourHandler.Update)
-	r.mux.HandleFunc("DELETE /tours/{tour_id}", r.tourHandler.Delete)
+	// HOME
+	r.mux.Handle(
+		"GET /home",
+		r.public(http.HandlerFunc(r.homeHandler.GetHome)),
+	)
 
-	//user
-	r.mux.HandleFunc("POST /users", r.userHandler.CreateUser)
-	r.mux.HandleFunc("POST /users/login", r.userHandler.UserLogin)
-	r.mux.HandleFunc("DELETE /users/{user_id}", r.userHandler.DeleteUser)
-	r.mux.HandleFunc("PUT /users/{user_id}", r.userHandler.UpdateUser)
+	// SEARCH
+	r.mux.Handle(
+		"GET /search",
+		r.public(http.HandlerFunc(r.searchHandler.Search)),
+	)
 
-	//booking
-	r.mux.HandleFunc("POST /bookings/{tour_id}", r.bookingHandler.CreateBooking)
+	// TOURS
+	r.mux.Handle(
+		"POST /tours",
+		r.protected(http.HandlerFunc(r.tourHandler.Create)),
+	)
 
-	//agency
-	r.mux.HandleFunc("POST /agency", r.agencyHandler.CreateAgency)
-	r.mux.HandleFunc("PUT /agency", r.agencyHandler.UpdateAgency)
-	r.mux.HandleFunc("DELETE /agency/{id}", r.agencyHandler.DeleteAgency)
+	r.mux.Handle(
+		"GET /tours/{tour_id}",
+		r.public(http.HandlerFunc(r.tourHandler.Get)),
+	)
 
-	//member
-	r.mux.HandleFunc("POST /members", r.memberHandler.CreateMember)
-	r.mux.HandleFunc("DELETE /members/{member_id}", r.memberHandler.DeleteMember)
-	r.mux.HandleFunc("GET /members/{agency_id}", r.memberHandler.ListMember)
-	r.mux.HandleFunc("PUT /members/{member_id}/permissions", r.memberHandler.UpdateMemberPermissions)
-	r.mux.HandleFunc("POST /members/login", r.memberHandler.MemberLogin)
+	r.mux.Handle(
+		"GET /tours/list/{agency_id}",
+		r.public(http.HandlerFunc(r.tourHandler.List)),
+	)
 
-	//permissions
-	r.mux.HandleFunc("POST /permissions", r.permissionHandler.CreatePermission)
-	r.mux.HandleFunc("DELETE /permissions/{id}", r.permissionHandler.DeletePermission)
+	r.mux.Handle(
+		"PUT /tours/{tour_id}",
+		r.protected(http.HandlerFunc(r.tourHandler.Update)),
+	)
 
+	r.mux.Handle(
+		"DELETE /tours/{tour_id}",
+		r.protected(http.HandlerFunc(r.tourHandler.Delete)),
+	)
+
+	// USERS
+	r.mux.Handle(
+		"POST /users",
+		r.public(http.HandlerFunc(r.userHandler.CreateUser)),
+	)
+
+	r.mux.Handle(
+		"POST /users/login",
+		r.public(http.HandlerFunc(r.userHandler.UserLogin)),
+	)
+
+	r.mux.Handle(
+		"DELETE /users/{user_id}",
+		r.protected(http.HandlerFunc(r.userHandler.DeleteUser)),
+	)
+
+	r.mux.Handle(
+		"PUT /users/{user_id}",
+		r.protected(http.HandlerFunc(r.userHandler.UpdateUser)),
+	)
+
+	// BOOKINGS
+	r.mux.Handle(
+		"POST /bookings/{tour_id}",
+		r.protected(http.HandlerFunc(r.bookingHandler.CreateBooking)),
+	)
+
+	// AGENCY
+	r.mux.Handle(
+		"POST /agency",
+		r.protected(http.HandlerFunc(r.agencyHandler.CreateAgency)),
+	)
+
+	r.mux.Handle(
+		"PUT /agency/{agency_id}",
+		r.protected(http.HandlerFunc(r.agencyHandler.UpdateAgency)),
+	)
+
+	r.mux.Handle(
+		"DELETE /agency/{agency_id}",
+		r.protected(http.HandlerFunc(r.agencyHandler.DeleteAgency)),
+	)
+
+	// MEMBERS
+	r.mux.Handle(
+		"POST /members",
+		r.protected(http.HandlerFunc(r.memberHandler.CreateMember)),
+	)
+
+	r.mux.Handle(
+		"DELETE /members/{member_id}",
+		r.protected(http.HandlerFunc(r.memberHandler.DeleteMember)),
+	)
+
+	r.mux.Handle(
+		"GET /members/{agency_id}",
+		r.protected(http.HandlerFunc(r.memberHandler.ListMember)),
+	)
+
+	r.mux.Handle(
+		"PUT /members/{member_id}/permissions",
+		r.protected(http.HandlerFunc(r.memberHandler.UpdateMemberPermissions)),
+	)
+
+	r.mux.Handle(
+		"POST /members/login",
+		r.public(http.HandlerFunc(r.memberHandler.MemberLogin)),
+	)
+
+	// PERMISSIONS
+	r.mux.Handle(
+		"POST /permissions",
+		r.protected(http.HandlerFunc(r.permissionHandler.CreatePermission)),
+	)
+
+	r.mux.Handle(
+		"DELETE /permissions/{id}",
+		r.protected(http.HandlerFunc(r.permissionHandler.DeletePermission)),
+	)
 }
