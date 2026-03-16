@@ -32,7 +32,8 @@ type UserRepository interface {
 	CreateUser(ctx context.Context, user *domain.User) error
 	UpdateUser(ctx context.Context, user *domain.User) error
 	DeleteUser(ctx context.Context, userID uuid.UUID) error
-	FindUser(ctx context.Context, email string) (*domain.User, error)
+	FindUserByEmail(ctx context.Context, email string) (*domain.User, error)
+	FindUserByID(ctx context.Context,id uuid.UUID) (*domain.User,error)
 }
 
 type AgencyMemberRepository interface {
@@ -41,7 +42,7 @@ type AgencyMemberRepository interface {
 	UpdateMember(ctx context.Context, member *domain.AgencyMember) error
 	DeleteMember(ctx context.Context, memberID uuid.UUID) error
 	GetRoleIDFromMemberIDForUpdate(ctx context.Context, memberID uuid.UUID) (*int, error)
-	FindMember(ctx context.Context, email, pass string) (*domain.AgencyMember, error)
+	FindMember(ctx context.Context, email string) (*domain.AgencyMember, error)
 }
 
 type BookingRepository interface {

@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
+	"github.com/bishal05das/travelbuddy/internal/validation"
 	util "github.com/bishal05das/travelbuddy/utils"
 	"github.com/google/uuid"
 )
@@ -30,18 +32,33 @@ func NewTourHandler(createUC port.CreateTour,getUC port.GetTour,listUC port.List
 }
 
 func (h *TourHandler) Create(w http.ResponseWriter, r *http.Request)  {
-	var tour domain.Tour
-	err := json.NewDecoder(r.Body).Decode(&tour)
+	var req domain.CreateTourRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		fmt.Println("Error: ", err)
+		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
+	}
+	if err := validation.Validate.Struct(req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	tour := domain.Tour{
+		AgencyID: req.AgencyID,
+		Name: req.Name,
+		StartDate: req.StartDate,
+		EndDate: req.EndDate,
+		AvailableSeat: req.AvailableSeat,
+		Description: req.Description,
+		LastEnrollmentDate: req.LastEnrollmentDate,
+		Price: req.Price,
+		Discount: req.Discount,
 	}
 	err = h.createUC.Execute(r.Context(),&tour)
 	if err != nil {
 		util.SendData(w,err.Error(),http.StatusBadRequest)
 		return
 	}
-	util.SendData(w, tour, http.StatusCreated)
+	util.SendData(w, "Successfully Created Tour", http.StatusCreated)
 }
 func (h *TourHandler) Get(w http.ResponseWriter, r *http.Request){
 	idStr :=r.PathValue("tour_id")
@@ -98,15 +115,31 @@ func (h *TourHandler) Update(w http.ResponseWriter, r *http.Request){
 		http.Error(w,err.Error(),http.StatusBadRequest)
 		return
 	}
-	var tour domain.Tour
+	var req domain.UpdateTourRequest
 	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(&tour)
+	err = decoder.Decode(&req)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	tour.TourID=id
-	err = h.updateUC.Execute(r.Context(), &tour)
+	if err := validation.Validate.Struct(req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	tour := &domain.Tour{
+		TourID: id,
+		AgencyID: req.AgencyID,
+		Name: req.Name,
+		StartDate: req.StartDate,
+		EndDate: req.EndDate,
+		AvailableSeat: req.AvailableSeat,
+		Description: req.Description,
+		LastEnrollmentDate: req.LastEnrollmentDate,
+		Price: req.Price,
+		Discount: req.Discount,
+		UpdatedAt: time.Now(),
+	}
+	err = h.updateUC.Execute(r.Context(), tour)
 	fmt.Println(err)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)

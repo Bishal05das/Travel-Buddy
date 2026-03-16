@@ -6,6 +6,7 @@ import (
 
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
+	"github.com/bishal05das/travelbuddy/internal/validation"
 	util "github.com/bishal05das/travelbuddy/utils"
 	"github.com/google/uuid"
 )
@@ -36,6 +37,11 @@ func (h *MemberHandler) CreateMember(w http.ResponseWriter, r *http.Request) {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	if err := validation.Validate.Struct(req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	err = h.createMemberUC.Execute(r.Context(), &req)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
@@ -86,24 +92,30 @@ func (h *MemberHandler) UpdateMemberPermissions(w http.ResponseWriter, r *http.R
 	err = decoder.Decode(&req)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 	err = h.updateMemberPermissionUC.Execute(r.Context(), memberID, &req)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 	util.SendData(w, "Successfully Updated Permission", http.StatusCreated)
 }
 
 func (h *MemberHandler) MemberLogin(w http.ResponseWriter, r *http.Request) {
-	var reqLogin domain.ReqLogin
+	var req domain.ReqLogin
 
 	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&reqLogin)
+	err := decoder.Decode(&req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	token, err := h.loginUC.Execute(r.Context(), &reqLogin)
+	if err := validation.Validate.Struct(req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	token, err := h.loginUC.Execute(r.Context(), &req)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusInternalServerError)
 		return

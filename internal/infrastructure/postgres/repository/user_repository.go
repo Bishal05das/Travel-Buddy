@@ -29,8 +29,8 @@ func (h *userRepositoryDB) CreateUser(ctx context.Context,user *domain.User) err
 }
 
 func (h *userRepositoryDB) UpdateUser(ctx context.Context,user *domain.User) error {
-	query := `UPDATE users SET name=$1,email=$2,password=$3,phone=$4,role=$5 WHERE user_id=$6;`
-	res,err := h.db.ExecContext(ctx,query, user.Name, user.Email, user.Password, user.Phone, user.Role,user.UserID)
+	query := `UPDATE users SET name=$1,email=$2,password=$3,phone=$4,updated_at=$5 WHERE user_id=$6;`
+	res,err := h.db.ExecContext(ctx,query, user.Name, user.Email, user.Password, user.Phone, user.UpdatedAt, user.UserID)
 	if err != nil {
 		return err
 	}
@@ -50,10 +50,23 @@ func (h *userRepositoryDB) DeleteUser(ctx context.Context,UserID uuid.UUID) erro
 	return nil
 }
 
-func (h *userRepositoryDB) FindUser(ctx context.Context,email string) (*domain.User,error) {
+func (h *userRepositoryDB) FindUserByEmail(ctx context.Context,email string) (*domain.User,error) {
 	var user domain.User
-	query := `SELECT user_id,name,password,phone,role FROM users WHERE email=$1`
+	query := `SELECT user_id,name,phone,role FROM users WHERE email=$1`
 	err := h.db.GetContext(ctx,&user,query,email)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil,nil
+		}
+		return nil,err
+	}
+	return &user,nil
+}
+
+func (h *userRepositoryDB) FindUserByID(ctx context.Context,id uuid.UUID) (*domain.User,error) {
+	var user domain.User
+	query := `SELECT name,email,phone,role FROM users WHERE user_id=$1`
+	err := h.db.GetContext(ctx,&user,query,id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil,nil

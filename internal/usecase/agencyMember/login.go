@@ -23,10 +23,17 @@ func NewMemberLoginUseCase(memberRepo port.AgencyMemberRepository, cfg *config.C
 }
 
 func (uc *memberLoginUseCase) Execute(ctx context.Context, member *domain.ReqLogin) (*string, error) {
-	mem, err := uc.memberRepo.FindMember(ctx, member.Email, member.Password)
+	mem, err := uc.memberRepo.FindMember(ctx, member.Email)
 	if mem == nil {
 		// http.Error(w, "Invalid Credentials", http.StatusBadRequest)
 		return nil, errors.New("Invalid Credentials")
+	}
+	reqHashedPassword, err := util.HashPassword(member.Password)
+	if err != nil {
+		return nil, errors.New("error in hashing password")
+	}
+	if reqHashedPassword != mem.Password {
+		return nil, errors.New("Invalid Password")
 	}
 	accessToken, err := util.CreateJWT(uc.cfg.JWTSecretkey, util.Payload{
 		UserID: mem.MemberID,

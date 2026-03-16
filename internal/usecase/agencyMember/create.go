@@ -7,6 +7,7 @@ import (
 
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
+	util "github.com/bishal05das/travelbuddy/utils"
 )
 
 type CreateAgencyMemberUseCase struct {
@@ -40,13 +41,17 @@ func (uc *CreateAgencyMemberUseCase) Execute(ctx context.Context, req *domain.Cr
 		if err != nil { 
 			return errors.New(err.Error())
 		}
+		hashedPassword, err := util.HashPassword(req.Password)
+		if err != nil {
+			return errors.New("error in hashing password")
+		}
 		member := domain.AgencyMember{
 			AgencyID: req.AgencyID,
 			RoleID:   role.RoleID,
 			Name:     req.Name,
 			Email:    req.Email,
 			Phone:    req.Phone,
-			Password: req.Password,
+			Password: hashedPassword,
 		}
 		if err := uc.agencyMemberRepo.CreateMember(txCtx, &member); err != nil {
 			return fmt.Errorf("create member: %w", err)

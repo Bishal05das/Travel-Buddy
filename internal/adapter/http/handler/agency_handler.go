@@ -3,9 +3,11 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
+	"github.com/bishal05das/travelbuddy/internal/validation"
 	util "github.com/bishal05das/travelbuddy/utils"
 	"github.com/google/uuid"
 )
@@ -25,14 +27,24 @@ func NewAgencyHandler(createUC port.CreateAgency, updateUC port.UpdateAgency, de
 }
 
 func (h *AgencyHandler) CreateAgency(w http.ResponseWriter, r *http.Request) {
-	var agency domain.Agency
+	var req domain.CreateAgencyRequest
 	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&agency)
+	err := decoder.Decode(&req)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = h.createUC.Execute(r.Context(), &agency)
+	if err := validation.Validate.Struct(req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	agency := &domain.Agency{
+		Name: req.Name,
+		Address: req.Address,
+		RegistrationID: req.RegistrationID,
+	}
+
+	err = h.createUC.Execute(r.Context(),agency)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
@@ -42,14 +54,31 @@ func (h *AgencyHandler) CreateAgency(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AgencyHandler) UpdateAgency(w http.ResponseWriter, r *http.Request) {
-	var agency domain.Agency
+	idStr := r.PathValue("agency_id")
+	AgencyID, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "invalid agency id", http.StatusBadRequest)
+		return
+	}
+	var req domain.UpdateAgencyRequest
 	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&agency)
+	err = decoder.Decode(&req)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = h.updateUC.Execute(r.Context(), &agency)
+	if err := validation.Validate.Struct(req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	agency := &domain.Agency{
+		AgencyID: AgencyID,
+		Name: req.Name,
+		Address: req.Address,
+		RegistrationID: req.RegistrationID,
+		UpdatedAt: time.Now(),
+	}
+	err = h.updateUC.Execute(r.Context(), agency)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
@@ -59,7 +88,7 @@ func (h *AgencyHandler) UpdateAgency(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AgencyHandler) DeleteAgency(w http.ResponseWriter, r *http.Request) {
-	idStr := r.PathValue("id")
+	idStr := r.PathValue("agency_id")
 	agencyID, err := uuid.Parse(idStr)
 	if err != nil {
 		http.Error(w, "invalid agency id", http.StatusBadRequest)

@@ -38,8 +38,8 @@ func (h *agencyRepositoryDB) CreateAgency(ctx context.Context, Agency *domain.Ag
 // }
 
 func (h *agencyRepositoryDB) UpdateAgency(ctx context.Context, agency *domain.Agency) error {
-	query := `UPDATE agency SET name=$1,address=$2,reg_id=$3 WHERE agency_id=$4;`
-	row := h.db.QueryRowContext(ctx, query, agency.Name, agency.Address, agency.RegistrationID,agency.AgencyID)
+	query := `UPDATE agency SET name=$1,address=$2,reg_id=$3,updated_at=$4 WHERE agency_id=$5;`
+	row := h.db.QueryRowContext(ctx, query, agency.Name, agency.Address, agency.RegistrationID,agency.UpdatedAt,agency.AgencyID)
 	err := row.Err()
 	if err != nil {
 		return err

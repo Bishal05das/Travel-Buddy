@@ -118,10 +118,10 @@ func (h *agencyMemberRepositoryDB) GetRoleIDFromMemberIDForUpdate(ctx context.Co
 	return &roleID,nil
 }
 
-func (h *agencyMemberRepositoryDB) FindMember(ctx context.Context,email,pass string) (*domain.AgencyMember,error) {
+func (h *agencyMemberRepositoryDB) FindMember(ctx context.Context,email string) (*domain.AgencyMember,error) {
 	var member domain.AgencyMember
-	query := `SELECT member_id,agency_id,name,phone,role_id FROM agency_members WHERE email=$1 AND password=$2`
-	err := h.db.GetContext(ctx,&member,query,email,pass)
+	query := `SELECT member_id,agency_id,name,password,phone,role_id FROM agency_members WHERE email=$1;`
+	err := h.db.GetContext(ctx,&member,query,email)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil,nil

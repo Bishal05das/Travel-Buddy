@@ -1,15 +1,33 @@
 services:
   postgres:
     image: postgres:15
-    container_name: tourcontainer
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: mydb
+      POSTGRES_USER: ${DBUSER}
+      POSTGRES_PASSWORD: ${DBPASSWORD}
+      POSTGRES_DB: ${DBNAME}
     ports:
-      - "5435:5432"
+      - "${DBPORT}:5432"
     volumes:
       - tour_data:/var/lib/postgresql/data
+    networks:
+      - tour_network
+
+  app:
+    image: ${APP_IMAGE}
+    depends_on:
+      - postgres
+    ports:
+      - "${HTTP_PORT}:${HTTP_PORT}"
+    env_file:
+      - .env
+    networks:
+      - tour_network
+
+
 
 volumes:
   tour_data:
+
+networks:
+  tour_network:
+    driver: bridge

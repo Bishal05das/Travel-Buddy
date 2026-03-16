@@ -27,7 +27,7 @@ func (s *ipStore) get(ip string) *rate.Limiter {
 	return l
 }
 
-func RateLimiter(next http.Handler) http.Handler {
+func (m *MiddlewareManager) RateLimiter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ip := realIP(r)
 		if !store.get(ip).Allow() {

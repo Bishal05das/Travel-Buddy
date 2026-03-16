@@ -52,7 +52,7 @@ type DeleteUser interface {
 }
 
 type UpdateUser interface {
-	Execute(ctx context.Context,userID uuid.UUID, user *domain.UpdateUserReq) error
+	Execute(ctx context.Context, user *domain.User) error
 }
 
 type CreateAgency interface {

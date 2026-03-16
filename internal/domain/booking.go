@@ -20,33 +20,18 @@ type Booking struct {
 	UpdatedAt      time.Time
 }
 
-// type BookingRequest struct {
-// 	TourID         uuid.UUID
-// 	NumberOfPeople int
-// 	CustomerName   string
-// 	CustomerEmail  string
-// 	CustomerPhone  int
-// }
-// type BookingUserRequest struct {
-// 	CustomerID     uuid.UUID
-// 	UserID         uuid.UUID
-// 	TourID         uuid.UUID
-// 	NumberOfPeople int
-// 	TotalPrice     int
-// 	Status         string
-// }
-
 type BookingRequest struct {
-	CustomerID     uuid.UUID `json:"customer_id" db:"customer_id"`
-	TourID         uuid.UUID `json:"tour_id" db:"tour_id"`
-	NumberOfPeople int       `json:"number_of_people" db:"number_of_people"`
-	TotalPrice     int       `json:"total_price" db:"total_price"`
-	Status         string    `json:"status" db:"status"`
-	Method         string    `json:"method" db:"method"`
-	TransactionId  string    `json:"transaction_id" db:"transaction_id"`
-	CustomerName   string    `json:"" db:""`
-	CustomerEmail  string    `json:"" db:""`
-	CustomerPhone  int       `json:"" db:""`
+	CustomerID     uuid.UUID `json:"customer_id" validate:"required,uuid"`
+	TourID         uuid.UUID `json:"tour_id" validate:"required,uuid"`
+	NumberOfPeople int       `json:"number_of_people" validate:"required,gt=0"`
+	TotalPrice     int       `json:"total_price" validate:"required,gt=0"`
+	Status         string    `json:"status" validate:"required,oneof=pending confirmed cancelled"`
+	Method         string    `json:"method" validate:"required,oneof=cash card online"`
+	TransactionId  string    `json:"transaction_id" validate:"omitempty,min=5,max=120"`
+
+	CustomerName  string `json:"customer_name" validate:"required,min=2,max=120"`
+	CustomerEmail string `json:"customer_email" validate:"required,email"`
+	CustomerPhone string `json:"customer_phone" validate:"required,e164"`
 }
 
 type BookingResponse struct {

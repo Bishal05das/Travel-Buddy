@@ -6,6 +6,7 @@ import (
 
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
+	"github.com/bishal05das/travelbuddy/internal/validation"
 	util "github.com/bishal05das/travelbuddy/utils"
 	"github.com/google/uuid"
 )
@@ -39,9 +40,14 @@ func (h *BookingHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 
 	var result *domain.BookingResponse
 	var req domain.BookingRequest
-	req.TourID = tourID
+
 	err = decoder.Decode(&req)
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	req.TourID = tourID
+	if err := validation.Validate.Struct(req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

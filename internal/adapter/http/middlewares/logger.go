@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func Logger(next http.Handler) http.Handler {
+func (m *MiddlewareManager) Logger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		fmt.Println("logger middleware e dhuklam")

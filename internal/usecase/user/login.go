@@ -23,13 +23,13 @@ func NewUserLoginUseCase(userRepo port.UserRepository, cnf *config.Config) port.
 }
 
 func (uc *userLoginUseCase) Execute(ctx context.Context, user *domain.ReqLogin) (*string, error) {
-	usr, err := uc.userRepo.FindUser(ctx, user.Email)
+	usr, err := uc.userRepo.FindUserByEmail(ctx, user.Email)
 	if usr == nil {
 		return nil, errors.New("Invalid Credentials")
 	}
 	reqHashedPassword, err := util.HashPassword(user.Password)
 	if err != nil {
-		return nil, errors.New("error in hashing password")
+		return nil, err
 	}
 	if reqHashedPassword != usr.Password {
 		return nil, errors.New("Invalid Password")
