@@ -24,11 +24,11 @@ func (m *MockGetTour) Execute(ctx context.Context, id uuid.UUID) (*domain.Tour, 
 }
 
 type MockListTour struct {
-	ExecuteFunc func(ctx context.Context, agencyID uuid.UUID) ([]*domain.Tour, error)
+	ExecuteFunc func(ctx context.Context, agencyID uuid.UUID, page, limit float64) ([]*domain.Tour, error)
 }
 
-func (m *MockListTour) Execute(ctx context.Context, agencyID uuid.UUID) ([]*domain.Tour, error) {
-	return m.ExecuteFunc(ctx, agencyID)
+func (m *MockListTour) Execute(ctx context.Context, agencyID uuid.UUID,page, limit float64) ([]*domain.Tour, error) {
+	return m.ExecuteFunc(ctx, agencyID, page, limit)
 }
 
 type MockUpdateTour struct {

@@ -62,6 +62,7 @@ func main() {
 	listTourUC := tourusecase.NewListTourUseCase(tourRepo)
 	deleteTourUC := tourusecase.NewDeleteTourUseCase(tourRepo)
 	updateTourUC := tourusecase.NewUpdateTourUseCase(tourRepo)
+	updateTourStatusUC := tourusecase.NewUpdateTourStatusUseCase(tourRepo)
 
 	createuserUC := userusecase.NewCreateUserUseCase(userRepo)
 	createBookingUC := bookingusecase.NewCreateBookingUseCase(txManager, bookingRepo, tourRepo, paymentRepo)
@@ -85,7 +86,7 @@ func main() {
 	//handler
 	homeHandler := handler.NewHomeHandler(homeUC)
 	searchHandler := handler.NewSearchHandler(searchUC)
-	tourHandler := handler.NewTourHandler(createTourUC,getTourUC,listTourUC,updateTourUC,deleteTourUC)
+	tourHandler := handler.NewTourHandler(createTourUC,getTourUC,listTourUC,updateTourUC,updateTourStatusUC,deleteTourUC)
 	userHandler := handler.NewUserHandler(createuserUC, loginUserUC,deleteUserUC,updateUserUC)
 	bookingHandler := handler.NewBookingHandler(createBookingUC)
 	agencyHandler := handler.NewAgencyHandler(createAgencyUC, updateAgencyUC, deleteAgencyUC)

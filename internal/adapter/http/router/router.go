@@ -79,8 +79,8 @@ func (r *Router) RegisterRoutes() {
 
 	// TOURS
 	r.mux.Handle(
-		"POST /tours",
-		r.protected(http.HandlerFunc(r.tourHandler.Create)),
+		"POST /agency/{agency_id}/tours",
+		r.public(http.HandlerFunc(r.tourHandler.Create)),
 	)
 
 	r.mux.Handle(
@@ -89,13 +89,18 @@ func (r *Router) RegisterRoutes() {
 	)
 
 	r.mux.Handle(
-		"GET /tours/list/{agency_id}",
+		"GET /agency/{agency_id}/tours/list",
 		r.public(http.HandlerFunc(r.tourHandler.List)),
 	)
 
 	r.mux.Handle(
-		"PUT /tours/{tour_id}",
+		"PUT /agency/{agency_id}/tours/{tour_id}",
 		r.protected(http.HandlerFunc(r.tourHandler.Update)),
+	)
+
+	r.mux.Handle(
+		"PATCH /tours/{tour_id}/tour-status",
+		r.public(http.HandlerFunc(r.tourHandler.UpdateStatus)),
 	)
 
 	r.mux.Handle(
@@ -133,7 +138,7 @@ func (r *Router) RegisterRoutes() {
 	// AGENCY
 	r.mux.Handle(
 		"POST /agency",
-		r.protected(http.HandlerFunc(r.agencyHandler.CreateAgency)),
+		r.public(http.HandlerFunc(r.agencyHandler.CreateAgency)),
 	)
 
 	r.mux.Handle(
@@ -148,8 +153,8 @@ func (r *Router) RegisterRoutes() {
 
 	// MEMBERS
 	r.mux.Handle(
-		"POST /members",
-		r.protected(http.HandlerFunc(r.memberHandler.CreateMember)),
+		"POST /members/{agency_id}",
+		r.public(http.HandlerFunc(r.memberHandler.CreateMember)),
 	)
 
 	r.mux.Handle(
@@ -175,11 +180,17 @@ func (r *Router) RegisterRoutes() {
 	// PERMISSIONS
 	r.mux.Handle(
 		"POST /permissions",
-		r.protected(http.HandlerFunc(r.permissionHandler.CreatePermission)),
+		r.public(http.HandlerFunc(r.permissionHandler.CreatePermission)),
 	)
 
 	r.mux.Handle(
 		"DELETE /permissions/{id}",
 		r.protected(http.HandlerFunc(r.permissionHandler.DeletePermission)),
 	)
+
+
+	// images
+	imageFS := http.FileServer(http.Dir("./images"))
+	r.mux.Handle(
+		"/images/", http.StripPrefix("/images/", imageFS))
 }

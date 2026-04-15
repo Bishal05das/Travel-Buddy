@@ -8,6 +8,7 @@ import (
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
 	util "github.com/bishal05das/travelbuddy/utils"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type memberLoginUseCase struct {
@@ -28,11 +29,8 @@ func (uc *memberLoginUseCase) Execute(ctx context.Context, member *domain.ReqLog
 		// http.Error(w, "Invalid Credentials", http.StatusBadRequest)
 		return nil, errors.New("Invalid Credentials")
 	}
-	reqHashedPassword, err := util.HashPassword(member.Password)
+	err = bcrypt.CompareHashAndPassword([]byte(mem.Password), []byte(member.Password))
 	if err != nil {
-		return nil, errors.New("error in hashing password")
-	}
-	if reqHashedPassword != mem.Password {
 		return nil, errors.New("Invalid Password")
 	}
 	accessToken, err := util.CreateJWT(uc.cfg.JWTSecretkey, util.Payload{

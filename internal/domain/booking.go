@@ -21,13 +21,13 @@ type Booking struct {
 }
 
 type BookingRequest struct {
-	CustomerID     uuid.UUID `json:"customer_id" validate:"required,uuid"`
+	CustomerID     uuid.UUID `json:"customer_id" validate:"uuid"`
 	TourID         uuid.UUID `json:"tour_id" validate:"required,uuid"`
 	NumberOfPeople int       `json:"number_of_people" validate:"required,gt=0"`
 	TotalPrice     int       `json:"total_price" validate:"required,gt=0"`
-	Status         string    `json:"status" validate:"required,oneof=pending confirmed cancelled"`
-	Method         string    `json:"method" validate:"required,oneof=cash card online"`
-	TransactionId  string    `json:"transaction_id" validate:"omitempty,min=5,max=120"`
+	Status         string    `json:"status" validate:"omitempty,oneof=pending confirmed cancelled"`
+	Method         string    `json:"method" validate:"required,oneof=bkash bank nagad"`
+	TransactionId  string    `json:"transaction_id" validate:"required,omitempty,min=5,max=120"`
 
 	CustomerName  string `json:"customer_name" validate:"required,min=2,max=120"`
 	CustomerEmail string `json:"customer_email" validate:"required,email"`

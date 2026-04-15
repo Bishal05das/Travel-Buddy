@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS agency (
     reg_id VARCHAR(100) UNIQUE,
     rating DECIMAL(2,1) CHECK (rating >= 0 AND rating <= 5) DEFAULT 5,
     is_active BOOLEAN DEFAULT true,
+    image_path VARCHAR(150) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

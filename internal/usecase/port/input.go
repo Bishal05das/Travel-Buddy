@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/bishal05das/travelbuddy/internal/domain"
+	util "github.com/bishal05das/travelbuddy/utils"
 	"github.com/google/uuid"
 )
 
@@ -20,7 +21,7 @@ type CreateTour interface {
 }
 
 type ListTour interface {
-	Execute(ctx context.Context, agencyID uuid.UUID) ([]*domain.Tour, error)
+	Execute(ctx context.Context, agencyID uuid.UUID, page, limit int) (*util.PaginationData, error)
 }
 
 type GetTour interface {
@@ -33,6 +34,10 @@ type UpdateTour interface {
 
 type DeleteTour interface {
 	Execute(ctx context.Context, tourID uuid.UUID) error
+}
+
+type UpdateTourStatus interface {
+	Execute(ctx context.Context,tourID uuid.UUID, status string) error
 }
 
 type CreateBooking interface {

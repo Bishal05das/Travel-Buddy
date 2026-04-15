@@ -14,12 +14,14 @@ type HomeRepository interface {
 
 type TourRepository interface {
 	CreateTour(ctx context.Context, tour *domain.Tour) error
-	ListTour(ctx context.Context, agencyID uuid.UUID) ([]*domain.Tour, error)
+	ListTour(ctx context.Context, agencyID uuid.UUID, page, limit int) ([]*domain.Tour, error)
+	Count(ctx context.Context, agencyID uuid.UUID) (int, error)
 	UpdateTour(ctx context.Context, t *domain.Tour) error
 	DeleteTour(ctx context.Context, tourID uuid.UUID) error
 	GetByID(ctx context.Context, tourID uuid.UUID) (*domain.Tour, error)
 	GetByIDForUpdate(ctx context.Context, tourID uuid.UUID) (*domain.Tour, error)
 	UpdateAvailableSeats(ctx context.Context, tourID uuid.UUID, seats int) error
+	UpdateTourStatus(ctx context.Context,tourID uuid.UUID, status string) error
 }
 
 type AgencyRepository interface {
