@@ -22,21 +22,36 @@ func NewTourRepositoryDB(db *sqlx.DB) port.TourRepository {
 }
 
 func (h *tourRepositoryDB) CreateTour(ctx context.Context, tour *domain.Tour) error {
-	query := `INSERT INTO tours (agency_id,name,start_date,end_date,available_seat,description,last_enrollment_date,price,discount) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING tour_id;`
+	query := `INSERT INTO tours (agency_id,name,start_date,end_date,available_seat,description,last_enrollment_date,price,discount,image_path) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING tour_id;`
 
-	return h.db.QueryRowContext(ctx, query, tour.AgencyID, tour.Name, tour.StartDate, tour.EndDate, tour.AvailableSeat, tour.Description, tour.LastEnrollmentDate, tour.Price, tour.Discount).Scan(&tour.TourID)
+	return h.db.QueryRowContext(ctx, query, tour.AgencyID, tour.Name, tour.StartDate, tour.EndDate, tour.AvailableSeat, tour.Description, tour.LastEnrollmentDate, tour.Price, tour.Discount, tour.ImagePath).Scan(&tour.TourID)
 }
 
-func (h *tourRepositoryDB) ListTour(ctx context.Context, agencyID uuid.UUID) ([]*domain.Tour, error) {
+func (h *tourRepositoryDB) ListTour(ctx context.Context, agencyID uuid.UUID, page, limit int) ([]*domain.Tour, error) {
+
+	offset := (page - 1) * limit
 
 	var tours []*domain.Tour
-	query := `SELECT tour_id,name,start_date,end_date,available_seat,description,last_enrollment_date,price,discount FROM tours WHERE agency_id=$1;`
-	err := h.db.SelectContext(ctx, &tours, query, agencyID)
+	query := `SELECT tour_id,name,start_date,end_date,available_seat,description,last_enrollment_date,price,discount,status,image_path FROM tours WHERE agency_id=$1 ORDER BY start_date DESC LIMIT $2 OFFSET $3;`
+	err := h.db.SelectContext(ctx, &tours, query, agencyID, limit, offset)
 	if err != nil {
 		return nil, err
 	}
 
 	return tours, nil
+}
+
+func (h *tourRepositoryDB) Count(ctx context.Context, agencyID uuid.UUID) (int, error) {
+	var count int
+
+	query := `SELECT COUNT(*) FROM tours WHERE agency_id=$1;`
+
+	err := h.db.GetContext(ctx, &count, query, agencyID)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
 }
 
 func (h *tourRepositoryDB) UpdateTour(ctx context.Context, t *domain.Tour) error {
@@ -76,7 +91,7 @@ func (h *tourRepositoryDB) GetByID(ctx context.Context, tourID uuid.UUID) (*doma
 }
 
 func (h *tourRepositoryDB) UpdateAvailableSeats(ctx context.Context, tourID uuid.UUID, seats int) error {
-	query := `UPDATE tours SET available_seat = $1, updated_at = CURRENT_TIMESTAMP WHERE tour_id = $2`
+	query := `UPDATE tours SET available_seat = $1, updated_at = CURRENT_TIMESTAMP WHERE tour_id = $2;`
 	_, err := h.executor(ctx).ExecContext(ctx, query, seats, tourID)
 	return err
 }
@@ -94,6 +109,13 @@ func (h *tourRepositoryDB) GetByIDForUpdate(ctx context.Context, tourID uuid.UUI
 		return nil, err
 	}
 	return tour, nil
+}
+
+func (h *tourRepositoryDB) UpdateTourStatus(ctx context.Context,tourID uuid.UUID, status string) error {
+	query := `UPDATE tours SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE tour_id= $2;`
+	_, err := h.executor(ctx).ExecContext(ctx, query, status, tourID)
+	return err
+
 }
 
 func (h *tourRepositoryDB) executor(ctx context.Context) sqlx.ExtContext {

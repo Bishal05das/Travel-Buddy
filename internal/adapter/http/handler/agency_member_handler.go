@@ -30,13 +30,20 @@ func NewMemberHandler(createMemberUC port.CreateAgencyMember, deleteMemberUC por
 }
 
 func (h *MemberHandler) CreateMember(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("agency_id")
+	agencyID, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "invalid agency id", http.StatusBadRequest)
+		return
+	}
 	var req domain.CreateMemberRequest
 	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&req)
+	err = decoder.Decode(&req)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	req.AgencyID = agencyID
 	if err := validation.Validate.Struct(req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

@@ -19,9 +19,9 @@ func NewAgencyRepositoryDB(db *sqlx.DB) port.AgencyRepository {
 }
 
 func (h *agencyRepositoryDB) CreateAgency(ctx context.Context, Agency *domain.Agency) error {
-	query := `INSERT INTO agency (name,address,reg_id) VALUES ($1,$2,$3) RETURNING agency_id;`
+	query := `INSERT INTO agency (name,address,reg_id,image_path) VALUES ($1,$2,$3,$4) RETURNING agency_id;`
 
-	return h.db.QueryRowContext(ctx, query, Agency.Name, Agency.Address, Agency.RegistrationID).Scan(&Agency.AgencyID)
+	return h.db.QueryRowContext(ctx, query, Agency.Name, Agency.Address, Agency.RegistrationID, Agency.ImagePath).Scan(&Agency.AgencyID)
 }
 
 // func (h *agencyRepositoryDB) ListAgency(ctx context.Context,agencyID int) ([]*domain.Agency,error) {

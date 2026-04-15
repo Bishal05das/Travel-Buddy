@@ -8,6 +8,7 @@ import (
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
 	util "github.com/bishal05das/travelbuddy/utils"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type userLoginUseCase struct {
@@ -26,14 +27,11 @@ func (uc *userLoginUseCase) Execute(ctx context.Context, user *domain.ReqLogin) 
 	usr, err := uc.userRepo.FindUserByEmail(ctx, user.Email)
 	if usr == nil {
 		return nil, errors.New("Invalid Credentials")
-	}
-	reqHashedPassword, err := util.HashPassword(user.Password)
+	} 
+	err = bcrypt.CompareHashAndPassword([]byte(usr.Password), []byte(user.Password))
 	if err != nil {
-		return nil, err
-	}
-	if reqHashedPassword != usr.Password {
 		return nil, errors.New("Invalid Password")
-	}  
+	}
 	accessToken, err := util.CreateJWT(uc.cnf.JWTSecretkey, util.Payload{
 		UserID: usr.UserID,
 		Role:   usr.Role,

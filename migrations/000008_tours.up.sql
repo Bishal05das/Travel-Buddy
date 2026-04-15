@@ -7,9 +7,10 @@ CREATE TABLE IF NOT EXISTS tours (
     available_seat INT NOT NULL,
     description TEXT NOT NULL,
     last_enrollment_date DATE NOT NULL,
-    price NUMERIC(10,2) NOT NULL,
-    discount NUMERIC(10,2) DEFAULT 0,
+    price NUMERIC(10,2) NOT NULL CHECK (price > 0),
+    discount NUMERIC(10,2) DEFAULT 0 CHECK (discount >= 0 AND discount <= 100),
     status VARCHAR(20) CHECK (status IN ('open', 'closed', 'cancelled')) DEFAULT 'open',
+    image_path VARCHAR(300),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -49,5 +50,3 @@ ON tours(start_date, end_date);
 
 CREATE INDEX idx_tours_home_status
 ON tours(status, last_enrollment_date);
-
-

@@ -28,7 +28,7 @@ func (m *MockTourRepository) CreateTour(ctx context.Context,tour *domain.Tour) e
 	return nil
 }
 
-func (m *MockTourRepository) ListTour(ctx context.Context,agencyID uuid.UUID) ([]*domain.Tour, error) {
+func (m *MockTourRepository) ListTour(ctx context.Context,agencyID uuid.UUID, page,limit int) ([]*domain.Tour, error) {
 	var result []*domain.Tour
 
 	for _, tour := range m.tours {
@@ -67,5 +67,7 @@ func (m *MockTourRepository) DeleteTour(ctx context.Context,tourID uuid.UUID) er
 
 func (m *MockTourRepository) GetByID(ctx context.Context, tourID uuid.UUID) (*domain.Tour, error)
 func (m *MockTourRepository) GetByIDForUpdate(ctx context.Context, tourID uuid.UUID) (*domain.Tour, error)
+func (m *MockTourRepository) Count(ctx context.Context, agencyID uuid.UUID) (int, error)
 
 func (m *MockTourRepository) UpdateAvailableSeats(ctx context.Context, tourID uuid.UUID, seats int) error
+func (m *MockTourRepository) UpdateTourStatus(ctx context.Context,tourID uuid.UUID, status string) error

@@ -18,6 +18,7 @@ type Tour struct {
 	Price              float64   `json:"price" db:"price"`
 	Discount           float64   `json:"discount" db:"discount"`
 	Status             string    `json:"status" db:"status"`
+	ImagePath          string    `json:"image_path" db:"image_path"`
 	CreatedAt          time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt          time.Time `json:"updated_at" db:"updated_at"`
 }
