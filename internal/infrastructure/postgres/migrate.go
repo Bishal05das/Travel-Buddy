@@ -19,7 +19,7 @@ func MigrateDB(db *sqlx.DB, cnf *config.Config) error {
 	}
 
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://migrations",
+		"file:///migrations",
 		cnf.DB.Name,
 		driver,
 	)
