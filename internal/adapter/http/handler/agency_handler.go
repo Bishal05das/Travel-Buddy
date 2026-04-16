@@ -32,29 +32,6 @@ func NewAgencyHandler(createUC port.CreateAgency, updateUC port.UpdateAgency, de
 }
 
 func (h *AgencyHandler) CreateAgency(w http.ResponseWriter, r *http.Request) {
-	// var req domain.CreateAgencyRequest
-	// decoder := json.NewDecoder(r.Body)
-	// err := decoder.Decode(&req)
-	// if err != nil {
-	// 	util.SendData(w, err.Error(), http.StatusBadRequest)
-	// 	return
-	// }
-	// if err := validation.Validate.Struct(req); err != nil {
-	// 	http.Error(w, err.Error(), http.StatusBadRequest)
-	// 	return
-	// }
-	// agency := &domain.Agency{
-	// 	Name: req.Name,
-	// 	Address: req.Address,
-	// 	RegistrationID: req.RegistrationID,
-	// }
-
-	// err = h.createUC.Execute(r.Context(),agency)
-	// if err != nil {
-	// 	util.SendData(w, err.Error(), http.StatusBadRequest)
-	// 	return
-	// }
-	// util.SendData(w, "Agency Successfully Created", http.StatusCreated)
 
 	err := r.ParseMultipartForm(10 << 20) // 10 MB
 	if err != nil {
@@ -93,6 +70,7 @@ func (h *AgencyHandler) CreateAgency(w http.ResponseWriter, r *http.Request) {
 
 	uploadDir := filepath.Join("images", "agencies")
 	if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
+		fmt.Println(err)
 		util.SendData(w, "failed to create upload directory", http.StatusInternalServerError)
 		return
 	}
