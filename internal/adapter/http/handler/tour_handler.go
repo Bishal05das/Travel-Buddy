@@ -118,7 +118,7 @@ func (h *TourHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	req.AvailableSeat = availableSeat
 
-	price, err := strconv.ParseFloat(r.FormValue("price"), 64)
+	price, err := strconv.Atoi(r.FormValue("price"))
 	if err != nil {
 		util.SendData(w, "invalid price", http.StatusBadRequest)
 		return
@@ -127,7 +127,7 @@ func (h *TourHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	discountStr := strings.TrimSpace(r.FormValue("discount"))
 	if discountStr != "" {
-		discount, err := strconv.ParseFloat(discountStr, 64)
+		discount, err := strconv.Atoi(discountStr)
 		if err != nil {
 			util.SendData(w, "invalid discount", http.StatusBadRequest)
 			return

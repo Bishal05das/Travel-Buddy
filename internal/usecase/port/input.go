@@ -41,7 +41,7 @@ type UpdateTourStatus interface {
 }
 
 type CreateBooking interface {
-	Execute(ctx context.Context, req *domain.BookingRequest, userID *uuid.UUID, memberID *uuid.UUID) (*domain.BookingResponse, error)
+	Execute(ctx context.Context, req *domain.BookingCommand) (*domain.BookingResponse, error)
 }
 
 type CreateUser interface {

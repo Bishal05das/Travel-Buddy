@@ -8,7 +8,7 @@ type Payment struct {
 	PaymentID     uuid.UUID
 	BookingID     uuid.UUID
 	TransactionID string
-	Amount        float64
+	Amount        int
 	Method        string
 	Status        string
 }

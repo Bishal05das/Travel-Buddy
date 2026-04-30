@@ -11,6 +11,12 @@ import (
 	"github.com/google/uuid"
 )
 
+type BookingRequest[T any] interface {
+	*T
+	SetTourID(id uuid.UUID)
+	ToCommand(actorID *uuid.UUID) *domain.BookingCommand
+}
+
 type BookingHandler struct {
 	createuc port.CreateBooking
 }
@@ -21,49 +27,64 @@ func NewBookingHandler(createuc port.CreateBooking) *BookingHandler {
 	}
 }
 
-func (h *BookingHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
+func (h *BookingHandler) CreateBookingByUser(w http.ResponseWriter, r *http.Request){
+	handleCreateBooking[domain.BookingRequestByUser](
+		h, w, r, "user",
+	)
+}
+
+func (h *BookingHandler) CreateBookingByAdmin(w http.ResponseWriter, r *http.Request){
+	handleCreateBooking[domain.BookingRequestByAdmin](
+		h, w, r, "admin",
+	)
+}
+
+func handleCreateBooking[T any, PT BookingRequest[T]](h *BookingHandler, w http.ResponseWriter, r *http.Request, requiredRole string,) {
 	idStr := r.PathValue("tour_id")
 	tourID, err := uuid.Parse(idStr)
 	if err != nil {
 		http.Error(w, "invalid agency id", http.StatusBadRequest)
 		return
 	}
-	decoder := json.NewDecoder(r.Body)
-
 	payload, err := util.GetPayload(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
-	userID := payload.UserID
-	role := payload.Role
+	actorID := payload.UserID
 
-	var result *domain.BookingResponse
-	var req domain.BookingRequest
+	if payload.Role != requiredRole {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+	
 
-	err = decoder.Decode(&req)
+	var req T
+	pReq := PT(&req)
+
+	decoder := json.NewDecoder(r.Body)
+	err = decoder.Decode(pReq)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	req.TourID = tourID
+	pReq.SetTourID(tourID)
+
 	if err := validation.Validate.Struct(req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	if role == "user" {
 
-		result, err = h.createuc.Execute(r.Context(), &req, &userID, nil)
-	} else if role == "member" {
-
-		result, err = h.createuc.Execute(r.Context(), &req, nil, &userID)
-	} else {
-		http.Error(w, "Invalid user type", 403)
-		return
-	}
+	cmd :=pReq.ToCommand(&actorID)
+	result, err := h.createuc.Execute(r.Context(), cmd)
 	if err != nil {
-		util.SendData(w, err.Error(), 400)
+		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	util.SendData(w, result, http.StatusCreated)
+
 }
+
+
+
+

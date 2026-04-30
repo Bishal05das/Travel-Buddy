@@ -26,7 +26,7 @@ func NewCreateBookingUseCase(txManager port.TxManager, bookingRepo port.BookingR
 	}
 }
 
-func (uc *createbookingusecase) Execute(ctx context.Context, req *domain.BookingRequest, userID *uuid.UUID, memberID *uuid.UUID) (*domain.BookingResponse, error) {
+func (uc *createbookingusecase) Execute(ctx context.Context, req *domain.BookingCommand) (*domain.BookingResponse, error) {
 
 	var response *domain.BookingResponse
 
@@ -46,23 +46,28 @@ func (uc *createbookingusecase) Execute(ctx context.Context, req *domain.Booking
 			return  errors.New("enrollment deadline has passed")
 		}
 		//calculate price with discount
-		totalPrice := tour.Price
+		receivedPrice := req.TotalPrice
+		totalDiscount := (tour.Price * tour.Discount) / 100
+		calculatedPrice := tour.Price - totalDiscount
+		if receivedPrice != calculatedPrice {
+			return  errors.New("price mismatch, please check the price and try again")
+		}
 
 		var customerID uuid.UUID
 
-		if userID != nil {
-			customerID, err = uc.bookingRepo.GetOrCreateCustomerByUser(txCtx, *userID)
+		if req.UserID != nil {
+			customerID, err = uc.bookingRepo.GetOrCreateCustomerByUser(txCtx, *req.UserID)
 			if err != nil {
 				return  err
 			}
-		} else if memberID != nil {
-			if req.CustomerName == "" || req.CustomerEmail == "" || req.CustomerPhone == "" {
+		} else if req.MemberID != nil {
+			if req.GuestInfo.Name == "" || req.GuestInfo.Email == "" || req.GuestInfo.Phone == "" {
 				return  errors.New("customer details required for guest booking")
 			}
 			customer := &domain.Customer{
-				Name:  req.CustomerName,
-				Email: req.CustomerEmail,
-				Phone: req.CustomerPhone,
+				Name:  req.GuestInfo.Name,
+				Email: req.GuestInfo.Email,
+				Phone: req.GuestInfo.Phone,
 			}
 			if err := uc.bookingRepo.CreateCustomer(txCtx, customer); err != nil {
 				return  err
@@ -76,14 +81,14 @@ func (uc *createbookingusecase) Execute(ctx context.Context, req *domain.Booking
 			CustomerID:     customerID,
 			TourID:         req.TourID,
 			NumberOfPeople: req.NumberOfPeople,
-			TotalPrice:     totalPrice,
+			TotalPrice:     receivedPrice,
 			Status:         "pending",
 		}
-		if userID != nil {
-			booking.UserID = userID
+		if req.UserID != nil {
+			booking.UserID = req.UserID
 		}
-		if memberID != nil {
-			booking.MemberID = memberID
+		if req.MemberID != nil {
+			booking.MemberID = req.MemberID
 		}
 	
 		if err := uc.bookingRepo.Create(txCtx, booking); err != nil {
@@ -98,7 +103,7 @@ func (uc *createbookingusecase) Execute(ctx context.Context, req *domain.Booking
 		//create payment
 		payment := &domain.Payment{
 			BookingID:     booking.BookingID,
-			Amount:        totalPrice,
+			Amount:        receivedPrice,
 			Method:        req.Method,
 			TransactionID: req.TransactionId,
 		}

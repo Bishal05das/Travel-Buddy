@@ -77,10 +77,10 @@ func (h *tourRepositoryDB) DeleteTour(ctx context.Context, tourID uuid.UUID) err
 }
 
 func (h *tourRepositoryDB) GetByID(ctx context.Context, tourID uuid.UUID) (*domain.Tour, error) {
-	query := `SELECT agency_id,name,start_date,end_date,available_seat,description,last_enrollment_date,price,discount,status FROM tours WHERE tour_id=$1;`
+	query := `SELECT agency_id,name,start_date,end_date,available_seat,description,last_enrollment_date,price,discount,status,image_path FROM tours WHERE tour_id=$1;`
 
 	tour := &domain.Tour{}
-	err := h.executor(ctx).QueryRowxContext(ctx, query, tourID).Scan(&tour.AgencyID, &tour.Name, &tour.StartDate, &tour.EndDate, &tour.AvailableSeat, &tour.Description, &tour.LastEnrollmentDate, &tour.Price, &tour.Discount, &tour.Status)
+	err := h.executor(ctx).QueryRowxContext(ctx, query, tourID).Scan(&tour.AgencyID, &tour.Name, &tour.StartDate, &tour.EndDate, &tour.AvailableSeat, &tour.Description, &tour.LastEnrollmentDate, &tour.Price, &tour.Discount, &tour.Status, &tour.ImagePath)
 	if err == sql.ErrNoRows {
 		return nil, errors.New("tour not found")
 	}

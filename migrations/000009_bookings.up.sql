@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     tour_id UUID NOT NULL REFERENCES tours(tour_id) ON DELETE CASCADE,
     booking_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     number_of_people INT CHECK (number_of_people > 0),
-    total_price NUMERIC(10,2) NOT NULL,
+    total_price INT NOT NULL,
     status VARCHAR(20) CHECK (
         status IN ('pending', 'confirmed', 'cancelled', 'completed')
     ) DEFAULT 'pending',
