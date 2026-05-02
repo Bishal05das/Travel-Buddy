@@ -15,8 +15,8 @@ type Tour struct {
 	AvailableSeat      int       `json:"available_seat" db:"available_seat"`
 	Description        string    `json:"description" db:"description"`
 	LastEnrollmentDate time.Time `json:"last_enrollment_date" db:"last_enrollment_date"`
-	Price              float64   `json:"price" db:"price"`
-	Discount           float64   `json:"discount" db:"discount"`
+	Price              int   `json:"price" db:"price"`
+	Discount           int       `json:"discount" db:"discount"`
 	Status             string    `json:"status" db:"status"`
 	ImagePath          string    `json:"image_path" db:"image_path"`
 	CreatedAt          time.Time `json:"created_at" db:"created_at"`
@@ -31,8 +31,8 @@ type CreateTourRequest struct {
 	AvailableSeat      int       `json:"available_seat" validate:"required,gt=0"`
 	Description        string    `json:"description" validate:"required,min=10,max=2000"`
 	LastEnrollmentDate time.Time `json:"last_enrollment_date" validate:"required,ltefield=StartDate"`
-	Price              float64   `json:"price" validate:"required,gt=0"`
-	Discount           float64   `json:"discount" validate:"gte=0,lte=100"`
+	Price              int   `json:"price" validate:"required,gt=0"`
+	Discount           int       `json:"discount" validate:"gte=0,lte=100"`
 }
 
 type UpdateTourRequest struct {
@@ -43,6 +43,6 @@ type UpdateTourRequest struct {
 	AvailableSeat      int       `json:"available_seat" validate:"required,gt=0"`
 	Description        string    `json:"description" validate:"required,min=10,max=2000"`
 	LastEnrollmentDate time.Time `json:"last_enrollment_date" validate:"required,ltefield=StartDate"`
-	Price              float64   `json:"price" validate:"required,gt=0"`
-	Discount           float64   `json:"discount" validate:"gte=0,lte=100"`
+	Price              int   `json:"price" validate:"required,gt=0"`
+	Discount           int       `json:"discount" validate:"gte=0,lte=100"`
 }

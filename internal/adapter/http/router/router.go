@@ -132,7 +132,11 @@ func (r *Router) RegisterRoutes() {
 	// BOOKINGS
 	r.mux.Handle(
 		"POST /bookings/{tour_id}",
-		r.protected(http.HandlerFunc(r.bookingHandler.CreateBooking)),
+		r.protected(http.HandlerFunc(r.bookingHandler.CreateBookingByUser)),
+	)
+	r.mux.Handle(
+		"POST /admin/bookings/{tour_id}",
+		r.protected(http.HandlerFunc(r.bookingHandler.CreateBookingByAdmin)),
 	)
 
 	// AGENCY

@@ -100,7 +100,7 @@ func main() {
 	router := router.NewRoutes(mux, middleware,homeHandler,searchHandler, tourHandler, userHandler, bookingHandler, agencyHandler, memberHandler, permissionHandler)
 	router.RegisterRoutes()
 
-	fmt.Println("Listening to server on port 3000")
+	fmt.Println("Listening to server on port ", cfg.HttpPort)
 	addr := ":" + strconv.Itoa(cfg.HttpPort)
 	err = http.ListenAndServe(addr, newHandler)
 	if err != nil {
