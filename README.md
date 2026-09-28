@@ -216,6 +216,12 @@ or `POST /members/login`. The **Access** column lists who may call each route
 | PUT, DELETE | `/users/{user_id}` | the user themselves, or super |
 | POST | `/bookings/{tour_id}` | role `user` |
 | POST | `/admin/bookings/{tour_id}` (guest booking) | member with `booking:create` |
+| GET | `/agency/{agency_id}/bookings?status=&tour_id=&page=&limit=` | `booking:read` |
+| GET | `/agency/{agency_id}/bookings/{booking_id}` | `booking:read` |
+| PATCH | `/agency/{agency_id}/bookings/{booking_id}/status` (body: `{"status": "confirmed"}`) | `booking:update` |
+| GET | `/me/bookings?status=&tour_id=&page=&limit=` | role `user` (own bookings) |
+| GET | `/me/bookings/{booking_id}` | role `user` (own bookings) |
+| POST | `/me/bookings/{booking_id}/cancel` | role `user` (own bookings) |
 | POST | `/agency` (multipart, `image` file) | super |
 | PUT | `/agency/{agency_id}` | `agency:update` |
 | DELETE | `/agency/{agency_id}` | `agency:delete` |
@@ -228,6 +234,16 @@ or `POST /members/login`. The **Access** column lists who may call each route
 | GET | `/images/{path}` | public (files only, no directory listing) |
 
 The booking `total_price` must equal `(price - price * discount / 100) * number_of_people`.
+
+**Booking lifecycle:** a booking starts `pending`. The agency moves it to
+`confirmed` once it has verified the payment, which also marks the payment
+`success`. From `confirmed` it can become `completed`. The agency can cancel a
+`pending` or `confirmed` booking at any time, and the customer can cancel their
+own until the tour's start date. Cancelling returns the seats to the tour and
+marks an unverified (`pending`) payment `failed`. A verified payment stays
+`success`, and the refund is handled outside the system. `cancelled` and
+`completed` are final. Invalid status changes return `409 Conflict`. A booking
+outside the caller's agency or account returns `404`.
 
 **Seats:** a tour's `total_seat` is its capacity and is set when the tour is
 created or updated (tour creation still accepts `available_seat` as an alias).

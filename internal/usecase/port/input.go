@@ -44,6 +44,24 @@ type CreateBooking interface {
 	Execute(ctx context.Context, req *domain.BookingCommand) (*domain.BookingResponse, error)
 }
 
+type ListBookings interface {
+	Execute(ctx context.Context, actor domain.Actor, filter domain.BookingFilter) (*util.PaginationData, error)
+}
+
+type GetBooking interface {
+	Execute(ctx context.Context, actor domain.Actor, scope domain.BookingScope, bookingID uuid.UUID) (*domain.BookingResponse, error)
+}
+
+// UpdateBookingStatus is the agency-side confirm / cancel / complete.
+type UpdateBookingStatus interface {
+	Execute(ctx context.Context, actor domain.Actor, agencyID, bookingID uuid.UUID, status string) (*domain.BookingResponse, error)
+}
+
+// CancelMyBooking lets a customer cancel their own booking.
+type CancelMyBooking interface {
+	Execute(ctx context.Context, actor domain.Actor, bookingID uuid.UUID) (*domain.BookingResponse, error)
+}
+
 type CreateUser interface {
 	Execute(ctx context.Context, user *domain.User) error
 }

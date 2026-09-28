@@ -117,7 +117,7 @@ func (uc *createbookingusecase) Execute(ctx context.Context, req *domain.Booking
 			return err
 		}
 
-		response, err = uc.bookingRepo.GetByID(txCtx, booking.BookingID)
+		response, err = uc.bookingRepo.GetByID(txCtx, booking.BookingID, domain.BookingScope{})
 		return err
 	})
 	if err != nil {
