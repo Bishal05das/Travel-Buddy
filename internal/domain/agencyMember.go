@@ -31,5 +31,5 @@ type ListMemberResponse struct {
 }
 
 type UpdatePermissionRequest struct {
-	Permissions []int
+	Permissions []int `json:"permissions" validate:"required,dive,gt=0"`
 }

@@ -23,8 +23,7 @@ func NewUpdatePermissionUseCase(txManager port.TxManager, agencyMemberRepo port.
 }
 
 func (uc *UpdatPermissionUseCase) Execute(ctx context.Context, memberID uuid.UUID, req *domain.UpdatePermissionRequest) error {
-	var response error
-	err := uc.txManager.WithinTransaction(ctx, func(txCtx context.Context) error {
+	return uc.txManager.WithinTransaction(ctx, func(txCtx context.Context) error {
 		//apply row level locking
 		roleID, err := uc.agencyMemberRepo.GetRoleIDFromMemberIDForUpdate(txCtx, memberID)
 		if err != nil {
@@ -34,11 +33,8 @@ func (uc *UpdatPermissionUseCase) Execute(ctx context.Context, memberID uuid.UUI
 		if err != nil {
 			return err
 		}
-		response = uc.roleRepo.AddPermissionsToRole(txCtx, *roleID, req.Permissions)
-		return err
+		// Returning this error rolls back the delete above; previously it was
+		// swallowed and the member was left with no permissions at all.
+		return uc.roleRepo.AddPermissionsToRole(txCtx, *roleID, req.Permissions)
 	})
-	if err != nil {
-		return err
-	}
-	return response
 }
