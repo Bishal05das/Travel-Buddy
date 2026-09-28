@@ -30,5 +30,5 @@ func (h *HomeHandler) GetHome(w http.ResponseWriter, r *http.Request) {
 	util.SendData(w, map[string]any{
 		"success": true,
 		"data":    resp,
-	},http.StatusOK)
+	}, http.StatusOK)
 }

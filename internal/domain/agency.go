@@ -13,7 +13,6 @@ type Agency struct {
 	RegistrationID string    `json:"reg_id" db:"reg_id"`
 	Rating         float64   `json:"rating"`
 	IsActive       bool      `json:"is_active" db:"is_active"`
-	ImagePath      string    `json:"image_path"`
 	CreatedAt      time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at" db:"updated_at"`
 }

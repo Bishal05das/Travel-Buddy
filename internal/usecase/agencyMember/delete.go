@@ -3,6 +3,7 @@ package memberusecase
 import (
 	"context"
 
+	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
 	"github.com/google/uuid"
 )
@@ -17,6 +18,6 @@ func NewDeleteAgencyMemberUseCase(repo port.AgencyMemberRepository) *DeleteAgenc
 	}
 }
 
-func (uc *DeleteAgencyMemberUseCase) Execute(ctx context.Context, agencyMemberID uuid.UUID) error {
-	return uc.repo.DeleteMember(ctx, agencyMemberID)
+func (uc *DeleteAgencyMemberUseCase) Execute(ctx context.Context, actor domain.Actor, agencyMemberID uuid.UUID) error {
+	return uc.repo.DeleteMember(ctx, agencyMemberID, actor.AgencyScope())
 }

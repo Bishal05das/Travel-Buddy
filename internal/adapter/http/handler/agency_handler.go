@@ -2,8 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -48,45 +46,9 @@ func (h *AgencyHandler) CreateAgency(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	file, header, err := r.FormFile("image")
+	dstPath, _, err := saveImage(r, "image", "agencies")
 	if err != nil {
-		util.SendData(w, "agency image is required", http.StatusBadRequest)
-		return
-	}
-	defer file.Close()
-
-	ext := strings.ToLower(filepath.Ext(header.Filename))
-	allowed := map[string]bool{
-		".jpg":  true,
-		".jpeg": true,
-		".png":  true,
-		".webp": true,
-	}
-
-	if !allowed[ext] {
-		util.SendData(w, "only jpg, jpeg, png, and webp files are allowed", http.StatusBadRequest)
-		return
-	}
-
-	uploadDir := filepath.Join("images", "agencies")
-	if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
-		fmt.Println(err)
-		util.SendData(w, "failed to create upload directory", http.StatusInternalServerError)
-		return
-	}
-
-	filename := fmt.Sprintf("%d_%s%s", time.Now().UnixNano(), uuid.NewString(), ext)
-	dstPath := filepath.Join(uploadDir, filename)
-
-	dst, err := os.Create(dstPath)
-	if err != nil {
-		util.SendData(w, "failed to save image", http.StatusInternalServerError)
-		return
-	}
-	defer dst.Close()
-
-	if _, err := io.Copy(dst, file); err != nil {
-		util.SendData(w, "failed to write image", http.StatusInternalServerError)
+		sendUploadError(w, err)
 		return
 	}
 
@@ -94,10 +56,10 @@ func (h *AgencyHandler) CreateAgency(w http.ResponseWriter, r *http.Request) {
 		Name:           name,
 		Address:        address,
 		RegistrationID: registrationID,
-		ImagePath:      filepath.ToSlash(dstPath), // images/agencies/abc.png
 	}
+	imagePath := filepath.ToSlash(dstPath) // images/agencies/abc.png
 
-	if err := h.createUC.Execute(r.Context(), agency); err != nil {
+	if err := h.createUC.Execute(r.Context(), agency, imagePath); err != nil {
 		_ = os.Remove(dstPath) // rollback file if DB save fails
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
@@ -105,8 +67,9 @@ func (h *AgencyHandler) CreateAgency(w http.ResponseWriter, r *http.Request) {
 
 	util.SendData(w, map[string]any{
 		"message":    "Agency successfully created",
-		"image_path": agency.ImagePath,
-		"image_url":  "/" + filepath.ToSlash(dstPath),
+		"agency_id":  agency.AgencyID,
+		"image_path": imagePath,
+		"image_url":  "/" + imagePath,
 	}, http.StatusCreated)
 
 }

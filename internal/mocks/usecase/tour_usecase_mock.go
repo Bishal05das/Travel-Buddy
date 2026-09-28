@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/bishal05das/travelbuddy/internal/domain"
+	util "github.com/bishal05das/travelbuddy/utils"
 	"github.com/google/uuid"
 )
 
@@ -24,11 +25,19 @@ func (m *MockGetTour) Execute(ctx context.Context, id uuid.UUID) (*domain.Tour, 
 }
 
 type MockListTour struct {
-	ExecuteFunc func(ctx context.Context, agencyID uuid.UUID, page, limit float64) ([]*domain.Tour, error)
+	ExecuteFunc func(ctx context.Context, agencyID uuid.UUID, page, limit int) (*util.PaginationData, error)
 }
 
-func (m *MockListTour) Execute(ctx context.Context, agencyID uuid.UUID,page, limit float64) ([]*domain.Tour, error) {
+func (m *MockListTour) Execute(ctx context.Context, agencyID uuid.UUID, page, limit int) (*util.PaginationData, error) {
 	return m.ExecuteFunc(ctx, agencyID, page, limit)
+}
+
+type MockUpdateTourStatus struct {
+	ExecuteFunc func(ctx context.Context, actor domain.Actor, tourID uuid.UUID, status string) error
+}
+
+func (m *MockUpdateTourStatus) Execute(ctx context.Context, actor domain.Actor, tourID uuid.UUID, status string) error {
+	return m.ExecuteFunc(ctx, actor, tourID, status)
 }
 
 type MockUpdateTour struct {
@@ -40,9 +49,9 @@ func (m *MockUpdateTour) Execute(ctx context.Context, tour *domain.Tour) error {
 }
 
 type MockDeleteTour struct {
-	ExecuteFunc func(ctx context.Context, id uuid.UUID) error
+	ExecuteFunc func(ctx context.Context, actor domain.Actor, id uuid.UUID) error
 }
 
-func (m *MockDeleteTour) Execute(ctx context.Context, id uuid.UUID) error {
-	return m.ExecuteFunc(ctx, id)
+func (m *MockDeleteTour) Execute(ctx context.Context, actor domain.Actor, id uuid.UUID) error {
+	return m.ExecuteFunc(ctx, actor, id)
 }

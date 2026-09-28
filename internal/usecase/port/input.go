@@ -17,7 +17,7 @@ type Search interface {
 }
 
 type CreateTour interface {
-	Execute(ctx context.Context,tour *domain.Tour) error
+	Execute(ctx context.Context, tour *domain.Tour) error
 }
 
 type ListTour interface {
@@ -25,7 +25,7 @@ type ListTour interface {
 }
 
 type GetTour interface {
-	Execute(ctx context.Context,tourID uuid.UUID) (*domain.Tour,error)
+	Execute(ctx context.Context, tourID uuid.UUID) (*domain.Tour, error)
 }
 
 type UpdateTour interface {
@@ -33,11 +33,11 @@ type UpdateTour interface {
 }
 
 type DeleteTour interface {
-	Execute(ctx context.Context, tourID uuid.UUID) error
+	Execute(ctx context.Context, actor domain.Actor, tourID uuid.UUID) error
 }
 
 type UpdateTourStatus interface {
-	Execute(ctx context.Context,tourID uuid.UUID, status string) error
+	Execute(ctx context.Context, actor domain.Actor, tourID uuid.UUID, status string) error
 }
 
 type CreateBooking interface {
@@ -45,11 +45,11 @@ type CreateBooking interface {
 }
 
 type CreateUser interface {
-	Execute(ctx context.Context,user *domain.User) error
+	Execute(ctx context.Context, user *domain.User) error
 }
 
 type LoginUser interface {
-	Execute(ctx context.Context,user *domain.ReqLogin) (*string, error)
+	Execute(ctx context.Context, user *domain.ReqLogin) (*string, error)
 }
 
 type DeleteUser interface {
@@ -61,7 +61,7 @@ type UpdateUser interface {
 }
 
 type CreateAgency interface {
-	Execute(ctx context.Context, agency *domain.Agency) error
+	Execute(ctx context.Context, agency *domain.Agency, imagePath string) error
 }
 
 type UpdateAgency interface {
@@ -73,15 +73,15 @@ type DeleteAgency interface {
 }
 
 type CreateAgencyMember interface {
-	Execute(ctx context.Context, req *domain.CreateMemberRequest) error
+	Execute(ctx context.Context, actor domain.Actor, req *domain.CreateMemberRequest) error
 }
 
 type UpdateAgencyMemberPermission interface {
-	Execute(ctx context.Context,memberID uuid.UUID, req *domain.UpdatePermissionRequest) error
+	Execute(ctx context.Context, actor domain.Actor, memberID uuid.UUID, req *domain.UpdatePermissionRequest) error
 }
 
 type DeleteAgencyMember interface {
-	Execute(ctx context.Context, agencyMemberID uuid.UUID) error
+	Execute(ctx context.Context, actor domain.Actor, agencyMemberID uuid.UUID) error
 }
 
 type ListAgencyMember interface {

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"net"
 	"net/http"
 	"strings"
 	"sync"
@@ -9,28 +10,54 @@ import (
 	"golang.org/x/time/rate"
 )
 
-type ipStore struct {
-	mu       sync.Mutex
-	limiters map[string]*rate.Limiter
+const (
+	requestsPerMinute = 30
+	visitorIdleTTL    = 3 * time.Minute
+)
+
+type visitor struct {
+	limiter  *rate.Limiter
+	lastSeen time.Time
 }
 
-var store = &ipStore{limiters: make(map[string]*rate.Limiter)}
+type ipStore struct {
+	mu        sync.Mutex
+	visitors  map[string]*visitor
+	lastSweep time.Time
+}
+
+func newIPStore() *ipStore {
+	return &ipStore{visitors: make(map[string]*visitor), lastSweep: time.Now()}
+}
 
 func (s *ipStore) get(ip string) *rate.Limiter {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if l, ok := s.limiters[ip]; ok {
-		return l
+
+	now := time.Now()
+	// Evict idle visitors so the map cannot grow without bound.
+	if now.Sub(s.lastSweep) > visitorIdleTTL {
+		for key, v := range s.visitors {
+			if now.Sub(v.lastSeen) > visitorIdleTTL {
+				delete(s.visitors, key)
+			}
+		}
+		s.lastSweep = now
 	}
-	l := rate.NewLimiter(rate.Every(time.Minute/30), 30)
-	s.limiters[ip] = l
-	return l
+
+	v, ok := s.visitors[ip]
+	if !ok {
+		v = &visitor{limiter: rate.NewLimiter(rate.Every(time.Minute/requestsPerMinute), requestsPerMinute)}
+		s.visitors[ip] = v
+	}
+	v.lastSeen = now
+	return v.limiter
 }
 
 func (m *MiddlewareManager) RateLimiter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ip := realIP(r)
-		if !store.get(ip).Allow() {
+		ip := m.clientIP(r)
+		if !m.limiter.get(ip).Allow() {
 			http.Error(w, `{"error":"too many requests"}`, http.StatusTooManyRequests)
 			return
 		}
@@ -38,12 +65,21 @@ func (m *MiddlewareManager) RateLimiter(next http.Handler) http.Handler {
 	})
 }
 
-func realIP(r *http.Request) string {
-	if ip := r.Header.Get("X-Real-IP"); ip != "" {
-		return ip
+// clientIP identifies the caller by IP address (without the port, which
+// changes per connection). Forwarding headers can be set by any client,
+// so they are only honoured when the app runs behind a trusted proxy.
+func (m *MiddlewareManager) clientIP(r *http.Request) string {
+	if m.cfg.TrustProxyHeaders {
+		if ip := strings.TrimSpace(r.Header.Get("X-Real-IP")); ip != "" {
+			return ip
+		}
+		if fwd := r.Header.Get("X-Forwarded-For"); fwd != "" {
+			return strings.TrimSpace(strings.Split(fwd, ",")[0])
+		}
 	}
-	if ip := r.Header.Get("X-Forwarded-For"); ip != "" {
-		return strings.Split(ip, ",")[0]
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
 	}
-	return r.RemoteAddr
+	return host
 }

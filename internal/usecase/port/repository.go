@@ -17,17 +17,21 @@ type TourRepository interface {
 	ListTour(ctx context.Context, agencyID uuid.UUID, page, limit int) ([]*domain.Tour, error)
 	Count(ctx context.Context, agencyID uuid.UUID) (int, error)
 	UpdateTour(ctx context.Context, t *domain.Tour) error
-	DeleteTour(ctx context.Context, tourID uuid.UUID) error
+	// agencyScope, when non-nil, restricts the change to tours of that agency.
+	DeleteTour(ctx context.Context, tourID uuid.UUID, agencyScope *uuid.UUID) error
 	GetByID(ctx context.Context, tourID uuid.UUID) (*domain.Tour, error)
 	GetByIDForUpdate(ctx context.Context, tourID uuid.UUID) (*domain.Tour, error)
 	UpdateAvailableSeats(ctx context.Context, tourID uuid.UUID, seats int) error
-	UpdateTourStatus(ctx context.Context,tourID uuid.UUID, status string) error
+	UpdateTourStatus(ctx context.Context, tourID uuid.UUID, status string, agencyScope *uuid.UUID) error
 }
 
 type AgencyRepository interface {
-	CreateAgency(ctx context.Context, agency *domain.Agency) error
+	CreateAgency(ctx context.Context, agency *domain.Agency, imagePath string) error
 	UpdateAgency(ctx context.Context, agency *domain.Agency) error
 	DeleteAgency(ctx context.Context, agencyID uuid.UUID) error
+	UpdateAgencyImage(ctx context.Context, agencyID uuid.UUID, newImagePath string) (oldImagePath string, err error)
+	GetCurrentImage(ctx context.Context, agencyID uuid.UUID) (*domain.AgencyImage, error)
+	ListAgencyImages(ctx context.Context, agencyID uuid.UUID) ([]*domain.AgencyImage, error)
 }
 
 type UserRepository interface {
@@ -35,15 +39,16 @@ type UserRepository interface {
 	UpdateUser(ctx context.Context, user *domain.User) error
 	DeleteUser(ctx context.Context, userID uuid.UUID) error
 	FindUserByEmail(ctx context.Context, email string) (*domain.User, error)
-	FindUserByID(ctx context.Context,id uuid.UUID) (*domain.User,error)
+	FindUserByID(ctx context.Context, id uuid.UUID) (*domain.User, error)
 }
 
 type AgencyMemberRepository interface {
 	CreateMember(ctx context.Context, member *domain.AgencyMember) error
 	ListMember(ctx context.Context, agencyID uuid.UUID) ([]*domain.ListMemberResponse, error)
 	UpdateMember(ctx context.Context, member *domain.AgencyMember) error
-	DeleteMember(ctx context.Context, memberID uuid.UUID) error
-	GetRoleIDFromMemberIDForUpdate(ctx context.Context, memberID uuid.UUID) (*int, error)
+	DeleteMember(ctx context.Context, memberID uuid.UUID, agencyScope *uuid.UUID) error
+	GetRoleIDFromMemberIDForUpdate(ctx context.Context, memberID uuid.UUID, agencyScope *uuid.UUID) (*int, error)
+	GetPermissionIDs(ctx context.Context, memberID uuid.UUID) ([]int, error)
 	FindMember(ctx context.Context, email string) (*domain.AgencyMember, error)
 }
 
@@ -75,6 +80,11 @@ type TxManager interface {
 type PermissionRepository interface {
 	CreatePermission(ctx context.Context, permisson *domain.Permission) error
 	DeletePermission(ctx context.Context, permissionID int) error
+}
+
+// Authorizer answers permission checks for agency members.
+type Authorizer interface {
+	MemberHasPermission(ctx context.Context, memberID, agencyID uuid.UUID, resource, action string) (bool, error)
 }
 
 type SearchRepository interface {

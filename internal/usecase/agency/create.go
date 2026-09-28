@@ -17,12 +17,12 @@ func NewCreateAgencyUseCase(r port.AgencyRepository) *CreateAgencyUseCase {
 	}
 }
 
-func (uc *CreateAgencyUseCase) Execute(ctx context.Context, agency *domain.Agency) error {
+func (uc *CreateAgencyUseCase) Execute(ctx context.Context, agency *domain.Agency, imagePath string) error {
 	//add business logic here
 	// if agency.Name == "" ||
 	// 	agency.Address == "" ||
 	// 	agency.RegistrationID == "" {
 	// 	return errors.New("invalid or missing agency data")
 	// }
-	return uc.repo.CreateAgency(ctx, agency)
+	return uc.repo.CreateAgency(ctx, agency, imagePath)
 }

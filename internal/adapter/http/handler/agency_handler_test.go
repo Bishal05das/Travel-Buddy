@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/bishal05das/travelbuddy/internal/adapter/http/handler"
@@ -14,56 +16,111 @@ import (
 	"github.com/google/uuid"
 )
 
+// pngBytes is a minimal payload that sniffs as image/png.
+var pngBytes = []byte("\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR")
+
+// newAgencyForm builds a multipart request; an empty fileName omits the image part.
+func newAgencyForm(t *testing.T, fields map[string]string, fileName string, content []byte) *http.Request {
+	t.Helper()
+	body := &bytes.Buffer{}
+	mw := multipart.NewWriter(body)
+	for k, v := range fields {
+		if err := mw.WriteField(k, v); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if fileName != "" {
+		fw, err := mw.CreateFormFile("image", fileName)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fw.Write(content)
+	}
+	mw.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/agency", body)
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+	return req
+}
+
 func TestCreateAgencyHandler(t *testing.T) {
+	// The handler writes uploads relative to the working directory.
+	t.Chdir(t.TempDir())
+
+	validFields := map[string]string{
+		"name":            "TravelPro",
+		"address":         "Dhaka",
+		"registration_id": "REG123",
+	}
 
 	tests := []struct {
 		name           string
-		body           string
+		request        func(t *testing.T) *http.Request
 		mockUsecase    func(*mocks.MockCreateAgency)
 		expectedStatus int
 	}{
 		{
 			name: "success",
-			body: `{
-				"name":"TravelPro",
-				"address":"Dhaka",
-				"reg_id":"REG123"
-			}`,
+			request: func(t *testing.T) *http.Request {
+				return newAgencyForm(t, validFields, "logo.png", pngBytes)
+			},
 			mockUsecase: func(m *mocks.MockCreateAgency) {
-				m.ExecuteFunc = func(ctx context.Context, a *domain.Agency) error {
+				m.ExecuteFunc = func(ctx context.Context, a *domain.Agency, imagePath string) error {
+					if !strings.HasPrefix(imagePath, "images/agencies/") {
+						return errors.New("unexpected image path " + imagePath)
+					}
 					return nil
 				}
 			},
 			expectedStatus: http.StatusCreated,
 		},
-
 		{
-			name:           "invalid json",
-			body:           `{bad-json}`,
+			name: "not a multipart form",
+			request: func(t *testing.T) *http.Request {
+				return httptest.NewRequest(http.MethodPost, "/agency", bytes.NewBufferString(`{bad-json}`))
+			},
 			mockUsecase:    func(m *mocks.MockCreateAgency) {},
 			expectedStatus: http.StatusBadRequest,
 		},
-
 		{
-			name: "validation error",
-			body: `{
-				"name":"",
-				"address":"",
-				"reg_id":""
-			}`,
+			name: "missing required fields",
+			request: func(t *testing.T) *http.Request {
+				return newAgencyForm(t, map[string]string{"name": "TravelPro"}, "logo.png", pngBytes)
+			},
 			mockUsecase:    func(m *mocks.MockCreateAgency) {},
 			expectedStatus: http.StatusBadRequest,
 		},
-
+		{
+			name: "missing image",
+			request: func(t *testing.T) *http.Request {
+				return newAgencyForm(t, validFields, "", nil)
+			},
+			mockUsecase:    func(m *mocks.MockCreateAgency) {},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "unsupported image extension",
+			request: func(t *testing.T) *http.Request {
+				return newAgencyForm(t, validFields, "logo.gif", pngBytes)
+			},
+			mockUsecase:    func(m *mocks.MockCreateAgency) {},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "html disguised as png",
+			request: func(t *testing.T) *http.Request {
+				return newAgencyForm(t, validFields, "logo.png", []byte("<html><script>alert(1)</script></html>"))
+			},
+			mockUsecase:    func(m *mocks.MockCreateAgency) {},
+			expectedStatus: http.StatusBadRequest,
+		},
 		{
 			name: "usecase error",
-			body: `{
-				"name":"TravelPro",
-				"address":"Dhaka",
-				"reg_id":"REG123"
-			}`,
+			request: func(t *testing.T) *http.Request {
+				return newAgencyForm(t, validFields, "logo.png", pngBytes)
+			},
 			mockUsecase: func(m *mocks.MockCreateAgency) {
-				m.ExecuteFunc = func(ctx context.Context, a *domain.Agency) error {
+				m.ExecuteFunc = func(ctx context.Context, a *domain.Agency, imagePath string) error {
 					return errors.New("database error")
 				}
 			},
@@ -72,28 +129,17 @@ func TestCreateAgencyHandler(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-
 		t.Run(tt.name, func(t *testing.T) {
-
 			mockUC := &mocks.MockCreateAgency{}
 			tt.mockUsecase(mockUC)
 
 			h := handler.NewAgencyHandler(mockUC, nil, nil)
-
-			req := httptest.NewRequest(
-				http.MethodPost,
-				"/agency",
-				bytes.NewBufferString(tt.body),
-			)
-
 			rec := httptest.NewRecorder()
 
-			h.CreateAgency(rec, req)
+			h.CreateAgency(rec, tt.request(t))
 
 			if rec.Code != tt.expectedStatus {
-				t.Errorf("expected %d got %d",
-					tt.expectedStatus,
-					rec.Code)
+				t.Errorf("expected %d got %d: %s", tt.expectedStatus, rec.Code, rec.Body.String())
 			}
 		})
 	}

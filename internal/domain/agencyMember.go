@@ -9,7 +9,7 @@ type AgencyMember struct {
 	Name     string    `json:"name" db:"name"`
 	Email    string    `json:"email" db:"email"`
 	Phone    string    `json:"phone" db:"phone"`
-	Password string    `json:"password" db:"password"`
+	Password string    `json:"-" db:"password"`
 }
 
 type CreateMemberRequest struct {
@@ -31,5 +31,5 @@ type ListMemberResponse struct {
 }
 
 type UpdatePermissionRequest struct {
-	Permissions []int
+	Permissions []int `json:"permissions" validate:"required,dive,gt=0"`
 }

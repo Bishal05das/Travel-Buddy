@@ -19,38 +19,59 @@ func NewSearchHandler(uc port.Search) *SearchHandler {
 }
 
 func (h *SearchHandler) Search(w http.ResponseWriter, r *http.Request) {
-
-	query := r.URL.Query().Get("q")
-
-	minPriceStr := r.URL.Query().Get("min_price")
-	maxPriceStr := r.URL.Query().Get("max_price")
+	q := r.URL.Query()
 
 	var filter domain.TourSearchFilter
-	filter.Query = query
+	filter.Query = q.Get("q")
 	filter.Limit = 20
 	filter.Offset = 0
 
-	if minPriceStr != "" {
-		v, _ := strconv.ParseFloat(minPriceStr, 64)
-		filter.MinPrice = &v
+	// Malformed filters are rejected instead of silently becoming 0 / zero time.
+	var err error
+	if filter.MinPrice, err = parseOptionalFloat(q.Get("min_price")); err != nil {
+		http.Error(w, "invalid min_price", http.StatusBadRequest)
+		return
 	}
-
-	if maxPriceStr != "" {
-		v, _ := strconv.ParseFloat(maxPriceStr, 64)
-		filter.MaxPrice = &v
+	if filter.MaxPrice, err = parseOptionalFloat(q.Get("max_price")); err != nil {
+		http.Error(w, "invalid max_price", http.StatusBadRequest)
+		return
 	}
-
-	startDateStr := r.URL.Query().Get("start_date")
-	if startDateStr != "" {
-		t, _ := time.Parse("2006-01-02", startDateStr)
-		filter.StartDate = &t
+	if filter.StartDate, err = parseOptionalDate(q.Get("start_date")); err != nil {
+		http.Error(w, "invalid start_date, use YYYY-MM-DD", http.StatusBadRequest)
+		return
+	}
+	if filter.EndDate, err = parseOptionalDate(q.Get("end_date")); err != nil {
+		http.Error(w, "invalid end_date, use YYYY-MM-DD", http.StatusBadRequest)
+		return
 	}
 
 	result, err := h.uc.Execute(r.Context(), filter)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
 	util.SendData(w, result, http.StatusOK)
+}
+
+func parseOptionalFloat(v string) (*float64, error) {
+	if v == "" {
+		return nil, nil
+	}
+	f, err := strconv.ParseFloat(v, 64)
+	if err != nil {
+		return nil, err
+	}
+	return &f, nil
+}
+
+func parseOptionalDate(v string) (*time.Time, error) {
+	if v == "" {
+		return nil, nil
+	}
+	t, err := time.Parse(time.DateOnly, v)
+	if err != nil {
+		return nil, err
+	}
+	return &t, nil
 }

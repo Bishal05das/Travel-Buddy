@@ -20,19 +20,18 @@ func NewCreateUserUseCase(r port.UserRepository) *CreateUserUseCase {
 }
 
 func (uc *CreateUserUseCase) Execute(ctx context.Context, user *domain.User) error {
-	usr, err := uc.repo.FindUserByEmail(ctx,user.Email)
+	usr, err := uc.repo.FindUserByEmail(ctx, user.Email)
 	if err != nil {
 		return err
 	}
 	if usr != nil {
-		return errors.New("email already exist")
+		return domain.ErrEmailTaken
 	}
 
-	hashedPassword,err := util.HashPassword(user.Password)
+	hashedPassword, err := util.HashPassword(user.Password)
 	if err != nil {
 		return errors.New("error in password hashing")
 	}
 	user.Password = hashedPassword
 	return uc.repo.CreateUser(ctx, user)
 }
-

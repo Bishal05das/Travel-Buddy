@@ -1,1 +1,5 @@
 .env
+
+# User uploads are runtime data (served from a volume in Docker), not source.
+/images/
+/uploads/

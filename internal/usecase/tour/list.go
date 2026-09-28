@@ -10,6 +10,11 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	defaultPageLimit = 10
+	maxPageLimit     = 100
+)
+
 type listTourUseCase struct {
 	repo port.TourRepository
 }
@@ -31,8 +36,11 @@ func (uc *listTourUseCase) Execute(ctx context.Context, agencyID uuid.UUID, page
 		page = 1
 	}
 
-	if limit > 100 {
-		limit = 100
+	if limit < 1 {
+		limit = defaultPageLimit
+	}
+	if limit > maxPageLimit {
+		limit = maxPageLimit
 	}
 
 	var list []*domain.Tour
@@ -66,17 +74,16 @@ func (uc *listTourUseCase) Execute(ctx context.Context, agencyID uuid.UUID, page
 	}()
 	wg.Wait()
 	if firstErr != nil {
-		return nil,firstErr
+		return nil, firstErr
 	}
 	paginationdata := util.PaginationData{
 		Data: list,
 		Meta: util.Meta{
-			Page: page,
-			Limit: limit,
+			Page:       page,
+			Limit:      limit,
 			TotalCount: count,
-			TotalPage: (count + limit - 1)/limit,
+			TotalPage:  (count + limit - 1) / limit,
 		},
-
 	}
 	return &paginationdata, nil
 }

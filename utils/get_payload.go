@@ -1,40 +1,31 @@
 package util
 
 import (
-	"encoding/base64"
-	"encoding/json"
+	"context"
 	"errors"
 	"net/http"
-	"strings"
 )
 
+type payloadKey struct{}
+
+// WithPayload stores verified token claims on the context.
+func WithPayload(ctx context.Context, p *Payload) context.Context {
+	return context.WithValue(ctx, payloadKey{}, p)
+}
+
+// PayloadFromContext returns the claims stored by WithPayload.
+func PayloadFromContext(ctx context.Context) (*Payload, bool) {
+	p, ok := ctx.Value(payloadKey{}).(*Payload)
+	return p, ok && p != nil
+}
+
+// GetPayload returns the claims the Authentication middleware verified for
+// this request. It never parses the Authorization header itself, so an
+// unverified token can never be trusted by accident.
 func GetPayload(r *http.Request) (*Payload, error) {
-	header := r.Header.Get("Authorization")
-	if header == "" {
-		return nil, errors.New("Unauthorized")
+	p, ok := PayloadFromContext(r.Context())
+	if !ok {
+		return nil, errors.New("unauthorized")
 	}
-	headArr := strings.Split(header, " ")
-	if len(headArr) != 2 {
-		// http.Error(w, "Unavailable", http.StatusUnauthorized)
-		return nil,errors.New("jwt token unavailable")
-	}
-	accessToken := headArr[1]
-
-	tokenParts := strings.Split(accessToken, ".")
-	if len(tokenParts) != 3 {
-		// http.Error(w, "Unavailable", http.StatusUnauthorized)
-		return nil,errors.New("Invalid Jwt token")
-	}
-	//jwtHeader := tokenParts[0]
-	jwtPayload := tokenParts[1]
-
-	decodedBytes, err := base64.URLEncoding.WithPadding(base64.NoPadding).DecodeString(jwtPayload)
-	if err != nil {
-		return nil, err
-	}
-	var payload Payload
-	if err := json.Unmarshal(decodedBytes, &payload); err != nil {
-		return nil, err
-	}
-	return &payload, nil
+	return p, nil
 }

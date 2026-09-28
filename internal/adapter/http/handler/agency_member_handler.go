@@ -49,7 +49,11 @@ func (h *MemberHandler) CreateMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.createMemberUC.Execute(r.Context(), &req)
+	actor, ok := actorFromRequest(w, r)
+	if !ok {
+		return
+	}
+	err = h.createMemberUC.Execute(r.Context(), actor, &req)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
@@ -61,15 +65,19 @@ func (h *MemberHandler) DeleteMember(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("member_id")
 	memberID, err := uuid.Parse(idStr)
 	if err != nil {
-		http.Error(w, "invalid agency id", http.StatusBadRequest)
+		http.Error(w, "invalid member id", http.StatusBadRequest)
 		return
 	}
-	err = h.deleteMemberUC.Execute(r.Context(), memberID)
+	actor, ok := actorFromRequest(w, r)
+	if !ok {
+		return
+	}
+	err = h.deleteMemberUC.Execute(r.Context(), actor, memberID)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	util.SendData(w, "Successfully Deleted Member", http.StatusCreated)
+	util.SendData(w, "Successfully Deleted Member", http.StatusOK)
 }
 
 func (h *MemberHandler) ListMember(w http.ResponseWriter, r *http.Request) {
@@ -84,7 +92,7 @@ func (h *MemberHandler) ListMember(w http.ResponseWriter, r *http.Request) {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	util.SendData(w, result, http.StatusCreated)
+	util.SendData(w, result, http.StatusOK)
 }
 
 func (h *MemberHandler) UpdateMemberPermissions(w http.ResponseWriter, r *http.Request) {
@@ -101,12 +109,20 @@ func (h *MemberHandler) UpdateMemberPermissions(w http.ResponseWriter, r *http.R
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = h.updateMemberPermissionUC.Execute(r.Context(), memberID, &req)
+	if err := validation.Validate.Struct(req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	actor, ok := actorFromRequest(w, r)
+	if !ok {
+		return
+	}
+	err = h.updateMemberPermissionUC.Execute(r.Context(), actor, memberID, &req)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	util.SendData(w, "Successfully Updated Permission", http.StatusCreated)
+	util.SendData(w, "Successfully Updated Permission", http.StatusOK)
 }
 
 func (h *MemberHandler) MemberLogin(w http.ResponseWriter, r *http.Request) {
@@ -124,8 +140,8 @@ func (h *MemberHandler) MemberLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	token, err := h.loginUC.Execute(r.Context(), &req)
 	if err != nil {
-		util.SendData(w, err.Error(), http.StatusInternalServerError)
+		sendLoginError(w, err)
 		return
 	}
-	util.SendData(w, token, http.StatusCreated)
+	util.SendData(w, token, http.StatusOK)
 }

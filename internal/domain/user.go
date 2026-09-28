@@ -10,7 +10,7 @@ type User struct {
 	UserID    uuid.UUID `json:"user_id" db:"user_id"`
 	Name      string    `json:"name" db:"name"`
 	Email     string    `json:"email" db:"email"`
-	Password  string    `json:"password" db:"password"`
+	Password  string    `json:"-" db:"password"`
 	Phone     string    `json:"phone" db:"phone"`
 	Role      string    `json:"role" db:"role"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
@@ -23,10 +23,10 @@ type ReqLogin struct {
 }
 
 type UpdateUserReq struct {
-	Name      string    `json:"name" validate:"required,min=2,max=100"`
-	Email     string    `json:"email" validate:"required,email"`
-	Password  string    `json:"password" validate:"required,min=8,max=64"`
-	Phone     string    `json:"phone" validate:"required,e164"`
+	Name     string `json:"name" validate:"required,min=2,max=100"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=8,max=64"`
+	Phone    string `json:"phone" validate:"required,e164"`
 }
 
 type CreateUserReq struct {

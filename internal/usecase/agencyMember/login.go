@@ -2,7 +2,6 @@ package memberusecase
 
 import (
 	"context"
-	"errors"
 
 	"github.com/bishal05das/travelbuddy/config"
 	"github.com/bishal05das/travelbuddy/internal/domain"
@@ -25,19 +24,22 @@ func NewMemberLoginUseCase(memberRepo port.AgencyMemberRepository, cfg *config.C
 
 func (uc *memberLoginUseCase) Execute(ctx context.Context, member *domain.ReqLogin) (*string, error) {
 	mem, err := uc.memberRepo.FindMember(ctx, member.Email)
+	if err != nil {
+		return nil, err
+	}
 	if mem == nil {
-		// http.Error(w, "Invalid Credentials", http.StatusBadRequest)
-		return nil, errors.New("Invalid Credentials")
+		return nil, domain.ErrInvalidCredentials
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(mem.Password), []byte(member.Password))
 	if err != nil {
-		return nil, errors.New("Invalid Password")
+		return nil, domain.ErrInvalidCredentials
 	}
 	accessToken, err := util.CreateJWT(uc.cfg.JWTSecretkey, util.Payload{
-		UserID: mem.MemberID,
-		Role:   "member",
-		RoleID: &mem.RoleID,
-	})
+		UserID:   mem.MemberID,
+		Role:     "member",
+		RoleID:   &mem.RoleID,
+		AgencyID: &mem.AgencyID,
+	}, uc.cfg.JWTTTL)
 	if err != nil {
 		//http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return nil, err

@@ -35,7 +35,8 @@ func TestCreateTourUseCase(t *testing.T) {
 				Description:        "blah blah blah",
 				LastEnrollmentDate: parseDate(t, "2026-12-05"),
 				Price:              10000,
-				Discount:           200,
+				Discount:           20,
+				AvailableSeat:      30,
 			},
 			wantErr: false,
 		},
@@ -48,7 +49,8 @@ func TestCreateTourUseCase(t *testing.T) {
 				Description:        "blah blah blah",
 				LastEnrollmentDate: parseDate(t, "2026-12-05"),
 				Price:              10000,
-				Discount:           200,
+				Discount:           20,
+				AvailableSeat:      30,
 			},
 			wantErr: true,
 		},
@@ -61,7 +63,8 @@ func TestCreateTourUseCase(t *testing.T) {
 				Description:        "blah blah blah",
 				LastEnrollmentDate: parseDate(t, "2026-12-05"),
 				Price:              10000,
-				Discount:           200,
+				Discount:           20,
+				AvailableSeat:      30,
 			},
 			wantErr: true,
 		},
@@ -70,7 +73,7 @@ func TestCreateTourUseCase(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			repo := mocks.NewMockTourRepository()
 			uc := tourusecase.NewCreateTourUseCase(repo)
-			err := uc.Execute(context.Background(),tt.tour)
+			err := uc.Execute(context.Background(), tt.tour)
 			if tt.wantErr && err == nil {
 				t.Error("expected error but got none")
 			}

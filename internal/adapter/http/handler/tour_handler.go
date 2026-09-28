@@ -2,8 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -19,22 +17,22 @@ import (
 )
 
 type TourHandler struct {
-	createUC port.CreateTour
-	getUC    port.GetTour
-	listUC   port.ListTour
-	updateUC port.UpdateTour
+	createUC       port.CreateTour
+	getUC          port.GetTour
+	listUC         port.ListTour
+	updateUC       port.UpdateTour
 	updateStatusUC port.UpdateTourStatus
-	deleteUC port.DeleteTour
+	deleteUC       port.DeleteTour
 }
 
-func NewTourHandler(createUC port.CreateTour, getUC port.GetTour, listUC port.ListTour, updateUC port.UpdateTour,updateStatusUC port.UpdateTourStatus, deleteUC port.DeleteTour) *TourHandler {
+func NewTourHandler(createUC port.CreateTour, getUC port.GetTour, listUC port.ListTour, updateUC port.UpdateTour, updateStatusUC port.UpdateTourStatus, deleteUC port.DeleteTour) *TourHandler {
 	return &TourHandler{
-		createUC: createUC,
-		getUC:    getUC,
-		listUC:   listUC,
-		updateUC: updateUC,
+		createUC:       createUC,
+		getUC:          getUC,
+		listUC:         listUC,
+		updateUC:       updateUC,
 		updateStatusUC: updateStatusUC,
-		deleteUC: deleteUC,
+		deleteUC:       deleteUC,
 	}
 }
 
@@ -67,7 +65,7 @@ func (h *TourHandler) Create(w http.ResponseWriter, r *http.Request) {
 	// }
 	// util.SendData(w, "Successfully Created Tour", http.StatusCreated)
 
-	err := r.ParseMultipartForm(10 << 20) 
+	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
 		util.SendData(w, "invalid multipart form data", http.StatusBadRequest)
 		return
@@ -76,29 +74,24 @@ func (h *TourHandler) Create(w http.ResponseWriter, r *http.Request) {
 	agencyID, err := uuid.Parse(agencyIDStr)
 
 	if err != nil {
-		fmt.Println(err)
 		util.SendData(w, "invalid agency_id", http.StatusBadRequest)
 		return
 	}
-	startDateStr := strings.TrimSpace(r.FormValue("start_date"))
-	startDate, err := time.Parse(time.RFC3339,startDateStr)
+	startDate, err := parseDate(r.FormValue("start_date"))
 	if err != nil {
-		fmt.Println(err)
-		util.SendData(w, "invalid start_date, use YYYY-MM-DD", http.StatusBadRequest)
+		util.SendData(w, "invalid start_date, use YYYY-MM-DD or RFC3339", http.StatusBadRequest)
 		return
 	}
 
-	endDateStr := strings.TrimSpace(r.FormValue("end_date"))
-	endDate, err := time.Parse(time.RFC3339, endDateStr)
+	endDate, err := parseDate(r.FormValue("end_date"))
 	if err != nil {
-		util.SendData(w, "invalid end_date, use YYYY-MM-DD", http.StatusBadRequest)
+		util.SendData(w, "invalid end_date, use YYYY-MM-DD or RFC3339", http.StatusBadRequest)
 		return
 	}
 
-	lastEnrollmentDateStr := strings.TrimSpace(r.FormValue("last_enrollment_date"))
-	lastEnrollmentDate, err := time.Parse(time.RFC3339, lastEnrollmentDateStr)
+	lastEnrollmentDate, err := parseDate(r.FormValue("last_enrollment_date"))
 	if err != nil {
-		util.SendData(w, "invalid last_enrollment_date, use YYYY-MM-DD", http.StatusBadRequest)
+		util.SendData(w, "invalid last_enrollment_date, use YYYY-MM-DD or RFC3339", http.StatusBadRequest)
 		return
 	}
 
@@ -140,44 +133,9 @@ func (h *TourHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	file, header, err := r.FormFile("image")
+	fullPath, fileName, err := saveImage(r, "image", "tours")
 	if err != nil {
-		util.SendData(w, "background_image is required", http.StatusBadRequest)
-		return
-	}
-	defer file.Close()
-
-	ext := strings.ToLower(filepath.Ext(header.Filename))
-	allowed := map[string]bool{
-		".jpg":  true,
-		".jpeg": true,
-		".png":  true,
-		".webp": true,
-	}
-
-	if !allowed[ext] {
-		util.SendData(w, "only jpg, jpeg, png, and webp files are allowed", http.StatusBadRequest)
-		return
-	}
-
-	uploadDir := filepath.Join("images", "tours")
-	if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
-		util.SendData(w, "failed to create upload directory", http.StatusInternalServerError)
-		return
-	}
-
-	fileName := fmt.Sprintf("%d_%s%s", time.Now().UnixNano(), uuid.NewString(), ext)
-	fullPath := filepath.Join(uploadDir, fileName)
-
-	dst, err := os.Create(fullPath)
-	if err != nil {
-		util.SendData(w, "failed to save background image", http.StatusInternalServerError)
-		return
-	}
-	defer dst.Close()
-
-	if _, err := io.Copy(dst, file); err != nil {
-		util.SendData(w, "failed to write background image", http.StatusInternalServerError)
+		sendUploadError(w, err)
 		return
 	}
 
@@ -232,7 +190,7 @@ func (h *TourHandler) List(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	var page,limit int
+	var page, limit int
 
 	pageStr := r.URL.Query().Get("page")
 	if pageStr != "" {
@@ -267,7 +225,11 @@ func (h *TourHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = h.deleteUC.Execute(r.Context(), id)
+	actor, ok := actorFromRequest(w, r)
+	if !ok {
+		return
+	}
+	err = h.deleteUC.Execute(r.Context(), actor, id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -314,7 +276,6 @@ func (h *TourHandler) Update(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt:          time.Now(),
 	}
 	err = h.updateUC.Execute(r.Context(), tour)
-	fmt.Println(err)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
@@ -337,10 +298,23 @@ func (h *TourHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = h.updateStatusUC.Execute(r.Context(),id,status)
+	actor, ok := actorFromRequest(w, r)
+	if !ok {
+		return
+	}
+	err = h.updateStatusUC.Execute(r.Context(), actor, id, status)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	util.SendData(w, "Status Updated Successfully", http.StatusOK)
+}
+
+// parseDate accepts either a plain date (YYYY-MM-DD) or a full RFC3339 timestamp.
+func parseDate(v string) (time.Time, error) {
+	v = strings.TrimSpace(v)
+	if t, err := time.Parse(time.DateOnly, v); err == nil {
+		return t, nil
+	}
+	return time.Parse(time.RFC3339, v)
 }
