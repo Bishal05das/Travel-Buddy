@@ -145,6 +145,34 @@ func (r *Router) RegisterRoutes() {
 		r.protected(http.HandlerFunc(r.bookingHandler.CreateBookingByAdmin), m.RequireRole(domain.RoleMember), m.RequirePermission("booking", "create")),
 	)
 
+	// BOOKING MANAGEMENT (agency side)
+	r.mux.Handle(
+		"GET /agency/{agency_id}/bookings",
+		r.protected(http.HandlerFunc(r.bookingHandler.ListAgencyBookings), m.RequirePermission("booking", "read")),
+	)
+	r.mux.Handle(
+		"GET /agency/{agency_id}/bookings/{booking_id}",
+		r.protected(http.HandlerFunc(r.bookingHandler.GetAgencyBooking), m.RequirePermission("booking", "read")),
+	)
+	r.mux.Handle(
+		"PATCH /agency/{agency_id}/bookings/{booking_id}/status",
+		r.protected(http.HandlerFunc(r.bookingHandler.UpdateAgencyBookingStatus), m.RequirePermission("booking", "update")),
+	)
+
+	// MY BOOKINGS (customer side)
+	r.mux.Handle(
+		"GET /me/bookings",
+		r.protected(http.HandlerFunc(r.bookingHandler.ListMyBookings), m.RequireRole(domain.RoleUser)),
+	)
+	r.mux.Handle(
+		"GET /me/bookings/{booking_id}",
+		r.protected(http.HandlerFunc(r.bookingHandler.GetMyBooking), m.RequireRole(domain.RoleUser)),
+	)
+	r.mux.Handle(
+		"POST /me/bookings/{booking_id}/cancel",
+		r.protected(http.HandlerFunc(r.bookingHandler.CancelMyBooking), m.RequireRole(domain.RoleUser)),
+	)
+
 	// AGENCY
 	r.mux.Handle(
 		"POST /agency",

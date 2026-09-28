@@ -18,12 +18,20 @@ type BookingRequest[T any] interface {
 }
 
 type BookingHandler struct {
-	createuc port.CreateBooking
+	createuc       port.CreateBooking
+	listUC         port.ListBookings
+	getUC          port.GetBooking
+	updateStatusUC port.UpdateBookingStatus
+	cancelUC       port.CancelMyBooking
 }
 
-func NewBookingHandler(createuc port.CreateBooking) *BookingHandler {
+func NewBookingHandler(createuc port.CreateBooking, listUC port.ListBookings, getUC port.GetBooking, updateStatusUC port.UpdateBookingStatus, cancelUC port.CancelMyBooking) *BookingHandler {
 	return &BookingHandler{
-		createuc: createuc,
+		createuc:       createuc,
+		listUC:         listUC,
+		getUC:          getUC,
+		updateStatusUC: updateStatusUC,
+		cancelUC:       cancelUC,
 	}
 }
 

@@ -11,40 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// inlineTx runs the function without a real transaction.
-type inlineTx struct{}
-
-func (inlineTx) WithinTransaction(ctx context.Context, fn func(ctx context.Context) error) error {
-	return fn(ctx)
-}
-
-type fakeBookingRepo struct{ created []*domain.Booking }
-
-func (f *fakeBookingRepo) Create(_ context.Context, b *domain.Booking) error {
-	b.BookingID = uuid.New()
-	f.created = append(f.created, b)
-	return nil
-}
-func (f *fakeBookingRepo) GetByID(_ context.Context, id uuid.UUID) (*domain.BookingResponse, error) {
-	return &domain.BookingResponse{BookingID: id}, nil
-}
-func (f *fakeBookingRepo) Update(context.Context, *domain.Booking) error { return nil }
-func (f *fakeBookingRepo) Cancel(context.Context, uuid.UUID) error       { return nil }
-func (f *fakeBookingRepo) GetOrCreateCustomerByUser(context.Context, uuid.UUID) (uuid.UUID, error) {
-	return uuid.New(), nil
-}
-func (f *fakeBookingRepo) CreateCustomer(_ context.Context, c *domain.Customer) error {
-	c.CustomerID = uuid.New()
-	return nil
-}
-
-type fakePaymentRepo struct{ amounts []int }
-
-func (f *fakePaymentRepo) Create(_ context.Context, p *domain.Payment) error {
-	f.amounts = append(f.amounts, p.Amount)
-	return nil
-}
-
 func TestCreateBooking(t *testing.T) {
 	agencyID := uuid.New()
 	otherAgency := uuid.New()
@@ -150,8 +116,8 @@ func TestCreateBooking(t *testing.T) {
 			if err := tourRepo.CreateTour(context.Background(), tour); err != nil {
 				t.Fatal(err)
 			}
-			bookings := &fakeBookingRepo{}
-			payments := &fakePaymentRepo{}
+			bookings := newFakeBookingRepo(tourRepo)
+			payments := newFakePaymentRepo()
 			uc := bookingusecase.NewCreateBookingUseCase(inlineTx{}, bookings, tourRepo, payments)
 
 			cmd := tt.cmd(tour.TourID)

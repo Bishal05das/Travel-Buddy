@@ -54,15 +54,20 @@ type AgencyMemberRepository interface {
 
 type BookingRepository interface {
 	Create(ctx context.Context, booking *domain.Booking) error
-	GetByID(ctx context.Context, id uuid.UUID) (*domain.BookingResponse, error)
-	Update(ctx context.Context, booking *domain.Booking) error
-	Cancel(ctx context.Context, id uuid.UUID) error
+	GetByID(ctx context.Context, id uuid.UUID, scope domain.BookingScope) (*domain.BookingResponse, error)
+	// List returns one page of bookings and the total number matching.
+	List(ctx context.Context, filter domain.BookingFilter) ([]*domain.BookingResponse, int, error)
+	// GetForUpdate locks the booking row (within scope) for a status change.
+	GetForUpdate(ctx context.Context, id uuid.UUID, scope domain.BookingScope) (*domain.LockedBooking, error)
+	UpdateStatus(ctx context.Context, id uuid.UUID, status string) error
 	GetOrCreateCustomerByUser(ctx context.Context, userID uuid.UUID) (uuid.UUID, error)
 	CreateCustomer(ctx context.Context, customer *domain.Customer) error
 }
 
 type PaymentRepository interface {
 	Create(ctx context.Context, payment *domain.Payment) error
+	// SetStatusForBooking moves the booking's payments from one status to another.
+	SetStatusForBooking(ctx context.Context, bookingID uuid.UUID, from, to string) error
 }
 
 type RoleRepository interface {

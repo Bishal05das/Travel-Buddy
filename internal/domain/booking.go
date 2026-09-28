@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -97,17 +99,96 @@ func (r *BookingRequestByAdmin) ToCommand(memberID *uuid.UUID) *BookingCommand {
 	}
 }
 
+// BookingResponse is a booking as shown to the customer or the agency,
+// including who booked, the tour and the payment.
 type BookingResponse struct {
+	BookingID      uuid.UUID  `json:"booking_id"`
+	Status         string     `json:"status"`
+	NumberOfPeople int        `json:"number_of_people"`
+	TotalPrice     int        `json:"total_price"`
+	BookingDate    time.Time  `json:"booking_date"`
+	CreatedBy      string     `json:"created_by"` // "user" or "agency_member"
+	UserID         *uuid.UUID `json:"user_id,omitempty"`
+	MemberID       *uuid.UUID `json:"member_id,omitempty"`
+
+	CustomerID    uuid.UUID `json:"customer_id"`
+	CustomerName  string    `json:"customer_name"`
+	CustomerEmail string    `json:"customer_email"`
+	CustomerPhone string    `json:"customer_phone"`
+
+	TourID        uuid.UUID `json:"tour_id"`
+	TourName      string    `json:"tour_name"`
+	TourStartDate time.Time `json:"tour_start_date"`
+	AgencyID      uuid.UUID `json:"agency_id"`
+	AgencyName    string    `json:"agency_name"`
+
+	PaymentMethod string `json:"payment_method"`
+	TransactionID string `json:"transaction_id"`
+	PaymentStatus string `json:"payment_status"`
+
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+const (
+	BookingPending   = "pending"
+	BookingConfirmed = "confirmed"
+	BookingCancelled = "cancelled"
+	BookingCompleted = "completed"
+)
+
+// bookingTransitions lists the statuses each status may move to.
+// Cancelled and completed bookings are final.
+var bookingTransitions = map[string][]string{
+	BookingPending:   {BookingConfirmed, BookingCancelled},
+	BookingConfirmed: {BookingCancelled, BookingCompleted},
+}
+
+var (
+	ErrInvalidBookingTransition = errors.New("invalid booking status change")
+	// ErrBookingNotFound also covers bookings outside the caller's scope, so
+	// their existence is not revealed.
+	ErrBookingNotFound = errors.New("booking not found")
+)
+
+// CheckBookingTransition reports whether a booking may move from -> to.
+func CheckBookingTransition(from, to string) error {
+	for _, allowed := range bookingTransitions[from] {
+		if allowed == to {
+			return nil
+		}
+	}
+	return fmt.Errorf("%w: %s -> %s", ErrInvalidBookingTransition, from, to)
+}
+
+// BookingScope limits which bookings a query or change may touch: those of
+// one agency's tours, or those made by one user. A nil field is unrestricted.
+type BookingScope struct {
+	AgencyID *uuid.UUID
+	UserID   *uuid.UUID
+}
+
+// BookingFilter selects bookings for listing.
+type BookingFilter struct {
+	BookingScope
+	TourID *uuid.UUID
+	Status string
+	Page   int
+	Limit  int
+}
+
+// LockedBooking is a booking row locked for a status change, with the tour
+// details the change needs.
+type LockedBooking struct {
 	BookingID      uuid.UUID
-	CustomerID     uuid.UUID
-	CustomerName   string
 	TourID         uuid.UUID
-	TourName       string
-	AgencyName     string
-	BookingDate    time.Time
+	AgencyID       uuid.UUID
+	UserID         *uuid.UUID
 	NumberOfPeople int
-	TotalPrice     float64
 	Status         string
-	CreatedBy      string
-	CreatedAt      time.Time
+	TourStartDate  time.Time
+}
+
+type UpdateBookingStatusRequest struct {
+	Status string `json:"status" validate:"required,oneof=confirmed cancelled completed"`
 }
