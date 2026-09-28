@@ -32,8 +32,9 @@ func (h *tourRepositoryDB) CreateTour(ctx context.Context, tour *domain.Tour) er
 	}
 	defer tx.Rollback() // no-op after a successful commit
 
-	query := `INSERT INTO tours (agency_id,name,start_date,end_date,available_seat,description,last_enrollment_date,price,discount) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING tour_id;`
-	err = tx.QueryRowContext(ctx, query, tour.AgencyID, tour.Name, tour.StartDate, tour.EndDate, tour.AvailableSeat, tour.Description, tour.LastEnrollmentDate, tour.Price, tour.Discount).Scan(&tour.TourID)
+	// A new tour has no bookings, so every seat is available.
+	query := `INSERT INTO tours (agency_id,name,start_date,end_date,total_seat,available_seat,description,last_enrollment_date,price,discount) VALUES ($1,$2,$3,$4,$5,$5,$6,$7,$8,$9) RETURNING tour_id, available_seat;`
+	err = tx.QueryRowContext(ctx, query, tour.AgencyID, tour.Name, tour.StartDate, tour.EndDate, tour.TotalSeat, tour.Description, tour.LastEnrollmentDate, tour.Price, tour.Discount).Scan(&tour.TourID, &tour.AvailableSeat)
 	if err != nil {
 		return fmt.Errorf("insert tour: %w", err)
 	}
@@ -53,7 +54,7 @@ func (h *tourRepositoryDB) ListTour(ctx context.Context, agencyID uuid.UUID, pag
 	offset := (page - 1) * limit
 
 	var tours []*domain.Tour
-	query := `SELECT t.tour_id,t.agency_id,t.name,t.start_date,t.end_date,t.available_seat,t.description,t.last_enrollment_date,t.price,t.discount,t.status,COALESCE(ti.image_path,'') AS image_path FROM tours t ` + activeTourImageJoin + ` WHERE t.agency_id=$1 ORDER BY t.start_date DESC LIMIT $2 OFFSET $3;`
+	query := `SELECT t.tour_id,t.agency_id,t.name,t.start_date,t.end_date,t.total_seat,t.available_seat,t.description,t.last_enrollment_date,t.price,t.discount,t.status,COALESCE(ti.image_path,'') AS image_path FROM tours t ` + activeTourImageJoin + ` WHERE t.agency_id=$1 ORDER BY t.start_date DESC LIMIT $2 OFFSET $3;`
 	err := h.db.SelectContext(ctx, &tours, query, agencyID, limit, offset)
 	if err != nil {
 		return nil, err
@@ -78,16 +79,39 @@ func (h *tourRepositoryDB) Count(ctx context.Context, agencyID uuid.UUID) (int, 
 func (h *tourRepositoryDB) UpdateTour(ctx context.Context, t *domain.Tour) error {
 	// agency_id is part of the filter, not the SET list: a tour can only be
 	// updated through the agency that owns it and can never be moved.
-	query := `UPDATE tours SET name=$1,start_date=$2,end_date=$3,available_seat=$4,description=$5,last_enrollment_date=$6,price=$7,discount=$8,updated_at=$9 WHERE tour_id=$10 AND agency_id=$11;`
-	res, err := h.db.ExecContext(ctx, query, t.Name, t.StartDate, t.EndDate, t.AvailableSeat, t.Description, t.LastEnrollmentDate, t.Price, t.Discount, t.UpdatedAt, t.TourID, t.AgencyID)
+	//
+	// The client sets the capacity (total_seat). The remaining seats are
+	// recomputed from the seats already booked (total_seat - available_seat,
+	// read from the row being updated), so an edit never discards bookings.
+	// The capacity guard is in the WHERE clause, so the check and the write are
+	// one atomic statement under the same row lock bookings take.
+	query := `
+	UPDATE tours SET
+		name=$1, start_date=$2, end_date=$3,
+		available_seat = $4 - (total_seat - available_seat),
+		total_seat = $4,
+		description=$5, last_enrollment_date=$6, price=$7, discount=$8, updated_at=$9
+	WHERE tour_id=$10 AND agency_id=$11 AND $4 >= total_seat - available_seat
+	RETURNING available_seat;`
+	err := h.db.QueryRowxContext(ctx, query, t.Name, t.StartDate, t.EndDate, t.TotalSeat, t.Description, t.LastEnrollmentDate, t.Price, t.Discount, t.UpdatedAt, t.TourID, t.AgencyID).Scan(&t.AvailableSeat)
+	if err == nil {
+		return nil
+	}
+	if !errors.Is(err, sql.ErrNoRows) {
+		return err
+	}
+
+	// Nothing matched: either the tour does not exist for this agency, or the
+	// new capacity is below the booked seats.
+	var booked int
+	err = h.db.QueryRowxContext(ctx, `SELECT total_seat - available_seat FROM tours WHERE tour_id=$1 AND agency_id=$2;`, t.TourID, t.AgencyID).Scan(&booked)
+	if errors.Is(err, sql.ErrNoRows) {
+		return errors.New("tour not found")
+	}
 	if err != nil {
 		return err
 	}
-	rows, _ := res.RowsAffected()
-	if rows == 0 {
-		return errors.New("tour not found")
-	}
-	return nil
+	return fmt.Errorf("%w (%d booked)", domain.ErrCapacityBelowBooked, booked)
 }
 
 func (h *tourRepositoryDB) DeleteTour(ctx context.Context, tourID uuid.UUID, agencyScope *uuid.UUID) error {
@@ -100,10 +124,10 @@ func (h *tourRepositoryDB) DeleteTour(ctx context.Context, tourID uuid.UUID, age
 }
 
 func (h *tourRepositoryDB) GetByID(ctx context.Context, tourID uuid.UUID) (*domain.Tour, error) {
-	query := `SELECT t.tour_id,t.agency_id,t.name,t.start_date,t.end_date,t.available_seat,t.description,t.last_enrollment_date,t.price,t.discount,t.status,COALESCE(ti.image_path,'') FROM tours t ` + activeTourImageJoin + ` WHERE t.tour_id=$1;`
+	query := `SELECT t.tour_id,t.agency_id,t.name,t.start_date,t.end_date,t.total_seat,t.available_seat,t.description,t.last_enrollment_date,t.price,t.discount,t.status,COALESCE(ti.image_path,'') FROM tours t ` + activeTourImageJoin + ` WHERE t.tour_id=$1;`
 
 	tour := &domain.Tour{}
-	err := h.executor(ctx).QueryRowxContext(ctx, query, tourID).Scan(&tour.TourID, &tour.AgencyID, &tour.Name, &tour.StartDate, &tour.EndDate, &tour.AvailableSeat, &tour.Description, &tour.LastEnrollmentDate, &tour.Price, &tour.Discount, &tour.Status, &tour.ImagePath)
+	err := h.executor(ctx).QueryRowxContext(ctx, query, tourID).Scan(&tour.TourID, &tour.AgencyID, &tour.Name, &tour.StartDate, &tour.EndDate, &tour.TotalSeat, &tour.AvailableSeat, &tour.Description, &tour.LastEnrollmentDate, &tour.Price, &tour.Discount, &tour.Status, &tour.ImagePath)
 	if err == sql.ErrNoRows {
 		return nil, errors.New("tour not found")
 	}
@@ -124,10 +148,10 @@ func (h *tourRepositoryDB) UpdateAvailableSeats(ctx context.Context, tourID uuid
 
 func (h *tourRepositoryDB) GetByIDForUpdate(ctx context.Context, tourID uuid.UUID) (*domain.Tour, error) {
 	// SELECT ... FOR UPDATE locks the row
-	query := `SELECT tour_id,agency_id,name,start_date,end_date,available_seat,description,last_enrollment_date,price,discount,status FROM tours WHERE tour_id=$1 FOR UPDATE;`
+	query := `SELECT tour_id,agency_id,name,start_date,end_date,total_seat,available_seat,description,last_enrollment_date,price,discount,status FROM tours WHERE tour_id=$1 FOR UPDATE;`
 
 	tour := &domain.Tour{}
-	err := h.executor(ctx).QueryRowxContext(ctx, query, tourID).Scan(&tour.TourID, &tour.AgencyID, &tour.Name, &tour.StartDate, &tour.EndDate, &tour.AvailableSeat, &tour.Description, &tour.LastEnrollmentDate, &tour.Price, &tour.Discount, &tour.Status)
+	err := h.executor(ctx).QueryRowxContext(ctx, query, tourID).Scan(&tour.TourID, &tour.AgencyID, &tour.Name, &tour.StartDate, &tour.EndDate, &tour.TotalSeat, &tour.AvailableSeat, &tour.Description, &tour.LastEnrollmentDate, &tour.Price, &tour.Discount, &tour.Status)
 	if err == sql.ErrNoRows {
 		return nil, errors.New("tour not found")
 	}

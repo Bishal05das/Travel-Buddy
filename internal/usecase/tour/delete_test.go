@@ -35,7 +35,7 @@ func TestDeleteTourUseCase(t *testing.T) {
 					LastEnrollmentDate: parseDate(t, "2026-12-05"),
 					Price:              10000,
 					Discount:           20,
-					AvailableSeat:      30,
+					TotalSeat:          30,
 				},
 				{
 					TourID:             tour2ID,
@@ -47,7 +47,7 @@ func TestDeleteTourUseCase(t *testing.T) {
 					LastEnrollmentDate: parseDate(t, "2026-12-06"),
 					Price:              10000,
 					Discount:           20,
-					AvailableSeat:      30,
+					TotalSeat:          30,
 				},
 				{
 					TourID:             tour3ID,
@@ -59,7 +59,7 @@ func TestDeleteTourUseCase(t *testing.T) {
 					LastEnrollmentDate: parseDate(t, "2026-12-05"),
 					Price:              10000,
 					Discount:           20,
-					AvailableSeat:      30,
+					TotalSeat:          30,
 				},
 			},
 			tourID:    tour1ID,

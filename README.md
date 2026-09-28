@@ -229,6 +229,13 @@ or `POST /members/login`. The **Access** column lists who may call each route
 
 The booking `total_price` must equal `(price - price * discount / 100) * number_of_people`.
 
+**Seats:** a tour's `total_seat` is its capacity and is set when the tour is
+created or updated (tour creation still accepts `available_seat` as an alias).
+`available_seat` is read-only: it starts at `total_seat` and bookings reduce it.
+Updating `total_seat` keeps existing bookings, so `available_seat` becomes
+`total_seat - booked`. Setting a capacity below the booked seats returns
+`409 Conflict`.
+
 ---
 
 # 🧪 Running Tests
