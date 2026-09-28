@@ -136,6 +136,11 @@ DBNAME=travelbuddy
 DBUSER=postgres
 DBPASSWORD=password
 ENABLE_SSL_MODE=false
+
+# Optional
+JWT_TTL=24h                       # access token lifetime (Go duration)
+TRUST_PROXY_HEADERS=false         # true only behind a proxy that sets X-Real-IP / X-Forwarded-For
+MIGRATIONS_PATH=file://migrations # the Docker image uses file:///migrations
 ```
 
 ⚠️ Do not commit `.env` files to version control.
@@ -192,67 +197,37 @@ They define schema changes for:
 
 # 📡 API Endpoints
 
-## Home
+Protected routes need `Authorization: Bearer <token>` from `POST /users/login`
+or `POST /members/login`. The **Access** column lists who may call each route
+(see [Roles and permissions](#-roles-and-permissions)).
 
-```
-GET /home
-```
+| Method | Path | Access |
+|---|---|---|
+| GET | `/home` | public |
+| GET | `/search?q=&min_price=&max_price=&start_date=&end_date=` | public |
+| GET | `/tours/{tour_id}` | public |
+| GET | `/agency/{agency_id}/tours/list?page=&limit=` | public |
+| POST | `/agency/{agency_id}/tours` (multipart, `image` file) | `tour:create` |
+| PUT | `/agency/{agency_id}/tours/{tour_id}` | `tour:update` |
+| PATCH | `/tours/{tour_id}/tour-status` (body: `"open"`/`"closed"`/`"cancelled"`) | `tour:update` |
+| DELETE | `/tours/{tour_id}` | `tour:delete` |
+| POST | `/users` | public |
+| POST | `/users/login` | public |
+| PUT, DELETE | `/users/{user_id}` | the user themselves, or super |
+| POST | `/bookings/{tour_id}` | role `user` |
+| POST | `/admin/bookings/{tour_id}` (guest booking) | member with `booking:create` |
+| POST | `/agency` (multipart, `image` file) | super |
+| PUT | `/agency/{agency_id}` | `agency:update` |
+| DELETE | `/agency/{agency_id}` | `agency:delete` |
+| POST | `/members/{agency_id}` | `member:create` |
+| GET | `/members/{agency_id}` | `member:read` |
+| PUT | `/members/{member_id}/permissions` | `member:update` |
+| DELETE | `/members/{member_id}` | `member:delete` |
+| POST | `/members/login` | public |
+| POST, DELETE | `/permissions`, `/permissions/{id}` | super |
+| GET | `/images/{path}` | public (files only, no directory listing) |
 
-## Search
-
-```
-GET /search
-```
-
-## Tours
-
-```
-POST   /tours
-GET    /tours/{tour_id}
-GET    /tours/list/{agency_id}
-PUT    /tours/{tour_id}
-DELETE /tours/{tour_id}
-```
-
-## Users
-
-```
-POST   /users
-POST   /users/login
-DELETE /users/{user_id}
-PUT    /users/{user_id}
-```
-
-## Bookings
-
-```
-POST /bookings/{tour_id}
-```
-
-## Agencies
-
-```
-POST   /agency
-PUT    /agency/{agency_id}
-DELETE /agency/{agency_id}
-```
-
-## Members
-
-```
-POST   /members
-DELETE /members/{member_id}
-GET    /members/{agency_id}
-PUT    /members/{member_id}/permissions
-POST   /members/login
-```
-
-## Permissions
-
-```
-POST   /permissions
-DELETE /permissions/{id}
-```
+The booking `total_price` must equal `(price - price * discount / 100) * number_of_people`.
 
 ---
 
@@ -270,19 +245,33 @@ Mocks are used for testing repositories and usecases.
 
 # 🔐 Authentication
 
-Authentication is handled using **JWT tokens**.
+Access tokens are HS256 JWTs signed with `JWT_SECRET_KEY`. They expire after
+`JWT_TTL` and carry the caller's id, role and, for members, their agency.
 
-Utilities for authentication are located in:
+## 🛡 Roles and permissions
 
-```
-utils/
-```
+* **super** (`users.role = 'super'`): the platform administrator. Creates
+  agencies, manages the permission catalogue, can act on any agency, and
+  creates each agency's first member.
+* **member**: an agency staff account, limited to its own agency. Each route
+  requires a permission (`tour:create`, `member:update`, …) granted through the
+  member's role. Permissions are checked against the database on every request,
+  so revoking one applies immediately. A member cannot grant permissions they
+  do not hold.
+* **user**: a customer. Can book tours and manage only their own account.
 
-Including:
+The permissions the routes use are seeded by migration `000015`. List them with
+`SELECT permission_id, name FROM permissions;` to find the ids to pass as
+`permissions` when creating members.
 
-* JWT token generation
-* password hashing
-* payload extraction
+### Bootstrapping a new environment
+
+1. Register an account with `POST /users`.
+2. Promote it once in the database:
+   `UPDATE users SET role = 'super' WHERE email = 'admin@example.com';`
+3. Log in, create an agency with `POST /agency`, then create its first
+   member (for example a manager holding every permission) with
+   `POST /members/{agency_id}`. That member can manage the agency from then on.
 
 ---
 
@@ -291,8 +280,10 @@ Including:
 The API includes middleware for:
 
 * **Logging**
-* **Rate Limiting**
-* **Authentication**
+* **Rate Limiting**: 30 requests/minute per client IP
+* **Authentication**: token verification
+* **Authorization**: role, self-or-super and permission checks
+* **Request size limit**: 11 MB bodies
 
 ---
 
@@ -311,11 +302,11 @@ This project follows best practices such as:
 
 # 📦 CI/CD
 
-GitHub Actions is used for:
+GitHub Actions (`.github/workflows/ci-cd.yml`):
 
-* running tests
-* validating builds
-* maintaining code quality
+* runs `gofmt`, `go vet` and `go test -race` on every push to `main`,
+  `pre-release`, `release/**` and `feature/**`, and on pull requests
+* builds and pushes the Docker image on manual dispatch, only after tests pass
 
 ---
 
