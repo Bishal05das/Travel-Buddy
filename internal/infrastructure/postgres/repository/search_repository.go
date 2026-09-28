@@ -112,7 +112,7 @@ func (r *searchRepository) SearchTours(ctx context.Context, filter domain.TourSe
 	}
 	defer rows.Close()
 
-	var tours []domain.TourSearchResponse
+	tours := []domain.TourSearchResponse{}
 
 	for rows.Next() {
 		var t domain.TourSearchResponse
@@ -131,6 +131,9 @@ func (r *searchRepository) SearchTours(ctx context.Context, filter domain.TourSe
 			return nil, err
 		}
 		tours = append(tours, t)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return tours, nil
@@ -156,7 +159,7 @@ func (r *searchRepository) SearchAgencies(
 	}
 	defer rows.Close()
 
-	var agencies []domain.Agency
+	agencies := []domain.Agency{}
 
 	for rows.Next() {
 		var a domain.Agency
@@ -164,6 +167,9 @@ func (r *searchRepository) SearchAgencies(
 			return nil, err
 		}
 		agencies = append(agencies, a)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return agencies, nil
