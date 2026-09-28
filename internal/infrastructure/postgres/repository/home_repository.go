@@ -30,7 +30,7 @@ func (r *homeRepositoryDB) GetTopTours(ctx context.Context, limit int) ([]domain
 			t.end_date,
 			t.price,
 			t.discount,
-			(t.price - t.discount)       AS final_price,
+			(t.price - (t.price * t.discount) / 100) AS final_price, -- discount is a percentage; same rounding as Tour.UnitPrice
 			t.available_seat,
 			t.last_enrollment_date,
 			t.description,
