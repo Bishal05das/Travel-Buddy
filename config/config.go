@@ -31,7 +31,9 @@ type Config struct {
 	// TrustProxyHeaders makes the rate limiter use X-Real-IP /
 	// X-Forwarded-For. Enable only behind a reverse proxy that sets them.
 	TrustProxyHeaders bool
-	DB                *DBConfig
+	// RateLimitPerMinute is the request budget per client IP (default 30).
+	RateLimitPerMinute int
+	DB                 *DBConfig
 }
 
 func loadConfig() {
@@ -82,6 +84,15 @@ func loadConfig() {
 		}
 		trustProxyHeaders = b
 	}
+	rateLimit := 0 // middleware default
+	if v := os.Getenv("RATE_LIMIT_PER_MINUTE"); v != "" {
+		n, err := strconv.Atoi(v)
+		if err != nil || n <= 0 {
+			fmt.Println("RATE_LIMIT_PER_MINUTE must be a positive number")
+			os.Exit(1)
+		}
+		rateLimit = n
+	}
 	host := os.Getenv("DBHOST")
 	if host == "" {
 		fmt.Println("HOST is required")
@@ -129,12 +140,13 @@ func loadConfig() {
 		migrationsURL = "file://migrations"
 	}
 	configurations = &Config{
-		Version:           version,
-		ServiceName:       serviceName,
-		HttpPort:          port,
-		JWTSecretkey:      jwtSecretKey,
-		JWTTTL:            jwtTTL,
-		TrustProxyHeaders: trustProxyHeaders,
+		Version:            version,
+		ServiceName:        serviceName,
+		HttpPort:           port,
+		JWTSecretkey:       jwtSecretKey,
+		JWTTTL:             jwtTTL,
+		TrustProxyHeaders:  trustProxyHeaders,
+		RateLimitPerMinute: rateLimit,
 		DB: &DBConfig{
 			Host:          host,
 			Port:          dbprt,
