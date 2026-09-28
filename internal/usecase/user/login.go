@@ -27,7 +27,7 @@ func (uc *userLoginUseCase) Execute(ctx context.Context, user *domain.ReqLogin) 
 	usr, err := uc.userRepo.FindUserByEmail(ctx, user.Email)
 	if usr == nil {
 		return nil, errors.New("Invalid Credentials")
-	} 
+	}
 	err = bcrypt.CompareHashAndPassword([]byte(usr.Password), []byte(user.Password))
 	if err != nil {
 		return nil, errors.New("Invalid Password")

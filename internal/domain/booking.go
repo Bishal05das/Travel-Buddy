@@ -86,7 +86,7 @@ func (r *BookingRequestByAdmin) ToCommand(memberID *uuid.UUID) *BookingCommand {
 		NumberOfPeople: r.NumberOfPeople,
 		Method:         r.Method,
 		TransactionId:  r.TransactionId,
-		MemberID:         memberID,
+		MemberID:       memberID,
 		GuestInfo: &GuestCustomer{
 			Name:  r.CustomerName,
 			Email: r.CustomerEmail,

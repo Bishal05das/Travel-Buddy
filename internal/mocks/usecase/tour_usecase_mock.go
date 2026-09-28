@@ -27,7 +27,7 @@ type MockListTour struct {
 	ExecuteFunc func(ctx context.Context, agencyID uuid.UUID, page, limit float64) ([]*domain.Tour, error)
 }
 
-func (m *MockListTour) Execute(ctx context.Context, agencyID uuid.UUID,page, limit float64) ([]*domain.Tour, error) {
+func (m *MockListTour) Execute(ctx context.Context, agencyID uuid.UUID, page, limit float64) ([]*domain.Tour, error) {
 	return m.ExecuteFunc(ctx, agencyID, page, limit)
 }
 

@@ -35,9 +35,9 @@ func (u *homeUseCase) GetHome(ctx context.Context) (*domain.HomeResponse, error)
 	}
 	wg.Add(2)
 
-	go func(){
+	go func() {
 		defer wg.Done()
-		result,err := u.repo.GetTopTours(ctx,5)
+		result, err := u.repo.GetTopTours(ctx, 5)
 		if err != nil {
 			capture(err)
 			return
@@ -63,7 +63,7 @@ func (u *homeUseCase) GetHome(ctx context.Context) (*domain.HomeResponse, error)
 	wg.Wait()
 
 	if firstErr != nil {
-		return nil,firstErr
+		return nil, firstErr
 	}
 	return &response, nil
 }

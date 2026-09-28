@@ -263,10 +263,10 @@ func TestUpdateMemberPermissionsHandler(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name:     "invalid json",
-			memberID: "550e8400-e29b-41d4-a716-446655440000",
-			body:     `{bad-json}`,
-			mockUsecase: func(m *mocks.MockUpdatePermission) {},
+			name:           "invalid json",
+			memberID:       "550e8400-e29b-41d4-a716-446655440000",
+			body:           `{bad-json}`,
+			mockUsecase:    func(m *mocks.MockUpdatePermission) {},
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
@@ -342,9 +342,9 @@ func TestMemberLoginHandler(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name: "validation error",
-			body: `{}`,
-			mockUsecase: func(m *mocks.MockLoginMember) {},
+			name:           "validation error",
+			body:           `{}`,
+			mockUsecase:    func(m *mocks.MockLoginMember) {},
 			expectedStatus: http.StatusBadRequest,
 		},
 		{

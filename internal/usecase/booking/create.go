@@ -34,23 +34,23 @@ func (uc *createbookingusecase) Execute(ctx context.Context, req *domain.Booking
 		//starts by row level locking
 		tour, err := uc.tourRepo.GetByIDForUpdate(txCtx, req.TourID)
 		if err != nil {
-			return  err
+			return err
 		}
 		if tour.Status != "open" {
-			return  errors.New("tour is not open for booking")
+			return errors.New("tour is not open for booking")
 		}
 		if tour.AvailableSeat <= req.NumberOfPeople {
-			return  errors.New("Not enough seats available")
+			return errors.New("Not enough seats available")
 		}
 		if time.Now().After(tour.LastEnrollmentDate) {
-			return  errors.New("enrollment deadline has passed")
+			return errors.New("enrollment deadline has passed")
 		}
 		//calculate price with discount
 		receivedPrice := req.TotalPrice
 		totalDiscount := (tour.Price * tour.Discount) / 100
 		calculatedPrice := tour.Price - totalDiscount
 		if receivedPrice != calculatedPrice {
-			return  errors.New("price mismatch, please check the price and try again")
+			return errors.New("price mismatch, please check the price and try again")
 		}
 
 		var customerID uuid.UUID
@@ -58,11 +58,11 @@ func (uc *createbookingusecase) Execute(ctx context.Context, req *domain.Booking
 		if req.UserID != nil {
 			customerID, err = uc.bookingRepo.GetOrCreateCustomerByUser(txCtx, *req.UserID)
 			if err != nil {
-				return  err
+				return err
 			}
 		} else if req.MemberID != nil {
 			if req.GuestInfo.Name == "" || req.GuestInfo.Email == "" || req.GuestInfo.Phone == "" {
-				return  errors.New("customer details required for guest booking")
+				return errors.New("customer details required for guest booking")
 			}
 			customer := &domain.Customer{
 				Name:  req.GuestInfo.Name,
@@ -70,7 +70,7 @@ func (uc *createbookingusecase) Execute(ctx context.Context, req *domain.Booking
 				Phone: req.GuestInfo.Phone,
 			}
 			if err := uc.bookingRepo.CreateCustomer(txCtx, customer); err != nil {
-				return  err
+				return err
 			}
 			customerID = customer.CustomerID
 		} else {
@@ -90,7 +90,7 @@ func (uc *createbookingusecase) Execute(ctx context.Context, req *domain.Booking
 		if req.MemberID != nil {
 			booking.MemberID = req.MemberID
 		}
-	
+
 		if err := uc.bookingRepo.Create(txCtx, booking); err != nil {
 			return err
 		}

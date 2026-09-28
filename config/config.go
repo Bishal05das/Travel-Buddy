@@ -92,7 +92,7 @@ func loadConfig() {
 		fmt.Println("Enable SSL Mode is required")
 		os.Exit(1)
 	}
-	enbleSSLMode,err := strconv.ParseBool(enableSSLMode)
+	enbleSSLMode, err := strconv.ParseBool(enableSSLMode)
 	if err != nil {
 		fmt.Println("Enable SSL Mode must be a boolean")
 		os.Exit(1)

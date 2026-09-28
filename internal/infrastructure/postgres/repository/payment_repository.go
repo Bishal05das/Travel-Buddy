@@ -25,7 +25,7 @@ func (p *paymentRepositoryDB) Create(ctx context.Context, payment *domain.Paymen
 }
 
 func (p *paymentRepositoryDB) executor(ctx context.Context) sqlx.ExtContext {
-	if tx,ok :=GetTx(ctx); ok {
+	if tx, ok := GetTx(ctx); ok {
 		return tx
 	}
 	return p.db

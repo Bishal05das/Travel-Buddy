@@ -72,29 +72,29 @@ func TestCreateUserHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-		mockUC := &mocks.MockCreateUser{}
-		tt.mockUsecase(mockUC)
+			mockUC := &mocks.MockCreateUser{}
+			tt.mockUsecase(mockUC)
 
-		h := handler.NewUserHandler(mockUC, nil, nil, nil)
-		req := httptest.NewRequest(
-			http.MethodPost,
-			"/users",
-			bytes.NewBufferString(tt.body),
-		)
-		req.Header.Set("Content-Type", "application/json")
-
-		rec := httptest.NewRecorder()
-
-		h.CreateUser(rec, req)
-
-		if rec.Code != tt.expectedStatus {
-			t.Errorf("expected status %d got %d",
-				tt.expectedStatus,
-				rec.Code,
+			h := handler.NewUserHandler(mockUC, nil, nil, nil)
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/users",
+				bytes.NewBufferString(tt.body),
 			)
-		}
-	})
-}
+			req.Header.Set("Content-Type", "application/json")
+
+			rec := httptest.NewRecorder()
+
+			h.CreateUser(rec, req)
+
+			if rec.Code != tt.expectedStatus {
+				t.Errorf("expected status %d got %d",
+					tt.expectedStatus,
+					rec.Code,
+				)
+			}
+		})
+	}
 }
 
 func TestUserLoginHandler(t *testing.T) {

@@ -21,7 +21,7 @@ func NewAgencyRepositoryDB(db *sqlx.DB) port.AgencyRepository {
 	}
 }
 
-func (h *agencyRepositoryDB) CreateAgency(ctx context.Context,agency *domain.Agency,imagePath string) error {
+func (h *agencyRepositoryDB) CreateAgency(ctx context.Context, agency *domain.Agency, imagePath string) error {
 	tx, err := h.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)

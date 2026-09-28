@@ -11,7 +11,7 @@ type permissionRepositoryDB struct {
 	db *sqlx.DB
 }
 
-func NewPermissionRepositoryDB(db *sqlx.DB) *permissionRepositoryDB{
+func NewPermissionRepositoryDB(db *sqlx.DB) *permissionRepositoryDB {
 	return &permissionRepositoryDB{
 		db: db,
 	}
@@ -23,9 +23,9 @@ func (h *permissionRepositoryDB) CreatePermission(ctx context.Context, permisson
 	return h.executor(ctx).QueryRowxContext(ctx, query, permisson.Name, permisson.Resource, permisson.Action).Scan(&permisson.PermissionID)
 }
 
-func (h *permissionRepositoryDB) DeletePermission(ctx context.Context,permissionID int) error {
+func (h *permissionRepositoryDB) DeletePermission(ctx context.Context, permissionID int) error {
 	query := `DELETE FROM permissions WHERE permission_id=$1;`
-	_,err := h.executor(ctx).ExecContext(ctx,query,permissionID)
+	_, err := h.executor(ctx).ExecContext(ctx, query, permissionID)
 	if err != nil {
 		return err
 	}

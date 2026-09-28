@@ -18,6 +18,6 @@ func NewGetTourUseCase(repo port.TourRepository) *GetTourUseCase {
 	}
 }
 
-func(uc *GetTourUseCase) Execute(ctx context.Context,tourID uuid.UUID) (*domain.Tour,error) {
-	return uc.repo.GetByID(ctx,tourID)
+func (uc *GetTourUseCase) Execute(ctx context.Context, tourID uuid.UUID) (*domain.Tour, error) {
+	return uc.repo.GetByID(ctx, tourID)
 }

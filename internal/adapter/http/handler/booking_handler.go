@@ -27,19 +27,19 @@ func NewBookingHandler(createuc port.CreateBooking) *BookingHandler {
 	}
 }
 
-func (h *BookingHandler) CreateBookingByUser(w http.ResponseWriter, r *http.Request){
+func (h *BookingHandler) CreateBookingByUser(w http.ResponseWriter, r *http.Request) {
 	handleCreateBooking[domain.BookingRequestByUser](
 		h, w, r, "user",
 	)
 }
 
-func (h *BookingHandler) CreateBookingByAdmin(w http.ResponseWriter, r *http.Request){
+func (h *BookingHandler) CreateBookingByAdmin(w http.ResponseWriter, r *http.Request) {
 	handleCreateBooking[domain.BookingRequestByAdmin](
 		h, w, r, "admin",
 	)
 }
 
-func handleCreateBooking[T any, PT BookingRequest[T]](h *BookingHandler, w http.ResponseWriter, r *http.Request, requiredRole string,) {
+func handleCreateBooking[T any, PT BookingRequest[T]](h *BookingHandler, w http.ResponseWriter, r *http.Request, requiredRole string) {
 	idStr := r.PathValue("tour_id")
 	tourID, err := uuid.Parse(idStr)
 	if err != nil {
@@ -57,7 +57,6 @@ func handleCreateBooking[T any, PT BookingRequest[T]](h *BookingHandler, w http.
 		http.Error(w, "forbidden", http.StatusForbidden)
 		return
 	}
-	
 
 	var req T
 	pReq := PT(&req)
@@ -75,7 +74,7 @@ func handleCreateBooking[T any, PT BookingRequest[T]](h *BookingHandler, w http.
 		return
 	}
 
-	cmd :=pReq.ToCommand(&actorID)
+	cmd := pReq.ToCommand(&actorID)
 	result, err := h.createuc.Execute(r.Context(), cmd)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
@@ -84,7 +83,3 @@ func handleCreateBooking[T any, PT BookingRequest[T]](h *BookingHandler, w http.
 	util.SendData(w, result, http.StatusCreated)
 
 }
-
-
-
-

@@ -18,7 +18,7 @@ func NewSearchRepository(db *sqlx.DB) port.SearchRepository {
 	return &searchRepository{db: db}
 }
 
-func (r *searchRepository) SearchTours(ctx context.Context,filter domain.TourSearchFilter,) ([]domain.TourSearchResponse, error) {
+func (r *searchRepository) SearchTours(ctx context.Context, filter domain.TourSearchFilter) ([]domain.TourSearchResponse, error) {
 
 	baseQuery := `
 	SELECT 

@@ -19,7 +19,7 @@ func NewUpdateTourUseCase(repo port.TourRepository) port.UpdateTour {
 }
 
 func (uc *updateTourUseCase) Execute(ctx context.Context, tour *domain.Tour) error {
-	hasTour, err := uc.repo.GetByID(ctx,tour.TourID)
+	hasTour, err := uc.repo.GetByID(ctx, tour.TourID)
 	if err != nil {
 		return err
 	}

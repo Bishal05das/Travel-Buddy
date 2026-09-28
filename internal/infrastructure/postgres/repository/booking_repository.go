@@ -127,7 +127,7 @@ func (r *bookingRepository) GetOrCreateCustomerByUser(ctx context.Context, userI
 
 	err = r.executor(ctx).QueryRowxContext(ctx, insertQuery, userID).Scan(&customerID)
 	if err != nil {
-		return uuid.Nil,err
+		return uuid.Nil, err
 	}
 	return customerID, nil
 }

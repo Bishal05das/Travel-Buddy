@@ -211,7 +211,6 @@ package handler_test
 // 	}
 // }
 
-
 // func TestDeleteTourHandler(t *testing.T) {
 
 // 	tests := []struct {

@@ -192,7 +192,6 @@ func (r *Router) RegisterRoutes() {
 		r.protected(http.HandlerFunc(r.permissionHandler.DeletePermission)),
 	)
 
-
 	// images
 	imageFS := http.FileServer(http.Dir("./images"))
 	r.mux.Handle(

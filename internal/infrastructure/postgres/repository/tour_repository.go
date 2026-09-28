@@ -77,7 +77,7 @@ func (h *tourRepositoryDB) Count(ctx context.Context, agencyID uuid.UUID) (int, 
 
 func (h *tourRepositoryDB) UpdateTour(ctx context.Context, t *domain.Tour) error {
 	query := `UPDATE tours SET agency_id=$1,name=$2,start_date=$3,end_date=$4,available_seat=$5,description=$6,last_enrollment_date=$7,price=$8,discount=$9,updated_at=$10 WHERE tour_id=$11;`
-	res,err := h.db.ExecContext(ctx, query, t.AgencyID, t.Name, t.StartDate, t.EndDate, t.AvailableSeat, t.Description, t.LastEnrollmentDate, t.Price, t.Discount,t.UpdatedAt, t.TourID)
+	res, err := h.db.ExecContext(ctx, query, t.AgencyID, t.Name, t.StartDate, t.EndDate, t.AvailableSeat, t.Description, t.LastEnrollmentDate, t.Price, t.Discount, t.UpdatedAt, t.TourID)
 	if err != nil {
 		return err
 	}
@@ -132,7 +132,7 @@ func (h *tourRepositoryDB) GetByIDForUpdate(ctx context.Context, tourID uuid.UUI
 	return tour, nil
 }
 
-func (h *tourRepositoryDB) UpdateTourStatus(ctx context.Context,tourID uuid.UUID, status string) error {
+func (h *tourRepositoryDB) UpdateTourStatus(ctx context.Context, tourID uuid.UUID, status string) error {
 	query := `UPDATE tours SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE tour_id= $2;`
 	_, err := h.executor(ctx).ExecContext(ctx, query, status, tourID)
 	return err

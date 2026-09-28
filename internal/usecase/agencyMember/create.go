@@ -38,7 +38,7 @@ func (uc *CreateAgencyMemberUseCase) Execute(ctx context.Context, req *domain.Cr
 		}
 		//add permissions to role
 		err = uc.roleRepo.AddPermissionsToRole(txCtx, role.RoleID, req.Permissions)
-		if err != nil { 
+		if err != nil {
 			return errors.New(err.Error())
 		}
 		hashedPassword, err := util.HashPassword(req.Password)

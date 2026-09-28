@@ -16,6 +16,6 @@ func NewUpdateTourStatusUseCase(repo port.TourRepository) port.UpdateTourStatus 
 	}
 }
 
-func (uc *updateTourStatusUseCase) Execute(ctx context.Context,tourID uuid.UUID, status string) error {
-	return uc.repo.UpdateTourStatus(ctx,tourID,status)
+func (uc *updateTourStatusUseCase) Execute(ctx context.Context, tourID uuid.UUID, status string) error {
+	return uc.repo.UpdateTourStatus(ctx, tourID, status)
 }

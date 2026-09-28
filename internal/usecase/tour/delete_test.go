@@ -26,7 +26,7 @@ func TestDeleteTourUseCase(t *testing.T) {
 			name: "successful delete",
 			seedTours: []*domain.Tour{
 				{
-					TourID: tour1ID,
+					TourID:             tour1ID,
 					AgencyID:           agency1ID,
 					Name:               "Bandarban tour",
 					StartDate:          parseDate(t, "2026-12-10"),
@@ -37,7 +37,7 @@ func TestDeleteTourUseCase(t *testing.T) {
 					Discount:           200,
 				},
 				{
-					TourID: tour2ID,
+					TourID:             tour2ID,
 					AgencyID:           agency1ID,
 					Name:               "sundarban tour",
 					StartDate:          parseDate(t, "2026-12-11"),
@@ -48,7 +48,7 @@ func TestDeleteTourUseCase(t *testing.T) {
 					Discount:           200,
 				},
 				{
-					TourID: tour3ID,
+					TourID:             tour3ID,
 					AgencyID:           agency2ID,
 					Name:               "sylhet tour",
 					StartDate:          parseDate(t, "2026-12-10"),
@@ -74,13 +74,13 @@ func TestDeleteTourUseCase(t *testing.T) {
 			repo := mocks.NewMockTourRepository()
 
 			for _, tour := range tt.seedTours {
-				err := repo.CreateTour(context.Background(),tour)
+				err := repo.CreateTour(context.Background(), tour)
 				if err != nil {
 					t.Fatalf("failed to seed tour: %v", err)
 				}
 			}
 			usecase := tourusecase.NewDeleteTourUseCase(repo)
-			err := usecase.Execute(context.Background(),tt.tourID)
+			err := usecase.Execute(context.Background(), tt.tourID)
 			if tt.expectErr && err == nil {
 				t.Fatalf("expected error,got nil")
 			}

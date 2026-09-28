@@ -77,7 +77,7 @@ func main() {
 	createMemberUC := memberusecase.NewCreateAgencyMemberUseCase(txManager, memberRepo, roleRepo)
 	deleteMemberUC := memberusecase.NewDeleteAgencyMemberUseCase(memberRepo)
 	listMemberUC := memberusecase.NewListAgencyMemberUseCase(memberRepo)
-	LoginMemberUC := memberusecase.NewMemberLoginUseCase(memberRepo,cfg)
+	LoginMemberUC := memberusecase.NewMemberLoginUseCase(memberRepo, cfg)
 
 	updatePermissionUC := memberusecase.NewUpdatePermissionUseCase(txManager, memberRepo, roleRepo)
 	createPermissionsUC := permissionusecase.NewCreatePermissionUseCase(permissionRepo)
@@ -86,18 +86,18 @@ func main() {
 	//handler
 	homeHandler := handler.NewHomeHandler(homeUC)
 	searchHandler := handler.NewSearchHandler(searchUC)
-	tourHandler := handler.NewTourHandler(createTourUC,getTourUC,listTourUC,updateTourUC,updateTourStatusUC,deleteTourUC)
-	userHandler := handler.NewUserHandler(createuserUC, loginUserUC,deleteUserUC,updateUserUC)
+	tourHandler := handler.NewTourHandler(createTourUC, getTourUC, listTourUC, updateTourUC, updateTourStatusUC, deleteTourUC)
+	userHandler := handler.NewUserHandler(createuserUC, loginUserUC, deleteUserUC, updateUserUC)
 	bookingHandler := handler.NewBookingHandler(createBookingUC)
 	agencyHandler := handler.NewAgencyHandler(createAgencyUC, updateAgencyUC, deleteAgencyUC)
-	memberHandler := handler.NewMemberHandler(createMemberUC, deleteMemberUC, listMemberUC, updatePermissionUC,LoginMemberUC)
+	memberHandler := handler.NewMemberHandler(createMemberUC, deleteMemberUC, listMemberUC, updatePermissionUC, LoginMemberUC)
 	permissionHandler := handler.NewPermissionHandler(createPermissionsUC, deletePermissionUC)
 
 	//middleware
 	middleware := middleware.NewMiddlewareManager(cfg)
 
 	//router setup
-	router := router.NewRoutes(mux, middleware,homeHandler,searchHandler, tourHandler, userHandler, bookingHandler, agencyHandler, memberHandler, permissionHandler)
+	router := router.NewRoutes(mux, middleware, homeHandler, searchHandler, tourHandler, userHandler, bookingHandler, agencyHandler, memberHandler, permissionHandler)
 	router.RegisterRoutes()
 
 	fmt.Println("Listening to server on port ", cfg.HttpPort)

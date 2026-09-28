@@ -22,11 +22,11 @@ func NewUpdatePermissionUseCase(txManager port.TxManager, agencyMemberRepo port.
 	}
 }
 
-func (uc *UpdatPermissionUseCase) Execute(ctx context.Context,memberID uuid.UUID, req *domain.UpdatePermissionRequest) error {
+func (uc *UpdatPermissionUseCase) Execute(ctx context.Context, memberID uuid.UUID, req *domain.UpdatePermissionRequest) error {
 	var response error
 	err := uc.txManager.WithinTransaction(ctx, func(txCtx context.Context) error {
 		//apply row level locking
-		roleID, err := uc.agencyMemberRepo.GetRoleIDFromMemberIDForUpdate(txCtx,memberID)
+		roleID, err := uc.agencyMemberRepo.GetRoleIDFromMemberIDForUpdate(txCtx, memberID)
 		if err != nil {
 			return err
 		}

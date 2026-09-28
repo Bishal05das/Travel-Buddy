@@ -17,7 +17,7 @@ type Search interface {
 }
 
 type CreateTour interface {
-	Execute(ctx context.Context,tour *domain.Tour) error
+	Execute(ctx context.Context, tour *domain.Tour) error
 }
 
 type ListTour interface {
@@ -25,7 +25,7 @@ type ListTour interface {
 }
 
 type GetTour interface {
-	Execute(ctx context.Context,tourID uuid.UUID) (*domain.Tour,error)
+	Execute(ctx context.Context, tourID uuid.UUID) (*domain.Tour, error)
 }
 
 type UpdateTour interface {
@@ -37,7 +37,7 @@ type DeleteTour interface {
 }
 
 type UpdateTourStatus interface {
-	Execute(ctx context.Context,tourID uuid.UUID, status string) error
+	Execute(ctx context.Context, tourID uuid.UUID, status string) error
 }
 
 type CreateBooking interface {
@@ -45,11 +45,11 @@ type CreateBooking interface {
 }
 
 type CreateUser interface {
-	Execute(ctx context.Context,user *domain.User) error
+	Execute(ctx context.Context, user *domain.User) error
 }
 
 type LoginUser interface {
-	Execute(ctx context.Context,user *domain.ReqLogin) (*string, error)
+	Execute(ctx context.Context, user *domain.ReqLogin) (*string, error)
 }
 
 type DeleteUser interface {
@@ -77,7 +77,7 @@ type CreateAgencyMember interface {
 }
 
 type UpdateAgencyMemberPermission interface {
-	Execute(ctx context.Context,memberID uuid.UUID, req *domain.UpdatePermissionRequest) error
+	Execute(ctx context.Context, memberID uuid.UUID, req *domain.UpdatePermissionRequest) error
 }
 
 type DeleteAgencyMember interface {

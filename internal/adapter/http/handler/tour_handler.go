@@ -19,22 +19,22 @@ import (
 )
 
 type TourHandler struct {
-	createUC port.CreateTour
-	getUC    port.GetTour
-	listUC   port.ListTour
-	updateUC port.UpdateTour
+	createUC       port.CreateTour
+	getUC          port.GetTour
+	listUC         port.ListTour
+	updateUC       port.UpdateTour
 	updateStatusUC port.UpdateTourStatus
-	deleteUC port.DeleteTour
+	deleteUC       port.DeleteTour
 }
 
-func NewTourHandler(createUC port.CreateTour, getUC port.GetTour, listUC port.ListTour, updateUC port.UpdateTour,updateStatusUC port.UpdateTourStatus, deleteUC port.DeleteTour) *TourHandler {
+func NewTourHandler(createUC port.CreateTour, getUC port.GetTour, listUC port.ListTour, updateUC port.UpdateTour, updateStatusUC port.UpdateTourStatus, deleteUC port.DeleteTour) *TourHandler {
 	return &TourHandler{
-		createUC: createUC,
-		getUC:    getUC,
-		listUC:   listUC,
-		updateUC: updateUC,
+		createUC:       createUC,
+		getUC:          getUC,
+		listUC:         listUC,
+		updateUC:       updateUC,
 		updateStatusUC: updateStatusUC,
-		deleteUC: deleteUC,
+		deleteUC:       deleteUC,
 	}
 }
 
@@ -67,7 +67,7 @@ func (h *TourHandler) Create(w http.ResponseWriter, r *http.Request) {
 	// }
 	// util.SendData(w, "Successfully Created Tour", http.StatusCreated)
 
-	err := r.ParseMultipartForm(10 << 20) 
+	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
 		util.SendData(w, "invalid multipart form data", http.StatusBadRequest)
 		return
@@ -81,7 +81,7 @@ func (h *TourHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	startDateStr := strings.TrimSpace(r.FormValue("start_date"))
-	startDate, err := time.Parse(time.RFC3339,startDateStr)
+	startDate, err := time.Parse(time.RFC3339, startDateStr)
 	if err != nil {
 		fmt.Println(err)
 		util.SendData(w, "invalid start_date, use YYYY-MM-DD", http.StatusBadRequest)
@@ -232,7 +232,7 @@ func (h *TourHandler) List(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	var page,limit int
+	var page, limit int
 
 	pageStr := r.URL.Query().Get("page")
 	if pageStr != "" {
@@ -337,7 +337,7 @@ func (h *TourHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = h.updateStatusUC.Execute(r.Context(),id,status)
+	err = h.updateStatusUC.Execute(r.Context(), id, status)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return

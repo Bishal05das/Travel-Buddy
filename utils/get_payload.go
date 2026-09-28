@@ -16,14 +16,14 @@ func GetPayload(r *http.Request) (*Payload, error) {
 	headArr := strings.Split(header, " ")
 	if len(headArr) != 2 {
 		// http.Error(w, "Unavailable", http.StatusUnauthorized)
-		return nil,errors.New("jwt token unavailable")
+		return nil, errors.New("jwt token unavailable")
 	}
 	accessToken := headArr[1]
 
 	tokenParts := strings.Split(accessToken, ".")
 	if len(tokenParts) != 3 {
 		// http.Error(w, "Unavailable", http.StatusUnauthorized)
-		return nil,errors.New("Invalid Jwt token")
+		return nil, errors.New("Invalid Jwt token")
 	}
 	//jwtHeader := tokenParts[0]
 	jwtPayload := tokenParts[1]

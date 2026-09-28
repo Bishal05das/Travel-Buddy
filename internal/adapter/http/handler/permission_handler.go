@@ -52,5 +52,5 @@ func (h *PermissionHandler) DeletePermission(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	util.SendData(w,"Permission Deleted Succesfully",http.StatusOK)
+	util.SendData(w, "Permission Deleted Succesfully", http.StatusOK)
 }

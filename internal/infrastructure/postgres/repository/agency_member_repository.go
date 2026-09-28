@@ -23,7 +23,7 @@ func NewAgencyMemberRepositoryDB(db *sqlx.DB) port.AgencyMemberRepository {
 func (h *agencyMemberRepositoryDB) CreateMember(ctx context.Context, member *domain.AgencyMember) error {
 	query := `INSERT INTO agency_members (agency_id,role_id,name,email,phone,password) VALUES ($1,$2,$3,$4,$5,$6) RETURNING member_id;`
 
-	return h.db.QueryRowContext(ctx, query, member.AgencyID,member.RoleID,member.Name,member.Email,member.Phone,member.Password).Scan(&member.MemberID)
+	return h.db.QueryRowContext(ctx, query, member.AgencyID, member.RoleID, member.Name, member.Email, member.Phone, member.Password).Scan(&member.MemberID)
 }
 
 func (h *agencyMemberRepositoryDB) ListMember(ctx context.Context, agencyID uuid.UUID) ([]*domain.ListMemberResponse, error) {
@@ -51,9 +51,9 @@ func (h *agencyMemberRepositoryDB) ListMember(ctx context.Context, agencyID uuid
 	WHERE m.agency_id = $1
 	ORDER BY m.member_id;
 `
-	rows,err := h.db.QueryxContext(ctx, query, agencyID)
+	rows, err := h.db.QueryxContext(ctx, query, agencyID)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -61,18 +61,18 @@ func (h *agencyMemberRepositoryDB) ListMember(ctx context.Context, agencyID uuid
 	for rows.Next() {
 		var (
 			memberID uuid.UUID
-			perm domain.Permission
+			perm     domain.Permission
 		)
 
 		var m domain.ListMemberResponse
-		err := rows.Scan(&memberID,&m.Name,&m.Email,&m.Phone,&perm.PermissionID)
+		err := rows.Scan(&memberID, &m.Name, &m.Email, &m.Phone, &perm.PermissionID)
 		if err != nil {
 			return nil, err
 		}
 		if _, exists := memberMap[memberID]; !exists {
 			m.MemberID = memberID
 			m.Permissions = []int{}
-			memberMap[memberID]=&m
+			memberMap[memberID] = &m
 		}
 
 		if perm.PermissionID != 0 {
@@ -81,16 +81,16 @@ func (h *agencyMemberRepositoryDB) ListMember(ctx context.Context, agencyID uuid
 	}
 
 	var members []*domain.ListMemberResponse
-	for _,v := range memberMap {
+	for _, v := range memberMap {
 		members = append(members, v)
 	}
 	return members, nil
 
 }
 
-func (h *agencyMemberRepositoryDB) UpdateMember(ctx context.Context,member *domain.AgencyMember) error {
+func (h *agencyMemberRepositoryDB) UpdateMember(ctx context.Context, member *domain.AgencyMember) error {
 	query := `UPDATE agency_members SET name=$1,email=$2,phone=$3,password=$4 WHERE member_id=$5;`
-	_,err := h.db.ExecContext(ctx, query, member.Name,member.Email,member.Phone,member.Password,member.MemberID)
+	_, err := h.db.ExecContext(ctx, query, member.Name, member.Email, member.Phone, member.Password, member.MemberID)
 	if err != nil {
 		return err
 	}
@@ -106,29 +106,28 @@ func (h *agencyMemberRepositoryDB) DeleteMember(ctx context.Context, memberID uu
 	return nil
 }
 
-
-func (h *agencyMemberRepositoryDB) GetRoleIDFromMemberIDForUpdate(ctx context.Context,memberID uuid.UUID) (*int,error) {
+func (h *agencyMemberRepositoryDB) GetRoleIDFromMemberIDForUpdate(ctx context.Context, memberID uuid.UUID) (*int, error) {
 	var roleID int
 
 	query := `SELECT role_id FROM agency_members WHERE member_id = $1 FOR UPDATE;`
-	err := h.executor(ctx).QueryRowxContext(ctx,query,memberID).Scan(&roleID)
+	err := h.executor(ctx).QueryRowxContext(ctx, query, memberID).Scan(&roleID)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
-	return &roleID,nil
+	return &roleID, nil
 }
 
-func (h *agencyMemberRepositoryDB) FindMember(ctx context.Context,email string) (*domain.AgencyMember,error) {
+func (h *agencyMemberRepositoryDB) FindMember(ctx context.Context, email string) (*domain.AgencyMember, error) {
 	var member domain.AgencyMember
 	query := `SELECT member_id,agency_id,name,password,phone,role_id FROM agency_members WHERE email=$1;`
-	err := h.db.GetContext(ctx,&member,query,email)
+	err := h.db.GetContext(ctx, &member, query, email)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil,nil
+			return nil, nil
 		}
-		return nil,err
+		return nil, err
 	}
-	return &member,nil
+	return &member, nil
 }
 
 func (h *agencyMemberRepositoryDB) executor(ctx context.Context) sqlx.ExtContext {
