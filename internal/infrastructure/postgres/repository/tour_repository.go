@@ -53,7 +53,7 @@ func (h *tourRepositoryDB) ListTour(ctx context.Context, agencyID uuid.UUID, pag
 
 	offset := (page - 1) * limit
 
-	var tours []*domain.Tour
+	tours := []*domain.Tour{} // encode an empty page as [], not null
 	query := `SELECT t.tour_id,t.agency_id,t.name,t.start_date,t.end_date,t.total_seat,t.available_seat,t.description,t.last_enrollment_date,t.price,t.discount,t.status,COALESCE(ti.image_path,'') AS image_path FROM tours t ` + activeTourImageJoin + ` WHERE t.agency_id=$1 ORDER BY t.start_date DESC LIMIT $2 OFFSET $3;`
 	err := h.db.SelectContext(ctx, &tours, query, agencyID, limit, offset)
 	if err != nil {
