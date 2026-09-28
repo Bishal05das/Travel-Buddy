@@ -61,7 +61,7 @@ type UpdateUser interface {
 }
 
 type CreateAgency interface {
-	Execute(ctx context.Context, agency *domain.Agency) error
+	Execute(ctx context.Context, agency *domain.Agency, imagePath string) error
 }
 
 type UpdateAgency interface {

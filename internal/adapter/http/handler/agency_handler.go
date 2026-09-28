@@ -94,10 +94,10 @@ func (h *AgencyHandler) CreateAgency(w http.ResponseWriter, r *http.Request) {
 		Name:           name,
 		Address:        address,
 		RegistrationID: registrationID,
-		ImagePath:      filepath.ToSlash(dstPath), // images/agencies/abc.png
 	}
+	imagePath := filepath.ToSlash(dstPath) // images/agencies/abc.png
 
-	if err := h.createUC.Execute(r.Context(), agency); err != nil {
+	if err := h.createUC.Execute(r.Context(), agency, imagePath); err != nil {
 		_ = os.Remove(dstPath) // rollback file if DB save fails
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
@@ -105,8 +105,9 @@ func (h *AgencyHandler) CreateAgency(w http.ResponseWriter, r *http.Request) {
 
 	util.SendData(w, map[string]any{
 		"message":    "Agency successfully created",
-		"image_path": agency.ImagePath,
-		"image_url":  "/" + filepath.ToSlash(dstPath),
+		"agency_id":  agency.AgencyID,
+		"image_path": imagePath,
+		"image_url":  "/" + imagePath,
 	}, http.StatusCreated)
 
 }

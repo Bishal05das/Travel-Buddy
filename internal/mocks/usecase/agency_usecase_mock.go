@@ -8,11 +8,11 @@ import (
 )
 
 type MockCreateAgency struct {
-	ExecuteFunc func(ctx context.Context, agency *domain.Agency) error
+	ExecuteFunc func(ctx context.Context, agency *domain.Agency, imagePath string) error
 }
 
-func (m *MockCreateAgency) Execute(ctx context.Context, agency *domain.Agency) error {
-	return m.ExecuteFunc(ctx, agency)
+func (m *MockCreateAgency) Execute(ctx context.Context, agency *domain.Agency, imagePath string) error {
+	return m.ExecuteFunc(ctx, agency, imagePath)
 }
 
 type MockUpdateAgency struct {

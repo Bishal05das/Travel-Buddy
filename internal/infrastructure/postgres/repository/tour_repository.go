@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
@@ -21,10 +22,30 @@ func NewTourRepositoryDB(db *sqlx.DB) port.TourRepository {
 	}
 }
 
-func (h *tourRepositoryDB) CreateTour(ctx context.Context, tour *domain.Tour) error {
-	query := `INSERT INTO tours (agency_id,name,start_date,end_date,available_seat,description,last_enrollment_date,price,discount,image_path) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING tour_id;`
+// activeTourImageJoin attaches the tour's current image (if any) as image_path.
+const activeTourImageJoin = `LEFT JOIN tour_images ti ON ti.tour_id = t.tour_id AND ti.is_active = TRUE AND ti.deleted_at IS NULL`
 
-	return h.db.QueryRowContext(ctx, query, tour.AgencyID, tour.Name, tour.StartDate, tour.EndDate, tour.AvailableSeat, tour.Description, tour.LastEnrollmentDate, tour.Price, tour.Discount, tour.ImagePath).Scan(&tour.TourID)
+func (h *tourRepositoryDB) CreateTour(ctx context.Context, tour *domain.Tour) error {
+	tx, err := h.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback() // no-op after a successful commit
+
+	query := `INSERT INTO tours (agency_id,name,start_date,end_date,available_seat,description,last_enrollment_date,price,discount) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING tour_id;`
+	err = tx.QueryRowContext(ctx, query, tour.AgencyID, tour.Name, tour.StartDate, tour.EndDate, tour.AvailableSeat, tour.Description, tour.LastEnrollmentDate, tour.Price, tour.Discount).Scan(&tour.TourID)
+	if err != nil {
+		return fmt.Errorf("insert tour: %w", err)
+	}
+
+	if tour.ImagePath != "" {
+		imageQ := `INSERT INTO tour_images (tour_id, image_path, is_active) VALUES ($1, $2, TRUE);`
+		if _, err := tx.ExecContext(ctx, imageQ, tour.TourID, tour.ImagePath); err != nil {
+			return fmt.Errorf("insert tour image: %w", err)
+		}
+	}
+
+	return tx.Commit()
 }
 
 func (h *tourRepositoryDB) ListTour(ctx context.Context, agencyID uuid.UUID, page, limit int) ([]*domain.Tour, error) {
@@ -32,7 +53,7 @@ func (h *tourRepositoryDB) ListTour(ctx context.Context, agencyID uuid.UUID, pag
 	offset := (page - 1) * limit
 
 	var tours []*domain.Tour
-	query := `SELECT tour_id,name,start_date,end_date,available_seat,description,last_enrollment_date,price,discount,status,image_path FROM tours WHERE agency_id=$1 ORDER BY start_date DESC LIMIT $2 OFFSET $3;`
+	query := `SELECT t.tour_id,t.name,t.start_date,t.end_date,t.available_seat,t.description,t.last_enrollment_date,t.price,t.discount,t.status,COALESCE(ti.image_path,'') AS image_path FROM tours t ` + activeTourImageJoin + ` WHERE t.agency_id=$1 ORDER BY t.start_date DESC LIMIT $2 OFFSET $3;`
 	err := h.db.SelectContext(ctx, &tours, query, agencyID, limit, offset)
 	if err != nil {
 		return nil, err
@@ -77,7 +98,7 @@ func (h *tourRepositoryDB) DeleteTour(ctx context.Context, tourID uuid.UUID) err
 }
 
 func (h *tourRepositoryDB) GetByID(ctx context.Context, tourID uuid.UUID) (*domain.Tour, error) {
-	query := `SELECT agency_id,name,start_date,end_date,available_seat,description,last_enrollment_date,price,discount,status,image_path FROM tours WHERE tour_id=$1;`
+	query := `SELECT t.agency_id,t.name,t.start_date,t.end_date,t.available_seat,t.description,t.last_enrollment_date,t.price,t.discount,t.status,COALESCE(ti.image_path,'') FROM tours t ` + activeTourImageJoin + ` WHERE t.tour_id=$1;`
 
 	tour := &domain.Tour{}
 	err := h.executor(ctx).QueryRowxContext(ctx, query, tourID).Scan(&tour.AgencyID, &tour.Name, &tour.StartDate, &tour.EndDate, &tour.AvailableSeat, &tour.Description, &tour.LastEnrollmentDate, &tour.Price, &tour.Discount, &tour.Status, &tour.ImagePath)

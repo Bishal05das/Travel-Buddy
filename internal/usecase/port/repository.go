@@ -21,13 +21,16 @@ type TourRepository interface {
 	GetByID(ctx context.Context, tourID uuid.UUID) (*domain.Tour, error)
 	GetByIDForUpdate(ctx context.Context, tourID uuid.UUID) (*domain.Tour, error)
 	UpdateAvailableSeats(ctx context.Context, tourID uuid.UUID, seats int) error
-	UpdateTourStatus(ctx context.Context,tourID uuid.UUID, status string) error
+	UpdateTourStatus(ctx context.Context, tourID uuid.UUID, status string) error
 }
 
 type AgencyRepository interface {
-	CreateAgency(ctx context.Context, agency *domain.Agency) error
+	CreateAgency(ctx context.Context, agency *domain.Agency, imagePath string) error
 	UpdateAgency(ctx context.Context, agency *domain.Agency) error
 	DeleteAgency(ctx context.Context, agencyID uuid.UUID) error
+	UpdateAgencyImage(ctx context.Context, agencyID uuid.UUID, newImagePath string) (oldImagePath string, err error)
+	GetCurrentImage(ctx context.Context, agencyID uuid.UUID) (*domain.AgencyImage, error)
+	ListAgencyImages(ctx context.Context, agencyID uuid.UUID) ([]*domain.AgencyImage, error)
 }
 
 type UserRepository interface {
@@ -35,7 +38,7 @@ type UserRepository interface {
 	UpdateUser(ctx context.Context, user *domain.User) error
 	DeleteUser(ctx context.Context, userID uuid.UUID) error
 	FindUserByEmail(ctx context.Context, email string) (*domain.User, error)
-	FindUserByID(ctx context.Context,id uuid.UUID) (*domain.User,error)
+	FindUserByID(ctx context.Context, id uuid.UUID) (*domain.User, error)
 }
 
 type AgencyMemberRepository interface {

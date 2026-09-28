@@ -30,7 +30,7 @@ func TestCreateAgencyHandler(t *testing.T) {
 				"reg_id":"REG123"
 			}`,
 			mockUsecase: func(m *mocks.MockCreateAgency) {
-				m.ExecuteFunc = func(ctx context.Context, a *domain.Agency) error {
+				m.ExecuteFunc = func(ctx context.Context, a *domain.Agency, imagePath string) error {
 					return nil
 				}
 			},
@@ -63,7 +63,7 @@ func TestCreateAgencyHandler(t *testing.T) {
 				"reg_id":"REG123"
 			}`,
 			mockUsecase: func(m *mocks.MockCreateAgency) {
-				m.ExecuteFunc = func(ctx context.Context, a *domain.Agency) error {
+				m.ExecuteFunc = func(ctx context.Context, a *domain.Agency, imagePath string) error {
 					return errors.New("database error")
 				}
 			},
@@ -117,7 +117,7 @@ func TestUpdateAgencyHandler(t *testing.T) {
 				"reg_id":"REG123"
 			}`,
 			mockUsecase: func(m *mocks.MockUpdateAgency) {
-				m.ExecuteFunc = func(ctx context.Context, a *domain.Agency) error {
+				m.ExecuteFunc = func(ctx context.Context, a *domain.Agency, imagePath string) error {
 					return nil
 				}
 			},
@@ -161,7 +161,7 @@ func TestUpdateAgencyHandler(t *testing.T) {
 				"reg_id":"REG123"
 			}`,
 			mockUsecase: func(m *mocks.MockUpdateAgency) {
-				m.ExecuteFunc = func(ctx context.Context, a *domain.Agency) error {
+				m.ExecuteFunc = func(ctx context.Context, a *domain.Agency, imagePath string) error {
 					return errors.New("update failed")
 				}
 			},
