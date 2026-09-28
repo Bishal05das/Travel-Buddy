@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -21,6 +23,25 @@ type Tour struct {
 	ImagePath          string    `json:"image_path" db:"image_path"`
 	CreatedAt          time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt          time.Time `json:"updated_at" db:"updated_at"`
+}
+
+// Validate enforces the tour invariants independently of the HTTP layer.
+func (t *Tour) Validate() error {
+	switch {
+	case strings.TrimSpace(t.Name) == "":
+		return errors.New("tour name is required")
+	case !t.EndDate.After(t.StartDate):
+		return errors.New("end date must be after start date")
+	case t.LastEnrollmentDate.After(t.StartDate):
+		return errors.New("last enrollment date must not be after start date")
+	case t.AvailableSeat < 1:
+		return errors.New("available seats must be at least 1")
+	case t.Price <= 0:
+		return errors.New("price must be greater than 0")
+	case t.Discount < 0 || t.Discount > 100:
+		return errors.New("discount must be between 0 and 100")
+	}
+	return nil
 }
 
 // UnitPrice is the per-person price after applying the percentage discount.

@@ -18,6 +18,8 @@ func NewCreateTourUseCase(r port.TourRepository) port.CreateTour {
 }
 
 func (uc *createTourUseCase) Execute(ctx context.Context, tour *domain.Tour) error {
-
+	if err := tour.Validate(); err != nil {
+		return err
+	}
 	return uc.repo.CreateTour(ctx, tour)
 }
