@@ -2,6 +2,7 @@ package router
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/bishal05das/travelbuddy/internal/adapter/http/handler"
 	middleware "github.com/bishal05das/travelbuddy/internal/adapter/http/middlewares"
@@ -200,5 +201,18 @@ func (r *Router) RegisterRoutes() {
 	// images
 	imageFS := http.FileServer(http.Dir("./images"))
 	r.mux.Handle(
-		"/images/", http.StripPrefix("/images/", imageFS))
+		"GET /images/", http.StripPrefix("/images/", serveFilesOnly(imageFS)))
+}
+
+// serveFilesOnly blocks directory listings, which would expose every
+// uploaded file name, and stops browsers from sniffing content types.
+func serveFilesOnly(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "" || strings.HasSuffix(r.URL.Path, "/") {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		h.ServeHTTP(w, r)
+	})
 }

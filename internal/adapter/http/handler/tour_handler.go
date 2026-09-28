@@ -2,8 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -135,44 +133,9 @@ func (h *TourHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	file, header, err := r.FormFile("image")
+	fullPath, fileName, err := saveImage(r, "image", "tours")
 	if err != nil {
-		util.SendData(w, "background_image is required", http.StatusBadRequest)
-		return
-	}
-	defer file.Close()
-
-	ext := strings.ToLower(filepath.Ext(header.Filename))
-	allowed := map[string]bool{
-		".jpg":  true,
-		".jpeg": true,
-		".png":  true,
-		".webp": true,
-	}
-
-	if !allowed[ext] {
-		util.SendData(w, "only jpg, jpeg, png, and webp files are allowed", http.StatusBadRequest)
-		return
-	}
-
-	uploadDir := filepath.Join("images", "tours")
-	if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
-		util.SendData(w, "failed to create upload directory", http.StatusInternalServerError)
-		return
-	}
-
-	fileName := fmt.Sprintf("%d_%s%s", time.Now().UnixNano(), uuid.NewString(), ext)
-	fullPath := filepath.Join(uploadDir, fileName)
-
-	dst, err := os.Create(fullPath)
-	if err != nil {
-		util.SendData(w, "failed to save background image", http.StatusInternalServerError)
-		return
-	}
-	defer dst.Close()
-
-	if _, err := io.Copy(dst, file); err != nil {
-		util.SendData(w, "failed to write background image", http.StatusInternalServerError)
+		sendUploadError(w, err)
 		return
 	}
 

@@ -107,6 +107,14 @@ func TestCreateAgencyHandler(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
+			name: "html disguised as png",
+			request: func(t *testing.T) *http.Request {
+				return newAgencyForm(t, validFields, "logo.png", []byte("<html><script>alert(1)</script></html>"))
+			},
+			mockUsecase:    func(m *mocks.MockCreateAgency) {},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
 			name: "usecase error",
 			request: func(t *testing.T) *http.Request {
 				return newAgencyForm(t, validFields, "logo.png", pngBytes)
