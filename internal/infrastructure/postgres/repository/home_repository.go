@@ -35,12 +35,15 @@ func (r *homeRepositoryDB) GetTopTours(ctx context.Context, limit int) ([]domain
 			t.last_enrollment_date,
 			t.description,
 			t.status,
-			COUNT(b.booking_id)          AS total_bookings
+			COUNT(b.booking_id)          AS total_bookings,
+			COALESCE(MAX(ti.image_path), '') AS image_path
 		FROM tours t
 		JOIN agency a ON t.agency_id = a.agency_id
 		LEFT JOIN bookings b
 			ON t.tour_id = b.tour_id
 			AND b.status NOT IN ('cancelled')
+		LEFT JOIN tour_images ti
+			ON ti.tour_id = t.tour_id AND ti.is_active = TRUE AND ti.deleted_at IS NULL
 		WHERE t.status = 'open'
 		  AND t.available_seat > 0
 		  AND t.last_enrollment_date >= CURRENT_DATE
@@ -64,7 +67,7 @@ func (r *homeRepositoryDB) GetTopTours(ctx context.Context, limit int) ([]domain
 			&t.Price, &t.Discount, &t.FinalPrice,
 			&t.AvailableSeat, &t.LastEnrollmentDate,
 			&t.Description, &t.Status,
-			&t.TotalBookings,
+			&t.TotalBookings, &t.ImagePath,
 		); err != nil {
 			return nil, err
 		}

@@ -22,6 +22,7 @@ type HomeTour struct {
 	Description        string    `json:"description"`
 	Status             string    `json:"status"`
 	TotalBookings      int64     `json:"total_bookings"`
+	ImagePath          string    `json:"image_path"` // active cover image, e.g. tours/x.png
 }
 
 type HomeAgency struct {
