@@ -37,7 +37,8 @@ type DeleteTour interface {
 }
 
 type UpdateTourStatus interface {
-	Execute(ctx context.Context, actor domain.Actor, tourID uuid.UUID, status string) error
+	// Cancelling a tour also cancels its active bookings.
+	Execute(ctx context.Context, actor domain.Actor, tourID uuid.UUID, status string) (*domain.TourStatusChange, error)
 }
 
 type CreateBooking interface {

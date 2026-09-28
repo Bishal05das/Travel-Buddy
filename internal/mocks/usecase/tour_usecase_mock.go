@@ -33,10 +33,10 @@ func (m *MockListTour) Execute(ctx context.Context, agencyID uuid.UUID, page, li
 }
 
 type MockUpdateTourStatus struct {
-	ExecuteFunc func(ctx context.Context, actor domain.Actor, tourID uuid.UUID, status string) error
+	ExecuteFunc func(ctx context.Context, actor domain.Actor, tourID uuid.UUID, status string) (*domain.TourStatusChange, error)
 }
 
-func (m *MockUpdateTourStatus) Execute(ctx context.Context, actor domain.Actor, tourID uuid.UUID, status string) error {
+func (m *MockUpdateTourStatus) Execute(ctx context.Context, actor domain.Actor, tourID uuid.UUID, status string) (*domain.TourStatusChange, error) {
 	return m.ExecuteFunc(ctx, actor, tourID, status)
 }
 

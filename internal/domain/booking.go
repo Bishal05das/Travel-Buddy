@@ -102,14 +102,17 @@ func (r *BookingRequestByAdmin) ToCommand(memberID *uuid.UUID) *BookingCommand {
 // BookingResponse is a booking as shown to the customer or the agency,
 // including who booked, the tour and the payment.
 type BookingResponse struct {
-	BookingID      uuid.UUID  `json:"booking_id"`
-	Status         string     `json:"status"`
-	NumberOfPeople int        `json:"number_of_people"`
-	TotalPrice     int        `json:"total_price"`
-	BookingDate    time.Time  `json:"booking_date"`
-	CreatedBy      string     `json:"created_by"` // "user" or "agency_member"
-	UserID         *uuid.UUID `json:"user_id,omitempty"`
-	MemberID       *uuid.UUID `json:"member_id,omitempty"`
+	BookingID      uuid.UUID `json:"booking_id"`
+	Status         string    `json:"status"`
+	NumberOfPeople int       `json:"number_of_people"`
+	TotalPrice     int       `json:"total_price"`
+	BookingDate    time.Time `json:"booking_date"`
+	CreatedBy      string    `json:"created_by"` // "user" or "agency_member"
+	// CancellationReason says who cancelled: "customer", "agency" or
+	// "tour_cancelled" (the agency cancelled the whole tour).
+	CancellationReason string     `json:"cancellation_reason,omitempty"`
+	UserID             *uuid.UUID `json:"user_id,omitempty"`
+	MemberID           *uuid.UUID `json:"member_id,omitempty"`
 
 	CustomerID    uuid.UUID `json:"customer_id"`
 	CustomerName  string    `json:"customer_name"`
@@ -119,6 +122,7 @@ type BookingResponse struct {
 	TourID        uuid.UUID `json:"tour_id"`
 	TourName      string    `json:"tour_name"`
 	TourStartDate time.Time `json:"tour_start_date"`
+	TourStatus    string    `json:"tour_status"`
 	AgencyID      uuid.UUID `json:"agency_id"`
 	AgencyName    string    `json:"agency_name"`
 
@@ -135,6 +139,13 @@ const (
 	BookingConfirmed = "confirmed"
 	BookingCancelled = "cancelled"
 	BookingCompleted = "completed"
+)
+
+// Cancellation reasons stored on cancelled bookings.
+const (
+	CancelledByCustomer = "customer"
+	CancelledByAgency   = "agency"
+	CancelledWithTour   = "tour_cancelled"
 )
 
 // bookingTransitions lists the statuses each status may move to.

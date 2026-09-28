@@ -17,8 +17,8 @@ import (
 type fixture struct {
 	ctx                  context.Context
 	tours                *mocks.MockTourRepository
-	bookings             *fakeBookingRepo
-	payments             *fakePaymentRepo
+	bookings             *mocks.MockBookingRepository
+	payments             *mocks.MockPaymentRepository
 	tourID               uuid.UUID
 	agencyA, agencyB     uuid.UUID
 	userID, otherUserID  uuid.UUID
@@ -44,10 +44,10 @@ func newFixture(t *testing.T) *fixture {
 		t.Fatal(err)
 	}
 	f.tourID = tour.TourID
-	f.bookings = newFakeBookingRepo(f.tours)
-	f.payments = newFakePaymentRepo()
+	f.bookings = mocks.NewMockBookingRepository(f.tours)
+	f.payments = mocks.NewMockPaymentRepository()
 
-	create := bookingusecase.NewCreateBookingUseCase(inlineTx{}, f.bookings, f.tours, f.payments)
+	create := bookingusecase.NewCreateBookingUseCase(mocks.InlineTx{}, f.bookings, f.tours, f.payments)
 	userResp, err := create.Execute(f.ctx, &domain.BookingCommand{TourID: f.tourID, UserID: &f.userID, NumberOfPeople: 3, TotalPrice: 2700})
 	if err != nil {
 		t.Fatal(err)
@@ -75,7 +75,7 @@ func (f *fixture) expectSeats(t *testing.T, want int) {
 func (f *fixture) updater() interface {
 	Execute(context.Context, domain.Actor, uuid.UUID, uuid.UUID, string) (*domain.BookingResponse, error)
 } {
-	return bookingusecase.NewUpdateBookingStatusUseCase(inlineTx{}, f.bookings, f.tours, f.payments)
+	return bookingusecase.NewUpdateBookingStatusUseCase(mocks.InlineTx{}, f.bookings, f.tours, f.payments)
 }
 
 func TestAgencyConfirmThenCancel(t *testing.T) {
@@ -85,8 +85,8 @@ func TestAgencyConfirmThenCancel(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if resp.Status != domain.BookingConfirmed || f.payments.status[f.userBooking] != "success" {
-		t.Fatalf("confirm: status %s, payment %s", resp.Status, f.payments.status[f.userBooking])
+	if resp.Status != domain.BookingConfirmed || f.payments.Status[f.userBooking] != "success" {
+		t.Fatalf("confirm: status %s, payment %s", resp.Status, f.payments.Status[f.userBooking])
 	}
 	f.expectSeats(t, 5)
 
@@ -94,8 +94,8 @@ func TestAgencyConfirmThenCancel(t *testing.T) {
 		t.Fatal(err)
 	}
 	f.expectSeats(t, 8) // 3 seats returned
-	if f.payments.status[f.userBooking] != "success" {
-		t.Fatalf("a verified payment must stay success for an offline refund, got %s", f.payments.status[f.userBooking])
+	if f.payments.Status[f.userBooking] != "success" {
+		t.Fatalf("a verified payment must stay success for an offline refund, got %s", f.payments.Status[f.userBooking])
 	}
 
 	// Final state: no further changes, and seats are not returned twice.
@@ -115,8 +115,8 @@ func TestAgencyStatusRules(t *testing.T) {
 	if _, err := f.updater().Execute(f.ctx, f.memberA, f.agencyA, f.guestBk, domain.BookingCancelled); err != nil {
 		t.Fatal(err)
 	}
-	if f.payments.status[f.guestBk] != "failed" {
-		t.Fatalf("cancelling an unverified booking should fail its payment, got %s", f.payments.status[f.guestBk])
+	if f.payments.Status[f.guestBk] != "failed" {
+		t.Fatalf("cancelling an unverified booking should fail its payment, got %s", f.payments.Status[f.guestBk])
 	}
 	f.expectSeats(t, 7)
 }
@@ -137,7 +137,7 @@ func TestAgencyCannotTouchOtherAgencyBookings(t *testing.T) {
 
 func TestUserCancelsOwnBooking(t *testing.T) {
 	f := newFixture(t)
-	cancel := bookingusecase.NewCancelMyBookingUseCase(inlineTx{}, f.bookings, f.tours, f.payments)
+	cancel := bookingusecase.NewCancelMyBookingUseCase(mocks.InlineTx{}, f.bookings, f.tours, f.payments)
 
 	if _, err := cancel.Execute(f.ctx, f.otherUser, f.userBooking); err == nil {
 		t.Fatal("expected another user to be unable to cancel this booking")
@@ -148,16 +148,16 @@ func TestUserCancelsOwnBooking(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if resp.Status != domain.BookingCancelled || f.payments.status[f.userBooking] != "failed" {
-		t.Fatalf("cancel: status %s, payment %s", resp.Status, f.payments.status[f.userBooking])
+	if resp.Status != domain.BookingCancelled || f.payments.Status[f.userBooking] != "failed" {
+		t.Fatalf("cancel: status %s, payment %s", resp.Status, f.payments.Status[f.userBooking])
 	}
 	f.expectSeats(t, 8)
 }
 
 func TestUserCannotCancelAfterTourStarts(t *testing.T) {
 	f := newFixture(t)
-	f.bookings.bookings[f.userBooking].TourStartDate = time.Now().Add(-time.Hour)
-	cancel := bookingusecase.NewCancelMyBookingUseCase(inlineTx{}, f.bookings, f.tours, f.payments)
+	f.bookings.Bookings[f.userBooking].TourStartDate = time.Now().Add(-time.Hour)
+	cancel := bookingusecase.NewCancelMyBookingUseCase(mocks.InlineTx{}, f.bookings, f.tours, f.payments)
 
 	if _, err := cancel.Execute(f.ctx, f.user, f.userBooking); !errors.Is(err, bookingusecase.ErrTourAlreadyStarted) {
 		t.Fatalf("expected ErrTourAlreadyStarted, got %v", err)

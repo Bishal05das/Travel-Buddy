@@ -116,9 +116,9 @@ func TestCreateBooking(t *testing.T) {
 			if err := tourRepo.CreateTour(context.Background(), tour); err != nil {
 				t.Fatal(err)
 			}
-			bookings := newFakeBookingRepo(tourRepo)
-			payments := newFakePaymentRepo()
-			uc := bookingusecase.NewCreateBookingUseCase(inlineTx{}, bookings, tourRepo, payments)
+			bookings := mocks.NewMockBookingRepository(tourRepo)
+			payments := mocks.NewMockPaymentRepository()
+			uc := bookingusecase.NewCreateBookingUseCase(mocks.InlineTx{}, bookings, tourRepo, payments)
 
 			cmd := tt.cmd(tour.TourID)
 			_, err := uc.Execute(context.Background(), cmd)
@@ -130,8 +130,8 @@ func TestCreateBooking(t *testing.T) {
 			if got.AvailableSeat != tt.wantSeats {
 				t.Fatalf("expected %d seats left, got %d", tt.wantSeats, got.AvailableSeat)
 			}
-			if !tt.wantErr && (len(payments.amounts) != 1 || payments.amounts[0] != cmd.TotalPrice) {
-				t.Fatalf("expected one payment of %d, got %v", cmd.TotalPrice, payments.amounts)
+			if !tt.wantErr && (len(payments.Amounts) != 1 || payments.Amounts[0] != cmd.TotalPrice) {
+				t.Fatalf("expected one payment of %d, got %v", cmd.TotalPrice, payments.Amounts)
 			}
 		})
 	}

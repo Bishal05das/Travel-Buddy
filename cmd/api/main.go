@@ -70,7 +70,7 @@ func main() {
 	listTourUC := tourusecase.NewListTourUseCase(tourRepo)
 	deleteTourUC := tourusecase.NewDeleteTourUseCase(tourRepo)
 	updateTourUC := tourusecase.NewUpdateTourUseCase(tourRepo)
-	updateTourStatusUC := tourusecase.NewUpdateTourStatusUseCase(tourRepo)
+	updateTourStatusUC := tourusecase.NewUpdateTourStatusUseCase(txManager, tourRepo, bookingRepo, paymentRepo)
 
 	createuserUC := userusecase.NewCreateUserUseCase(userRepo)
 	createBookingUC := bookingusecase.NewCreateBookingUseCase(txManager, bookingRepo, tourRepo, paymentRepo)

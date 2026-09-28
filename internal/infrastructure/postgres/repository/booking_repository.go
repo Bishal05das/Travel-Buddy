@@ -43,10 +43,11 @@ const bookingSelect = `
 	SELECT
 		b.booking_id, b.status, b.number_of_people, b.total_price, b.booking_date,
 		CASE WHEN b.user_id IS NOT NULL THEN 'user' ELSE 'agency_member' END,
+		COALESCE(b.cancellation_reason, ''),
 		b.user_id, b.member_id,
 		b.customer_id,
 		COALESCE(c.name, u.name, ''), COALESCE(c.email, u.email, ''), COALESCE(c.phone, u.phone, ''),
-		t.tour_id, t.name, t.start_date, a.agency_id, a.name,
+		t.tour_id, t.name, t.start_date, t.status, a.agency_id, a.name,
 		COALESCE(p.method, ''), COALESCE(p.transaction_id, ''), COALESCE(p.status, ''),
 		b.created_at, b.updated_at,
 		COUNT(*) OVER ()
@@ -84,9 +85,9 @@ func (r *bookingRepository) queryBookings(ctx context.Context, bookingID *uuid.U
 		b := &domain.BookingResponse{}
 		if err := rows.Scan(
 			&b.BookingID, &b.Status, &b.NumberOfPeople, &b.TotalPrice, &b.BookingDate,
-			&b.CreatedBy, &b.UserID, &b.MemberID,
+			&b.CreatedBy, &b.CancellationReason, &b.UserID, &b.MemberID,
 			&b.CustomerID, &b.CustomerName, &b.CustomerEmail, &b.CustomerPhone,
-			&b.TourID, &b.TourName, &b.TourStartDate, &b.AgencyID, &b.AgencyName,
+			&b.TourID, &b.TourName, &b.TourStartDate, &b.TourStatus, &b.AgencyID, &b.AgencyName,
 			&b.PaymentMethod, &b.TransactionID, &b.PaymentStatus,
 			&b.CreatedAt, &b.UpdatedAt,
 			&total,
@@ -152,9 +153,9 @@ func (r *bookingRepository) GetForUpdate(ctx context.Context, id uuid.UUID, scop
 	return lb, nil
 }
 
-func (r *bookingRepository) UpdateStatus(ctx context.Context, id uuid.UUID, status string) error {
-	query := `UPDATE bookings SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE booking_id = $2`
-	res, err := r.executor(ctx).ExecContext(ctx, query, status, id)
+func (r *bookingRepository) UpdateStatus(ctx context.Context, id uuid.UUID, status, cancellationReason string) error {
+	query := `UPDATE bookings SET status = $1, cancellation_reason = NULLIF($3, ''), updated_at = CURRENT_TIMESTAMP WHERE booking_id = $2`
+	res, err := r.executor(ctx).ExecContext(ctx, query, status, id, cancellationReason)
 	if err != nil {
 		return err
 	}
@@ -162,6 +163,32 @@ func (r *bookingRepository) UpdateStatus(ctx context.Context, id uuid.UUID, stat
 		return domain.ErrBookingNotFound
 	}
 	return nil
+}
+
+func (r *bookingRepository) CancelActiveForTour(ctx context.Context, tourID uuid.UUID, reason string) ([]uuid.UUID, int, error) {
+	query := `
+		UPDATE bookings
+		SET status = 'cancelled', cancellation_reason = $2, updated_at = CURRENT_TIMESTAMP
+		WHERE tour_id = $1 AND status IN ('pending', 'confirmed')
+		RETURNING booking_id, number_of_people`
+	rows, err := r.executor(ctx).QueryxContext(ctx, query, tourID, reason)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	ids := []uuid.UUID{}
+	seats := 0
+	for rows.Next() {
+		var id uuid.UUID
+		var people int
+		if err := rows.Scan(&id, &people); err != nil {
+			return nil, 0, err
+		}
+		ids = append(ids, id)
+		seats += people
+	}
+	return ids, seats, rows.Err()
 }
 
 func (r *bookingRepository) GetOrCreateCustomerByUser(ctx context.Context, userID uuid.UUID) (uuid.UUID, error) {
