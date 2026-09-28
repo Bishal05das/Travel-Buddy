@@ -1,0 +1,2 @@
+ALTER TABLE tours DROP CONSTRAINT IF EXISTS chk_tours_seats;
+ALTER TABLE tours DROP COLUMN IF EXISTS total_seat;

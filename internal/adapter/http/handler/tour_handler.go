@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -104,12 +105,18 @@ func (h *TourHandler) Create(w http.ResponseWriter, r *http.Request) {
 		LastEnrollmentDate: lastEnrollmentDate,
 	}
 
-	availableSeat, err := strconv.Atoi(r.FormValue("available_seat"))
+	// total_seat is the capacity; available_seat is still accepted from older
+	// clients, since at creation every seat is available.
+	seatStr := strings.TrimSpace(r.FormValue("total_seat"))
+	if seatStr == "" {
+		seatStr = strings.TrimSpace(r.FormValue("available_seat"))
+	}
+	totalSeat, err := strconv.Atoi(seatStr)
 	if err != nil {
-		util.SendData(w, "invalid available_seat", http.StatusBadRequest)
+		util.SendData(w, "invalid total_seat", http.StatusBadRequest)
 		return
 	}
-	req.AvailableSeat = availableSeat
+	req.TotalSeat = totalSeat
 
 	price, err := strconv.Atoi(r.FormValue("price"))
 	if err != nil {
@@ -144,7 +151,7 @@ func (h *TourHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Name:               req.Name,
 		StartDate:          startDate,
 		EndDate:            endDate,
-		AvailableSeat:      req.AvailableSeat,
+		TotalSeat:          req.TotalSeat,
 		Description:        req.Description,
 		LastEnrollmentDate: lastEnrollmentDate,
 		Price:              req.Price,
@@ -268,7 +275,7 @@ func (h *TourHandler) Update(w http.ResponseWriter, r *http.Request) {
 		Name:               req.Name,
 		StartDate:          req.StartDate,
 		EndDate:            req.EndDate,
-		AvailableSeat:      req.AvailableSeat,
+		TotalSeat:          req.TotalSeat,
 		Description:        req.Description,
 		LastEnrollmentDate: req.LastEnrollmentDate,
 		Price:              req.Price,
@@ -276,11 +283,19 @@ func (h *TourHandler) Update(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt:          time.Now(),
 	}
 	err = h.updateUC.Execute(r.Context(), tour)
+	if errors.Is(err, domain.ErrCapacityBelowBooked) {
+		util.SendData(w, err.Error(), http.StatusConflict)
+		return
+	}
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	util.SendData(w, "Tour Updated Successfully", http.StatusOK)
+	util.SendData(w, map[string]any{
+		"message":        "Tour Updated Successfully",
+		"total_seat":     tour.TotalSeat,
+		"available_seat": tour.AvailableSeat,
+	}, http.StatusOK)
 }
 
 func (h *TourHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {

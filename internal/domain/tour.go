@@ -14,7 +14,8 @@ type Tour struct {
 	Name               string    `json:"name" db:"name"`
 	StartDate          time.Time `json:"start_date" db:"start_date"`
 	EndDate            time.Time `json:"end_date" db:"end_date"`
-	AvailableSeat      int       `json:"available_seat" db:"available_seat"`
+	TotalSeat          int       `json:"total_seat" db:"total_seat"`         // capacity, set by the agency
+	AvailableSeat      int       `json:"available_seat" db:"available_seat"` // capacity minus active bookings
 	Description        string    `json:"description" db:"description"`
 	LastEnrollmentDate time.Time `json:"last_enrollment_date" db:"last_enrollment_date"`
 	Price              int       `json:"price" db:"price"`
@@ -34,8 +35,8 @@ func (t *Tour) Validate() error {
 		return errors.New("end date must be after start date")
 	case t.LastEnrollmentDate.After(t.StartDate):
 		return errors.New("last enrollment date must not be after start date")
-	case t.AvailableSeat < 1:
-		return errors.New("available seats must be at least 1")
+	case t.TotalSeat < 1:
+		return errors.New("total seats must be at least 1")
 	case t.Price <= 0:
 		return errors.New("price must be greater than 0")
 	case t.Discount < 0 || t.Discount > 100:
@@ -43,6 +44,15 @@ func (t *Tour) Validate() error {
 	}
 	return nil
 }
+
+// BookedSeats is the number of seats held by active bookings.
+func (t *Tour) BookedSeats() int {
+	return t.TotalSeat - t.AvailableSeat
+}
+
+// ErrCapacityBelowBooked is returned when an update would shrink a tour
+// below the seats that are already booked.
+var ErrCapacityBelowBooked = errors.New("total seats cannot be lower than the seats already booked")
 
 // UnitPrice is the per-person price after applying the percentage discount.
 func (t *Tour) UnitPrice() int {
@@ -54,7 +64,7 @@ type CreateTourRequest struct {
 	Name               string    `json:"name" validate:"required,min=3,max=200"`
 	StartDate          time.Time `json:"start_date" validate:"required"`
 	EndDate            time.Time `json:"end_date" validate:"required,gtfield=StartDate"`
-	AvailableSeat      int       `json:"available_seat" validate:"required,gt=0"`
+	TotalSeat          int       `json:"total_seat" validate:"required,gt=0"`
 	Description        string    `json:"description" validate:"required,min=10,max=2000"`
 	LastEnrollmentDate time.Time `json:"last_enrollment_date" validate:"required,ltefield=StartDate"`
 	Price              int       `json:"price" validate:"required,gt=0"`
@@ -66,7 +76,7 @@ type UpdateTourRequest struct {
 	Name               string    `json:"name" validate:"required,min=3,max=200"`
 	StartDate          time.Time `json:"start_date" validate:"required"`
 	EndDate            time.Time `json:"end_date" validate:"required,gtfield=StartDate"`
-	AvailableSeat      int       `json:"available_seat" validate:"required,gt=0"`
+	TotalSeat          int       `json:"total_seat" validate:"required,gt=0"`
 	Description        string    `json:"description" validate:"required,min=10,max=2000"`
 	LastEnrollmentDate time.Time `json:"last_enrollment_date" validate:"required,ltefield=StartDate"`
 	Price              int       `json:"price" validate:"required,gt=0"`

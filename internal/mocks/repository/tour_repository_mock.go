@@ -42,6 +42,14 @@ func (m *MockTourRepository) CreateTour(ctx context.Context, tour *domain.Tour) 
 	if tour.Status == "" {
 		tour.Status = "open"
 	}
+	// Mirror the real insert: a new tour has every seat available. Tests that
+	// seed only AvailableSeat get it as the capacity.
+	if tour.TotalSeat == 0 {
+		tour.TotalSeat = tour.AvailableSeat
+	}
+	if tour.AvailableSeat == 0 {
+		tour.AvailableSeat = tour.TotalSeat
+	}
 	m.tours[tour.TourID] = tour
 	return nil
 }
@@ -90,10 +98,16 @@ func (m *MockTourRepository) UpdateTour(ctx context.Context, t *domain.Tour) err
 	if !ok || existing.AgencyID != t.AgencyID {
 		return errTourNotFound
 	}
+	booked := existing.BookedSeats()
+	if t.TotalSeat < booked {
+		return domain.ErrCapacityBelowBooked
+	}
 	existing.Name = t.Name
 	existing.StartDate = t.StartDate
 	existing.EndDate = t.EndDate
-	existing.AvailableSeat = t.AvailableSeat
+	existing.TotalSeat = t.TotalSeat
+	existing.AvailableSeat = t.TotalSeat - booked
+	t.AvailableSeat = existing.AvailableSeat
 	existing.Description = t.Description
 	existing.LastEnrollmentDate = t.LastEnrollmentDate
 	existing.Price = t.Price
