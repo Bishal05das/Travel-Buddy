@@ -83,6 +83,7 @@ func TestCreateMemberHandler(t *testing.T) {
 				"/members",
 				bytes.NewBufferString(tt.body),
 			)
+			req.SetPathValue("agency_id", "550e8400-e29b-41d4-a716-446655440000")
 
 			rec := httptest.NewRecorder()
 
@@ -113,7 +114,7 @@ func TestDeleteMemberHandler(t *testing.T) {
 					return nil
 				}
 			},
-			expectedStatus: http.StatusCreated,
+			expectedStatus: http.StatusOK,
 		},
 		{
 			name:           "invalid uuid",
@@ -185,7 +186,7 @@ func TestListMemberHandler(t *testing.T) {
 					}, nil
 				}
 			},
-			expectedStatus: http.StatusCreated,
+			expectedStatus: http.StatusOK,
 		},
 		{
 			name:           "invalid agency id",
@@ -253,7 +254,7 @@ func TestUpdateMemberPermissionsHandler(t *testing.T) {
 					return nil
 				}
 			},
-			expectedStatus: http.StatusCreated,
+			expectedStatus: http.StatusOK,
 		},
 		{
 			name:           "invalid member id",
