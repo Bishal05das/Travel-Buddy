@@ -18,6 +18,8 @@ type DBConfig struct {
 	User          string
 	Password      string
 	EnableSSLMode bool
+	// MigrationsURL is the golang-migrate source, e.g. file://migrations.
+	MigrationsURL string
 }
 
 type Config struct {
@@ -92,7 +94,7 @@ func loadConfig() {
 	}
 	dbprt, err := strconv.Atoi(dbport)
 	if err != nil {
-		fmt.Println("HTTP Port must be a number")
+		fmt.Println("DB Port must be a number")
 		os.Exit(1)
 	}
 	dbName := os.Getenv("DBNAME")
@@ -120,6 +122,12 @@ func loadConfig() {
 		fmt.Println("Enable SSL Mode must be a boolean")
 		os.Exit(1)
 	}
+	// Relative to the working directory by default so local runs work; the
+	// Docker image sets MIGRATIONS_PATH=file:///migrations.
+	migrationsURL := os.Getenv("MIGRATIONS_PATH")
+	if migrationsURL == "" {
+		migrationsURL = "file://migrations"
+	}
 	configurations = &Config{
 		Version:           version,
 		ServiceName:       serviceName,
@@ -134,6 +142,7 @@ func loadConfig() {
 			User:          dbUser,
 			Password:      dbPassword,
 			EnableSSLMode: enbleSSLMode,
+			MigrationsURL: migrationsURL,
 		},
 	}
 }

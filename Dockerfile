@@ -44,6 +44,8 @@ COPY --from=builder --chown=nonroot:nonroot /app/server /app/server
 COPY --from=builder --chown=nonroot:nonroot /app/images /app/images
 COPY --chown=nonroot:nonroot migrations /migrations
 
+ENV MIGRATIONS_PATH=file:///migrations
+
 USER nonroot:nonroot
 
 EXPOSE 3000

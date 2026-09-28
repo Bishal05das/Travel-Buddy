@@ -27,6 +27,15 @@ func (m *TxManager) WithinTransaction(ctx context.Context, fn func(txCtx context
 	}
 	txCtx := context.WithValue(ctx, txKey{}, tx)
 
+	// Roll back if fn panics; otherwise the transaction and its pooled
+	// connection stay open after net/http recovers the panic.
+	defer func() {
+		if p := recover(); p != nil {
+			_ = tx.Rollback()
+			panic(p)
+		}
+	}()
+
 	if err := fn(txCtx); err != nil {
 		if rbErr := tx.Rollback(); rbErr != nil {
 			return errors.New("tx rollback failed: " + rbErr.Error() + ", original error: " + err.Error())
