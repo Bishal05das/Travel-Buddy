@@ -29,7 +29,7 @@ func TestRateLimiterSharesBudgetAcrossConnections(t *testing.T) {
 	h := m.RateLimiter(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 
 	limited := false
-	for i := 0; i < requestsPerMinute+1; i++ {
+	for i := 0; i < defaultRequestsPerMinute+1; i++ {
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
 		// A new source port per request, like new connections, and a spoofed
 		// header that must be ignored.

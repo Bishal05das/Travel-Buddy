@@ -175,6 +175,10 @@ func (r *Router) RegisterRoutes() {
 
 	// AGENCY
 	r.mux.Handle(
+		"GET /agency/{agency_id}",
+		r.public(http.HandlerFunc(r.agencyHandler.GetAgency)),
+	)
+	r.mux.Handle(
 		"POST /agency",
 		r.protected(http.HandlerFunc(r.agencyHandler.CreateAgency), superOnly),
 	)
@@ -216,6 +220,10 @@ func (r *Router) RegisterRoutes() {
 	)
 
 	// PERMISSIONS
+	r.mux.Handle(
+		"GET /permissions",
+		r.protected(http.HandlerFunc(r.permissionHandler.ListPermissions), m.RequireRole(domain.RoleSuper, domain.RoleMember)),
+	)
 	r.mux.Handle(
 		"POST /permissions",
 		r.protected(http.HandlerFunc(r.permissionHandler.CreatePermission), superOnly),

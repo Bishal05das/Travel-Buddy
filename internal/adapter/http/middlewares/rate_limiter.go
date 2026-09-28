@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	requestsPerMinute = 30
-	visitorIdleTTL    = 3 * time.Minute
+	defaultRequestsPerMinute = 30
+	visitorIdleTTL           = 3 * time.Minute
 )
 
 type visitor struct {
@@ -24,10 +24,14 @@ type ipStore struct {
 	mu        sync.Mutex
 	visitors  map[string]*visitor
 	lastSweep time.Time
+	perMinute int
 }
 
-func newIPStore() *ipStore {
-	return &ipStore{visitors: make(map[string]*visitor), lastSweep: time.Now()}
+func newIPStore(perMinute int) *ipStore {
+	if perMinute <= 0 {
+		perMinute = defaultRequestsPerMinute
+	}
+	return &ipStore{visitors: make(map[string]*visitor), lastSweep: time.Now(), perMinute: perMinute}
 }
 
 func (s *ipStore) get(ip string) *rate.Limiter {
@@ -47,7 +51,7 @@ func (s *ipStore) get(ip string) *rate.Limiter {
 
 	v, ok := s.visitors[ip]
 	if !ok {
-		v = &visitor{limiter: rate.NewLimiter(rate.Every(time.Minute/requestsPerMinute), requestsPerMinute)}
+		v = &visitor{limiter: rate.NewLimiter(rate.Every(time.Minute/time.Duration(s.perMinute)), s.perMinute)}
 		s.visitors[ip] = v
 	}
 	v.lastSeen = now

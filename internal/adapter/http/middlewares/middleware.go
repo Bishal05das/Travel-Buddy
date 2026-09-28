@@ -15,6 +15,6 @@ func NewMiddlewareManager(cfg *config.Config, authorizer port.Authorizer) *Middl
 	return &MiddlewareManager{
 		cfg:        cfg,
 		authorizer: authorizer,
-		limiter:    newIPStore(),
+		limiter:    newIPStore(cfg.RateLimitPerMinute),
 	}
 }

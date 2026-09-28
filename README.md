@@ -140,6 +140,7 @@ ENABLE_SSL_MODE=false
 # Optional
 JWT_TTL=24h                       # access token lifetime (Go duration)
 TRUST_PROXY_HEADERS=false         # true only behind a proxy that sets X-Real-IP / X-Forwarded-For
+RATE_LIMIT_PER_MINUTE=30          # requests per client IP per minute
 MIGRATIONS_PATH=file://migrations # the Docker image uses file:///migrations
 ```
 
@@ -153,6 +154,20 @@ Run the application locally:
 
 ```
 go run cmd/api/main.go
+```
+
+---
+
+# 🖥 Web app
+
+A Next.js frontend lives in [`frontend/`](frontend/README.md). With the API
+running on port 3000:
+
+```
+cd frontend
+cp .env.example .env.local
+npm install
+npm run dev   # http://localhost:3001
 ```
 
 ---

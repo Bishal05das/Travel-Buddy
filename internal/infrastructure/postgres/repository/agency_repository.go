@@ -159,6 +159,25 @@ func (h *agencyRepositoryDB) ListAgencyImages(
 // 	return agencys, nil
 // }
 
+func (h *agencyRepositoryDB) GetAgency(ctx context.Context, agencyID uuid.UUID) (*domain.Agency, error) {
+	query := `
+	SELECT a.agency_id, a.name, COALESCE(a.address, ''), COALESCE(a.reg_id, ''), COALESCE(a.rating, 0),
+	       COALESCE(a.is_active, true), a.created_at, a.updated_at, COALESCE(ai.image_path, '')
+	FROM agency a
+	LEFT JOIN agency_images ai ON ai.agency_id = a.agency_id AND ai.is_active = TRUE AND ai.deleted_at IS NULL
+	WHERE a.agency_id = $1`
+	a := &domain.Agency{}
+	err := h.db.QueryRowContext(ctx, query, agencyID).Scan(&a.AgencyID, &a.Name, &a.Address, &a.RegistrationID,
+		&a.Rating, &a.IsActive, &a.CreatedAt, &a.UpdatedAt, &a.ImagePath)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, errors.New("agency not found")
+	}
+	if err != nil {
+		return nil, err
+	}
+	return a, nil
+}
+
 func (h *agencyRepositoryDB) UpdateAgency(ctx context.Context, agency *domain.Agency) error {
 	query := `UPDATE agency SET name=$1,address=$2,reg_id=$3,updated_at=$4 WHERE agency_id=$5;`
 	// ExecContext, not QueryRowContext: an unscanned *sql.Row never releases

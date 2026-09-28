@@ -27,6 +27,7 @@ type TourRepository interface {
 
 type AgencyRepository interface {
 	CreateAgency(ctx context.Context, agency *domain.Agency, imagePath string) error
+	GetAgency(ctx context.Context, agencyID uuid.UUID) (*domain.Agency, error)
 	UpdateAgency(ctx context.Context, agency *domain.Agency) error
 	DeleteAgency(ctx context.Context, agencyID uuid.UUID) error
 	UpdateAgencyImage(ctx context.Context, agencyID uuid.UUID, newImagePath string) (oldImagePath string, err error)
@@ -90,6 +91,7 @@ type TxManager interface {
 type PermissionRepository interface {
 	CreatePermission(ctx context.Context, permisson *domain.Permission) error
 	DeletePermission(ctx context.Context, permissionID int) error
+	ListPermissions(ctx context.Context) ([]domain.Permission, error)
 }
 
 // Authorizer answers permission checks for agency members.

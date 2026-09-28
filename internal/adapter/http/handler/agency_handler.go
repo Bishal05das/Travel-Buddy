@@ -19,14 +19,31 @@ type AgencyHandler struct {
 	createUC port.CreateAgency
 	updateUC port.UpdateAgency
 	deleteUC port.DeleteAgency
+	getUC    port.GetAgency
 }
 
-func NewAgencyHandler(createUC port.CreateAgency, updateUC port.UpdateAgency, deleteUC port.DeleteAgency) *AgencyHandler {
+func NewAgencyHandler(createUC port.CreateAgency, updateUC port.UpdateAgency, deleteUC port.DeleteAgency, getUC port.GetAgency) *AgencyHandler {
 	return &AgencyHandler{
 		createUC: createUC,
 		updateUC: updateUC,
 		deleteUC: deleteUC,
+		getUC:    getUC,
 	}
+}
+
+// GetAgency returns an agency's public profile.
+func (h *AgencyHandler) GetAgency(w http.ResponseWriter, r *http.Request) {
+	agencyID, err := uuid.Parse(r.PathValue("agency_id"))
+	if err != nil {
+		http.Error(w, "invalid agency id", http.StatusBadRequest)
+		return
+	}
+	agency, err := h.getUC.Execute(r.Context(), agencyID)
+	if err != nil {
+		util.SendData(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	util.SendData(w, agency, http.StatusOK)
 }
 
 func (h *AgencyHandler) CreateAgency(w http.ResponseWriter, r *http.Request) {
