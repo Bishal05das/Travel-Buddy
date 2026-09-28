@@ -13,13 +13,26 @@ import (
 type PermissionHandler struct {
 	createUC port.CreatePermission
 	deleteUC port.DeletePermission
+	listUC   port.ListPermissions
 }
 
-func NewPermissionHandler(c port.CreatePermission, d port.DeletePermission) *PermissionHandler {
+func NewPermissionHandler(c port.CreatePermission, d port.DeletePermission, l port.ListPermissions) *PermissionHandler {
 	return &PermissionHandler{
 		createUC: c,
 		deleteUC: d,
+		listUC:   l,
 	}
+}
+
+// ListPermissions returns the permission catalogue, so clients can offer
+// permissions by name when creating members.
+func (h *PermissionHandler) ListPermissions(w http.ResponseWriter, r *http.Request) {
+	perms, err := h.listUC.Execute(r.Context())
+	if err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	util.SendData(w, perms, http.StatusOK)
 }
 
 func (h *PermissionHandler) CreatePermission(w http.ResponseWriter, r *http.Request) {

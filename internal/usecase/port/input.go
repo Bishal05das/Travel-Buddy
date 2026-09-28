@@ -118,3 +118,11 @@ type CreatePermission interface {
 type DeletePermission interface {
 	Execute(ctx context.Context, id int) error
 }
+
+type ListPermissions interface {
+	Execute(ctx context.Context) ([]domain.Permission, error)
+}
+
+type GetAgency interface {
+	Execute(ctx context.Context, agencyID uuid.UUID) (*domain.Agency, error)
+}

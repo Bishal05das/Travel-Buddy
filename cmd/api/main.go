@@ -85,6 +85,7 @@ func main() {
 	createAgencyUC := agencyusecase.NewCreateAgencyUseCase(agencyRepo)
 	deleteAgencyUC := agencyusecase.NewDeleteAgencyUseCase(agencyRepo)
 	updateAgencyUC := agencyusecase.NewUpdateAgencyUseCase(agencyRepo)
+	getAgencyUC := agencyusecase.NewGetAgencyUseCase(agencyRepo)
 
 	createMemberUC := memberusecase.NewCreateAgencyMemberUseCase(txManager, memberRepo, roleRepo)
 	deleteMemberUC := memberusecase.NewDeleteAgencyMemberUseCase(memberRepo)
@@ -94,6 +95,7 @@ func main() {
 	updatePermissionUC := memberusecase.NewUpdatePermissionUseCase(txManager, memberRepo, roleRepo)
 	createPermissionsUC := permissionusecase.NewCreatePermissionUseCase(permissionRepo)
 	deletePermissionUC := permissionusecase.NewDeletePermissionUseCase(permissionRepo)
+	listPermissionsUC := permissionusecase.NewListPermissionsUseCase(permissionRepo)
 
 	//handler
 	homeHandler := handler.NewHomeHandler(homeUC)
@@ -101,9 +103,9 @@ func main() {
 	tourHandler := handler.NewTourHandler(createTourUC, getTourUC, listTourUC, updateTourUC, updateTourStatusUC, deleteTourUC)
 	userHandler := handler.NewUserHandler(createuserUC, loginUserUC, deleteUserUC, updateUserUC)
 	bookingHandler := handler.NewBookingHandler(createBookingUC, listBookingsUC, getBookingUC, updateBookingStatusUC, cancelMyBookingUC)
-	agencyHandler := handler.NewAgencyHandler(createAgencyUC, updateAgencyUC, deleteAgencyUC)
+	agencyHandler := handler.NewAgencyHandler(createAgencyUC, updateAgencyUC, deleteAgencyUC, getAgencyUC)
 	memberHandler := handler.NewMemberHandler(createMemberUC, deleteMemberUC, listMemberUC, updatePermissionUC, LoginMemberUC)
-	permissionHandler := handler.NewPermissionHandler(createPermissionsUC, deletePermissionUC)
+	permissionHandler := handler.NewPermissionHandler(createPermissionsUC, deletePermissionUC, listPermissionsUC)
 
 	//middleware
 	middleware := middleware.NewMiddlewareManager(cfg, permissionRepo)

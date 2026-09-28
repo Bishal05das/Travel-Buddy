@@ -33,6 +33,15 @@ func (h *permissionRepositoryDB) DeletePermission(ctx context.Context, permissio
 	return requireAffected(res, "permission not found")
 }
 
+func (h *permissionRepositoryDB) ListPermissions(ctx context.Context) ([]domain.Permission, error) {
+	perms := []domain.Permission{}
+	query := `SELECT permission_id, name, resource, action FROM permissions ORDER BY resource, action`
+	if err := sqlx.SelectContext(ctx, h.executor(ctx), &perms, query); err != nil {
+		return nil, err
+	}
+	return perms, nil
+}
+
 // MemberHasPermission reports whether the member belongs to agencyID and
 // their role grants resource:action. It reads current data on every call,
 // so revoked permissions and deleted members take effect immediately.

@@ -133,7 +133,7 @@ func TestCreateAgencyHandler(t *testing.T) {
 			mockUC := &mocks.MockCreateAgency{}
 			tt.mockUsecase(mockUC)
 
-			h := handler.NewAgencyHandler(mockUC, nil, nil)
+			h := handler.NewAgencyHandler(mockUC, nil, nil, nil)
 			rec := httptest.NewRecorder()
 
 			h.CreateAgency(rec, tt.request(t))
@@ -222,7 +222,7 @@ func TestUpdateAgencyHandler(t *testing.T) {
 			mockUC := &mocks.MockUpdateAgency{}
 			tt.mockUsecase(mockUC)
 
-			h := handler.NewAgencyHandler(nil, mockUC, nil)
+			h := handler.NewAgencyHandler(nil, mockUC, nil, nil)
 
 			req := httptest.NewRequest(
 				http.MethodPut,
@@ -290,7 +290,7 @@ func TestDeleteAgencyHandler(t *testing.T) {
 			mockUC := &mocks.MockDeleteAgency{}
 			tt.mockUsecase(mockUC)
 
-			h := handler.NewAgencyHandler(nil, nil, mockUC)
+			h := handler.NewAgencyHandler(nil, nil, mockUC, nil)
 
 			req := httptest.NewRequest(
 				http.MethodDelete,
