@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS travel_agencies;
+DROP TABLE IF EXISTS agency;

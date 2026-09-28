@@ -3,12 +3,14 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 type agencyRepositoryDB struct {
@@ -159,19 +161,26 @@ func (h *agencyRepositoryDB) ListAgencyImages(
 
 func (h *agencyRepositoryDB) UpdateAgency(ctx context.Context, agency *domain.Agency) error {
 	query := `UPDATE agency SET name=$1,address=$2,reg_id=$3,updated_at=$4 WHERE agency_id=$5;`
-	row := h.db.QueryRowContext(ctx, query, agency.Name, agency.Address, agency.RegistrationID, agency.UpdatedAt, agency.AgencyID)
-	err := row.Err()
+	// ExecContext, not QueryRowContext: an unscanned *sql.Row never releases
+	// its connection back to the pool.
+	res, err := h.db.ExecContext(ctx, query, agency.Name, agency.Address, agency.RegistrationID, agency.UpdatedAt, agency.AgencyID)
 	if err != nil {
 		return err
 	}
-	return nil
+	return requireAffected(res, "agency not found")
 }
 
 func (h *agencyRepositoryDB) DeleteAgency(ctx context.Context, agencyID uuid.UUID) error {
 	query := `DELETE FROM agency WHERE agency_id=$1;`
-	_, err := h.db.ExecContext(ctx, query, agencyID)
+	res, err := h.db.ExecContext(ctx, query, agencyID)
+	var pqErr *pq.Error
+	if errors.As(err, &pqErr) && pqErr.Code == "23503" { // foreign_key_violation
+		// Tours (and through them bookings and payments) are deliberately not
+		// cascaded, so booking history cannot be wiped by deleting an agency.
+		return errors.New("agency still has tours; delete or reassign them first")
+	}
 	if err != nil {
 		return err
 	}
-	return nil
+	return requireAffected(res, "agency not found")
 }
