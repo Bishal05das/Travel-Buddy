@@ -37,7 +37,7 @@ func (uc *userLoginUseCase) Execute(ctx context.Context, user *domain.ReqLogin) 
 	accessToken, err := util.CreateJWT(uc.cnf.JWTSecretkey, util.Payload{
 		UserID: usr.UserID,
 		Role:   usr.Role,
-	})
+	}, uc.cnf.JWTTTL)
 	if err != nil {
 		return nil, err
 	}

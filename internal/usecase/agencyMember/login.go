@@ -35,10 +35,11 @@ func (uc *memberLoginUseCase) Execute(ctx context.Context, member *domain.ReqLog
 		return nil, domain.ErrInvalidCredentials
 	}
 	accessToken, err := util.CreateJWT(uc.cfg.JWTSecretkey, util.Payload{
-		UserID: mem.MemberID,
-		Role:   "member",
-		RoleID: &mem.RoleID,
-	})
+		UserID:   mem.MemberID,
+		Role:     "member",
+		RoleID:   &mem.RoleID,
+		AgencyID: &mem.AgencyID,
+	}, uc.cfg.JWTTTL)
 	if err != nil {
 		//http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return nil, err

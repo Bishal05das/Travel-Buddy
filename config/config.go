@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/lpernett/godotenv"
 )
@@ -24,6 +25,7 @@ type Config struct {
 	ServiceName  string
 	HttpPort     int
 	JWTSecretkey string
+	JWTTTL       time.Duration
 	DB           *DBConfig
 }
 
@@ -56,6 +58,15 @@ func loadConfig() {
 	if jwtSecretKey == "" {
 		fmt.Println("JWT Secret Key is required")
 		os.Exit(1)
+	}
+	jwtTTL := 24 * time.Hour
+	if v := os.Getenv("JWT_TTL"); v != "" {
+		d, err := time.ParseDuration(v)
+		if err != nil || d <= 0 {
+			fmt.Println("JWT_TTL must be a positive duration, e.g. 24h")
+			os.Exit(1)
+		}
+		jwtTTL = d
 	}
 	host := os.Getenv("DBHOST")
 	if host == "" {
@@ -102,6 +113,7 @@ func loadConfig() {
 		ServiceName:  serviceName,
 		HttpPort:     port,
 		JWTSecretkey: jwtSecretKey,
+		JWTTTL:       jwtTTL,
 		DB: &DBConfig{
 			Host:          host,
 			Port:          dbprt,
