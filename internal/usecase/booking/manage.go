@@ -108,13 +108,23 @@ type statusChanger struct {
 	now         func() time.Time
 }
 
-// change locks the booking, lets check veto the change, then updates the
-// status. A cancellation returns the seats to the tour. Lock order is
-// booking then tour; booking creation only locks the tour, so the two
-// cannot deadlock.
-func (s *statusChanger) change(ctx context.Context, bookingID uuid.UUID, scope domain.BookingScope, to string, check func(*domain.LockedBooking) error) (*domain.BookingResponse, error) {
+// change locks the tour and then the booking, lets check veto the change,
+// then updates the status. A cancellation returns the seats to the tour and
+// records reason. Every path (booking creation, booking status changes and
+// tour cancellation) locks the tour before any booking, so they cannot
+// deadlock.
+func (s *statusChanger) change(ctx context.Context, bookingID uuid.UUID, scope domain.BookingScope, to, reason string, check func(*domain.LockedBooking) error) (*domain.BookingResponse, error) {
 	var response *domain.BookingResponse
 	err := s.txManager.WithinTransaction(ctx, func(txCtx context.Context) error {
+		current, err := s.bookingRepo.GetByID(txCtx, bookingID, scope)
+		if err != nil {
+			return err
+		}
+		tour, err := s.tourRepo.GetByIDForUpdate(txCtx, current.TourID)
+		if err != nil {
+			return err
+		}
+		// Re-read under lock: the status may have changed while we waited.
 		booking, err := s.bookingRepo.GetForUpdate(txCtx, bookingID, scope)
 		if err != nil {
 			return err
@@ -129,15 +139,13 @@ func (s *statusChanger) change(ctx context.Context, bookingID uuid.UUID, scope d
 		}
 
 		if to == domain.BookingCancelled {
-			tour, err := s.tourRepo.GetByIDForUpdate(txCtx, booking.TourID)
-			if err != nil {
-				return err
-			}
 			if err := s.tourRepo.UpdateAvailableSeats(txCtx, tour.TourID, tour.AvailableSeat+booking.NumberOfPeople); err != nil {
 				return err
 			}
+		} else {
+			reason = ""
 		}
-		if err := s.bookingRepo.UpdateStatus(txCtx, bookingID, to); err != nil {
+		if err := s.bookingRepo.UpdateStatus(txCtx, bookingID, to, reason); err != nil {
 			return err
 		}
 
@@ -146,9 +154,9 @@ func (s *statusChanger) change(ctx context.Context, bookingID uuid.UUID, scope d
 		// payment keeps "success" and is refunded outside the system.
 		switch to {
 		case domain.BookingConfirmed:
-			err = s.paymentRepo.SetStatusForBooking(txCtx, bookingID, "pending", "success")
+			err = s.paymentRepo.SetStatusForBookings(txCtx, []uuid.UUID{bookingID}, "pending", "success")
 		case domain.BookingCancelled:
-			err = s.paymentRepo.SetStatusForBooking(txCtx, bookingID, "pending", "failed")
+			err = s.paymentRepo.SetStatusForBookings(txCtx, []uuid.UUID{bookingID}, "pending", "failed")
 		}
 		if err != nil {
 			return err
@@ -176,7 +184,7 @@ func (uc *updateBookingStatusUseCase) Execute(ctx context.Context, actor domain.
 	if err := checkScope(actor, scope); err != nil {
 		return nil, err
 	}
-	return uc.change(ctx, bookingID, scope, status, nil)
+	return uc.change(ctx, bookingID, scope, status, domain.CancelledByAgency, nil)
 }
 
 var ErrTourAlreadyStarted = errors.New("bookings can only be cancelled before the tour starts")
@@ -194,7 +202,7 @@ func (uc *cancelMyBookingUseCase) Execute(ctx context.Context, actor domain.Acto
 	if err := checkScope(actor, scope); err != nil {
 		return nil, err
 	}
-	return uc.change(ctx, bookingID, scope, domain.BookingCancelled, func(b *domain.LockedBooking) error {
+	return uc.change(ctx, bookingID, scope, domain.BookingCancelled, domain.CancelledByCustomer, func(b *domain.LockedBooking) error {
 		if !uc.now().Before(b.TourStartDate) {
 			return ErrTourAlreadyStarted
 		}

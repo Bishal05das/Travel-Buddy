@@ -245,6 +245,17 @@ marks an unverified (`pending`) payment `failed`. A verified payment stays
 `completed` are final. Invalid status changes return `409 Conflict`. A booking
 outside the caller's agency or account returns `404`.
 
+Each booking response includes `tour_status` and, when cancelled, a
+`cancellation_reason`: `customer`, `agency` or `tour_cancelled`.
+
+**Tour status:** `open` and `closed` can be switched freely, and closing a tour
+only stops new bookings. Setting a tour to `cancelled` is final (reopening it
+returns `409`). It also cancels every `pending` or `confirmed` booking on the
+tour with reason `tour_cancelled`, returns their seats, and fails their
+unverified payments, all in one transaction. The response reports how many
+bookings were cancelled. Verified payments stay `success` for an offline
+refund.
+
 **Seats:** a tour's `total_seat` is its capacity and is set when the tour is
 created or updated (tour creation still accepts `available_seat` as an alias).
 `available_seat` is read-only: it starts at `total_seat` and bookings reduce it.

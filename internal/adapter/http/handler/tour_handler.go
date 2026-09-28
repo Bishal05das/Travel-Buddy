@@ -317,12 +317,16 @@ func (h *TourHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	err = h.updateStatusUC.Execute(r.Context(), actor, id, status)
+	change, err := h.updateStatusUC.Execute(r.Context(), actor, id, status)
+	if errors.Is(err, domain.ErrTourCancelled) {
+		util.SendData(w, err.Error(), http.StatusConflict)
+		return
+	}
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	util.SendData(w, "Status Updated Successfully", http.StatusOK)
+	util.SendData(w, change, http.StatusOK)
 }
 
 // parseDate accepts either a plain date (YYYY-MM-DD) or a full RFC3339 timestamp.

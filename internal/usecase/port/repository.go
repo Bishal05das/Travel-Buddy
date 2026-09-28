@@ -59,15 +59,20 @@ type BookingRepository interface {
 	List(ctx context.Context, filter domain.BookingFilter) ([]*domain.BookingResponse, int, error)
 	// GetForUpdate locks the booking row (within scope) for a status change.
 	GetForUpdate(ctx context.Context, id uuid.UUID, scope domain.BookingScope) (*domain.LockedBooking, error)
-	UpdateStatus(ctx context.Context, id uuid.UUID, status string) error
+	// UpdateStatus sets the status; cancellationReason is stored only for
+	// cancellations and may be "".
+	UpdateStatus(ctx context.Context, id uuid.UUID, status, cancellationReason string) error
+	// CancelActiveForTour cancels the tour's pending and confirmed bookings and
+	// returns their ids and the seats they held.
+	CancelActiveForTour(ctx context.Context, tourID uuid.UUID, reason string) ([]uuid.UUID, int, error)
 	GetOrCreateCustomerByUser(ctx context.Context, userID uuid.UUID) (uuid.UUID, error)
 	CreateCustomer(ctx context.Context, customer *domain.Customer) error
 }
 
 type PaymentRepository interface {
 	Create(ctx context.Context, payment *domain.Payment) error
-	// SetStatusForBooking moves the booking's payments from one status to another.
-	SetStatusForBooking(ctx context.Context, bookingID uuid.UUID, from, to string) error
+	// SetStatusForBookings moves the bookings' payments from one status to another.
+	SetStatusForBookings(ctx context.Context, bookingIDs []uuid.UUID, from, to string) error
 }
 
 type RoleRepository interface {

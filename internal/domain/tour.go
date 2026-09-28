@@ -45,6 +45,35 @@ func (t *Tour) Validate() error {
 	return nil
 }
 
+const (
+	TourOpen      = "open"
+	TourClosed    = "closed"
+	TourCancelled = "cancelled"
+)
+
+var ErrTourCancelled = errors.New("a cancelled tour cannot be changed")
+
+// CheckTourStatus validates a manual status change. Open and closed can be
+// swapped freely; cancelled is final because it cancels every booking.
+func CheckTourStatus(from, to string) error {
+	switch to {
+	case TourOpen, TourClosed, TourCancelled:
+	default:
+		return errors.New("status must be one of: open, closed, cancelled")
+	}
+	if from == TourCancelled {
+		return ErrTourCancelled
+	}
+	return nil
+}
+
+// TourStatusChange is the outcome of a tour status change.
+type TourStatusChange struct {
+	TourID            uuid.UUID `json:"tour_id"`
+	Status            string    `json:"status"`
+	CancelledBookings int       `json:"cancelled_bookings"`
+}
+
 // BookedSeats is the number of seats held by active bookings.
 func (t *Tour) BookedSeats() int {
 	return t.TotalSeat - t.AvailableSeat
