@@ -262,7 +262,11 @@ func (h *TourHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = h.deleteUC.Execute(r.Context(), id)
+	actor, ok := actorFromRequest(w, r)
+	if !ok {
+		return
+	}
+	err = h.deleteUC.Execute(r.Context(), actor, id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -331,7 +335,11 @@ func (h *TourHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = h.updateStatusUC.Execute(r.Context(), id, status)
+	actor, ok := actorFromRequest(w, r)
+	if !ok {
+		return
+	}
+	err = h.updateStatusUC.Execute(r.Context(), actor, id, status)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return

@@ -5,6 +5,7 @@ import (
 
 	"github.com/bishal05das/travelbuddy/internal/adapter/http/handler"
 	middleware "github.com/bishal05das/travelbuddy/internal/adapter/http/middlewares"
+	"github.com/bishal05das/travelbuddy/internal/domain"
 )
 
 type Router struct {
@@ -54,16 +55,20 @@ func (r *Router) public(h http.Handler) http.Handler {
 	)
 }
 
-func (r *Router) protected(h http.Handler) http.Handler {
-	return middleware.Chain(
-		h,
+// protected requires a valid token, then applies the given authorization
+// checks in order.
+func (r *Router) protected(h http.Handler, authz ...middleware.Middleware) http.Handler {
+	chain := append([]middleware.Middleware{
 		r.middleware.Logger,
 		r.middleware.RateLimiter,
 		r.middleware.Authentication,
-	)
+	}, authz...)
+	return middleware.Chain(h, chain...)
 }
 
 func (r *Router) RegisterRoutes() {
+	m := r.middleware
+	superOnly := m.RequireRole(domain.RoleSuper)
 
 	// HOME
 	r.mux.Handle(
@@ -80,7 +85,7 @@ func (r *Router) RegisterRoutes() {
 	// TOURS
 	r.mux.Handle(
 		"POST /agency/{agency_id}/tours",
-		r.public(http.HandlerFunc(r.tourHandler.Create)),
+		r.protected(http.HandlerFunc(r.tourHandler.Create), m.RequirePermission("tour", "create")),
 	)
 
 	r.mux.Handle(
@@ -95,17 +100,17 @@ func (r *Router) RegisterRoutes() {
 
 	r.mux.Handle(
 		"PUT /agency/{agency_id}/tours/{tour_id}",
-		r.protected(http.HandlerFunc(r.tourHandler.Update)),
+		r.protected(http.HandlerFunc(r.tourHandler.Update), m.RequirePermission("tour", "update")),
 	)
 
 	r.mux.Handle(
 		"PATCH /tours/{tour_id}/tour-status",
-		r.public(http.HandlerFunc(r.tourHandler.UpdateStatus)),
+		r.protected(http.HandlerFunc(r.tourHandler.UpdateStatus), m.RequirePermission("tour", "update")),
 	)
 
 	r.mux.Handle(
 		"DELETE /tours/{tour_id}",
-		r.protected(http.HandlerFunc(r.tourHandler.Delete)),
+		r.protected(http.HandlerFunc(r.tourHandler.Delete), m.RequirePermission("tour", "delete")),
 	)
 
 	// USERS
@@ -121,59 +126,59 @@ func (r *Router) RegisterRoutes() {
 
 	r.mux.Handle(
 		"DELETE /users/{user_id}",
-		r.protected(http.HandlerFunc(r.userHandler.DeleteUser)),
+		r.protected(http.HandlerFunc(r.userHandler.DeleteUser), m.RequireSelfOrSuper("user_id")),
 	)
 
 	r.mux.Handle(
 		"PUT /users/{user_id}",
-		r.protected(http.HandlerFunc(r.userHandler.UpdateUser)),
+		r.protected(http.HandlerFunc(r.userHandler.UpdateUser), m.RequireSelfOrSuper("user_id")),
 	)
 
 	// BOOKINGS
 	r.mux.Handle(
 		"POST /bookings/{tour_id}",
-		r.protected(http.HandlerFunc(r.bookingHandler.CreateBookingByUser)),
+		r.protected(http.HandlerFunc(r.bookingHandler.CreateBookingByUser), m.RequireRole(domain.RoleUser)),
 	)
 	r.mux.Handle(
 		"POST /admin/bookings/{tour_id}",
-		r.protected(http.HandlerFunc(r.bookingHandler.CreateBookingByAdmin)),
+		r.protected(http.HandlerFunc(r.bookingHandler.CreateBookingByAdmin), m.RequireRole(domain.RoleMember), m.RequirePermission("booking", "create")),
 	)
 
 	// AGENCY
 	r.mux.Handle(
 		"POST /agency",
-		r.public(http.HandlerFunc(r.agencyHandler.CreateAgency)),
+		r.protected(http.HandlerFunc(r.agencyHandler.CreateAgency), superOnly),
 	)
 
 	r.mux.Handle(
 		"PUT /agency/{agency_id}",
-		r.protected(http.HandlerFunc(r.agencyHandler.UpdateAgency)),
+		r.protected(http.HandlerFunc(r.agencyHandler.UpdateAgency), m.RequirePermission("agency", "update")),
 	)
 
 	r.mux.Handle(
 		"DELETE /agency/{agency_id}",
-		r.protected(http.HandlerFunc(r.agencyHandler.DeleteAgency)),
+		r.protected(http.HandlerFunc(r.agencyHandler.DeleteAgency), m.RequirePermission("agency", "delete")),
 	)
 
 	// MEMBERS
 	r.mux.Handle(
 		"POST /members/{agency_id}",
-		r.public(http.HandlerFunc(r.memberHandler.CreateMember)),
+		r.protected(http.HandlerFunc(r.memberHandler.CreateMember), m.RequirePermission("member", "create")),
 	)
 
 	r.mux.Handle(
 		"DELETE /members/{member_id}",
-		r.protected(http.HandlerFunc(r.memberHandler.DeleteMember)),
+		r.protected(http.HandlerFunc(r.memberHandler.DeleteMember), m.RequirePermission("member", "delete")),
 	)
 
 	r.mux.Handle(
 		"GET /members/{agency_id}",
-		r.protected(http.HandlerFunc(r.memberHandler.ListMember)),
+		r.protected(http.HandlerFunc(r.memberHandler.ListMember), m.RequirePermission("member", "read")),
 	)
 
 	r.mux.Handle(
 		"PUT /members/{member_id}/permissions",
-		r.protected(http.HandlerFunc(r.memberHandler.UpdateMemberPermissions)),
+		r.protected(http.HandlerFunc(r.memberHandler.UpdateMemberPermissions), m.RequirePermission("member", "update")),
 	)
 
 	r.mux.Handle(
@@ -184,12 +189,12 @@ func (r *Router) RegisterRoutes() {
 	// PERMISSIONS
 	r.mux.Handle(
 		"POST /permissions",
-		r.public(http.HandlerFunc(r.permissionHandler.CreatePermission)),
+		r.protected(http.HandlerFunc(r.permissionHandler.CreatePermission), superOnly),
 	)
 
 	r.mux.Handle(
 		"DELETE /permissions/{id}",
-		r.protected(http.HandlerFunc(r.permissionHandler.DeletePermission)),
+		r.protected(http.HandlerFunc(r.permissionHandler.DeletePermission), superOnly),
 	)
 
 	// images

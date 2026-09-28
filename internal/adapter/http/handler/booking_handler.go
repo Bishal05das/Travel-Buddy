@@ -77,6 +77,7 @@ func handleCreateBooking[T any, PT BookingRequest[T]](h *BookingHandler, w http.
 	}
 
 	cmd := pReq.ToCommand(&actorID)
+	cmd.AgencyID = payload.AgencyID
 	result, err := h.createuc.Execute(r.Context(), cmd)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)

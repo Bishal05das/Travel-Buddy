@@ -33,11 +33,11 @@ type UpdateTour interface {
 }
 
 type DeleteTour interface {
-	Execute(ctx context.Context, tourID uuid.UUID) error
+	Execute(ctx context.Context, actor domain.Actor, tourID uuid.UUID) error
 }
 
 type UpdateTourStatus interface {
-	Execute(ctx context.Context, tourID uuid.UUID, status string) error
+	Execute(ctx context.Context, actor domain.Actor, tourID uuid.UUID, status string) error
 }
 
 type CreateBooking interface {
@@ -73,15 +73,15 @@ type DeleteAgency interface {
 }
 
 type CreateAgencyMember interface {
-	Execute(ctx context.Context, req *domain.CreateMemberRequest) error
+	Execute(ctx context.Context, actor domain.Actor, req *domain.CreateMemberRequest) error
 }
 
 type UpdateAgencyMemberPermission interface {
-	Execute(ctx context.Context, memberID uuid.UUID, req *domain.UpdatePermissionRequest) error
+	Execute(ctx context.Context, actor domain.Actor, memberID uuid.UUID, req *domain.UpdatePermissionRequest) error
 }
 
 type DeleteAgencyMember interface {
-	Execute(ctx context.Context, agencyMemberID uuid.UUID) error
+	Execute(ctx context.Context, actor domain.Actor, agencyMemberID uuid.UUID) error
 }
 
 type ListAgencyMember interface {

@@ -49,7 +49,11 @@ func (h *MemberHandler) CreateMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.createMemberUC.Execute(r.Context(), &req)
+	actor, ok := actorFromRequest(w, r)
+	if !ok {
+		return
+	}
+	err = h.createMemberUC.Execute(r.Context(), actor, &req)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
@@ -64,7 +68,11 @@ func (h *MemberHandler) DeleteMember(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid member id", http.StatusBadRequest)
 		return
 	}
-	err = h.deleteMemberUC.Execute(r.Context(), memberID)
+	actor, ok := actorFromRequest(w, r)
+	if !ok {
+		return
+	}
+	err = h.deleteMemberUC.Execute(r.Context(), actor, memberID)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
@@ -105,7 +113,11 @@ func (h *MemberHandler) UpdateMemberPermissions(w http.ResponseWriter, r *http.R
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = h.updateMemberPermissionUC.Execute(r.Context(), memberID, &req)
+	actor, ok := actorFromRequest(w, r)
+	if !ok {
+		return
+	}
+	err = h.updateMemberPermissionUC.Execute(r.Context(), actor, memberID, &req)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return

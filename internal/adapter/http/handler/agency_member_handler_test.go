@@ -34,7 +34,7 @@ func TestCreateMemberHandler(t *testing.T) {
 				"permissions":[1,2,3]
 			}`,
 			mockUsecase: func(m *mocks.MockCreateMember) {
-				m.ExecuteFunc = func(ctx context.Context, r *domain.CreateMemberRequest) error {
+				m.ExecuteFunc = func(ctx context.Context, actor domain.Actor, r *domain.CreateMemberRequest) error {
 					return nil
 				}
 			},
@@ -61,7 +61,7 @@ func TestCreateMemberHandler(t *testing.T) {
 				"agency_id":"550e8400-e29b-41d4-a716-446655440000"
 			}`,
 			mockUsecase: func(m *mocks.MockCreateMember) {
-				m.ExecuteFunc = func(ctx context.Context, r *domain.CreateMemberRequest) error {
+				m.ExecuteFunc = func(ctx context.Context, actor domain.Actor, r *domain.CreateMemberRequest) error {
 					return errors.New("failed")
 				}
 			},
@@ -87,7 +87,7 @@ func TestCreateMemberHandler(t *testing.T) {
 
 			rec := httptest.NewRecorder()
 
-			h.CreateMember(rec, req)
+			h.CreateMember(rec, asSuper(req))
 
 			if rec.Code != tt.expectedStatus {
 				t.Errorf("expected %d got %d",
@@ -110,7 +110,7 @@ func TestDeleteMemberHandler(t *testing.T) {
 			name:     "success",
 			memberID: "550e8400-e29b-41d4-a716-446655440000",
 			mockUsecase: func(m *mocks.MockDeleteMember) {
-				m.ExecuteFunc = func(ctx context.Context, id uuid.UUID) error {
+				m.ExecuteFunc = func(ctx context.Context, actor domain.Actor, id uuid.UUID) error {
 					return nil
 				}
 			},
@@ -126,7 +126,7 @@ func TestDeleteMemberHandler(t *testing.T) {
 			name:     "usecase error",
 			memberID: "550e8400-e29b-41d4-a716-446655440000",
 			mockUsecase: func(m *mocks.MockDeleteMember) {
-				m.ExecuteFunc = func(ctx context.Context, id uuid.UUID) error {
+				m.ExecuteFunc = func(ctx context.Context, actor domain.Actor, id uuid.UUID) error {
 					return errors.New("delete error")
 				}
 			},
@@ -148,7 +148,7 @@ func TestDeleteMemberHandler(t *testing.T) {
 
 			rec := httptest.NewRecorder()
 
-			h.DeleteMember(rec, req)
+			h.DeleteMember(rec, asSuper(req))
 
 			if rec.Code != tt.expectedStatus {
 				t.Errorf("expected %d got %d", tt.expectedStatus, rec.Code)
@@ -250,7 +250,7 @@ func TestUpdateMemberPermissionsHandler(t *testing.T) {
 				"permissions":[1,2,3]
 			}`,
 			mockUsecase: func(m *mocks.MockUpdatePermission) {
-				m.ExecuteFunc = func(ctx context.Context, memberID uuid.UUID, req *domain.UpdatePermissionRequest) error {
+				m.ExecuteFunc = func(ctx context.Context, actor domain.Actor, memberID uuid.UUID, req *domain.UpdatePermissionRequest) error {
 					return nil
 				}
 			},
@@ -277,7 +277,7 @@ func TestUpdateMemberPermissionsHandler(t *testing.T) {
 				"permissions":["create_tour"]
 			}`,
 			mockUsecase: func(m *mocks.MockUpdatePermission) {
-				m.ExecuteFunc = func(ctx context.Context, memberID uuid.UUID, req *domain.UpdatePermissionRequest) error {
+				m.ExecuteFunc = func(ctx context.Context, actor domain.Actor, memberID uuid.UUID, req *domain.UpdatePermissionRequest) error {
 					return errors.New("permission update failed")
 				}
 			},
@@ -304,7 +304,7 @@ func TestUpdateMemberPermissionsHandler(t *testing.T) {
 
 			rec := httptest.NewRecorder()
 
-			h.UpdateMemberPermissions(rec, req)
+			h.UpdateMemberPermissions(rec, asSuper(req))
 
 			if rec.Code != tt.expectedStatus {
 				t.Errorf("expected %d got %d", tt.expectedStatus, rec.Code)

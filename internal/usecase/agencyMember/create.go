@@ -24,7 +24,13 @@ func NewCreateAgencyMemberUseCase(txManager port.TxManager, agencyMemberRepo por
 	}
 }
 
-func (uc *CreateAgencyMemberUseCase) Execute(ctx context.Context, req *domain.CreateMemberRequest) error {
+func (uc *CreateAgencyMemberUseCase) Execute(ctx context.Context, actor domain.Actor, req *domain.CreateMemberRequest) error {
+	if scope := actor.AgencyScope(); scope != nil && *scope != req.AgencyID {
+		return errors.New("cannot create members for another agency")
+	}
+	if err := ensureCanGrant(ctx, uc.agencyMemberRepo, actor, req.Permissions); err != nil {
+		return err
+	}
 
 	err := uc.txManager.WithinTransaction(ctx, func(txCtx context.Context) error {
 		//create role

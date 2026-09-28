@@ -90,9 +90,9 @@ func (h *tourRepositoryDB) UpdateTour(ctx context.Context, t *domain.Tour) error
 	return nil
 }
 
-func (h *tourRepositoryDB) DeleteTour(ctx context.Context, tourID uuid.UUID) error {
-	query := `DELETE FROM tours WHERE tour_id=$1;`
-	res, err := h.db.ExecContext(ctx, query, tourID)
+func (h *tourRepositoryDB) DeleteTour(ctx context.Context, tourID uuid.UUID, agencyScope *uuid.UUID) error {
+	query := `DELETE FROM tours WHERE tour_id=$1 AND ($2::uuid IS NULL OR agency_id=$2);`
+	res, err := h.db.ExecContext(ctx, query, tourID, agencyScope)
 	if err != nil {
 		return err
 	}
@@ -137,9 +137,9 @@ func (h *tourRepositoryDB) GetByIDForUpdate(ctx context.Context, tourID uuid.UUI
 	return tour, nil
 }
 
-func (h *tourRepositoryDB) UpdateTourStatus(ctx context.Context, tourID uuid.UUID, status string) error {
-	query := `UPDATE tours SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE tour_id= $2;`
-	res, err := h.executor(ctx).ExecContext(ctx, query, status, tourID)
+func (h *tourRepositoryDB) UpdateTourStatus(ctx context.Context, tourID uuid.UUID, status string, agencyScope *uuid.UUID) error {
+	query := `UPDATE tours SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE tour_id= $2 AND ($3::uuid IS NULL OR agency_id=$3);`
+	res, err := h.executor(ctx).ExecContext(ctx, query, status, tourID, agencyScope)
 	if err != nil {
 		return err
 	}

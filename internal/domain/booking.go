@@ -24,6 +24,7 @@ type BookingCommand struct {
 	TourID         uuid.UUID
 	UserID         *uuid.UUID
 	MemberID       *uuid.UUID
+	AgencyID       *uuid.UUID // agency of the member creating a guest booking
 	NumberOfPeople int
 	TotalPrice     int
 	Method         string

@@ -36,6 +36,9 @@ func (uc *createbookingusecase) Execute(ctx context.Context, req *domain.Booking
 		if err != nil {
 			return err
 		}
+		if req.MemberID != nil && (req.AgencyID == nil || *req.AgencyID != tour.AgencyID) {
+			return errors.New("members can only book tours of their own agency")
+		}
 		if tour.Status != "open" {
 			return errors.New("tour is not open for booking")
 		}

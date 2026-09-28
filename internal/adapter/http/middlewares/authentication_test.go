@@ -12,7 +12,7 @@ import (
 )
 
 func TestAuthentication(t *testing.T) {
-	m := NewMiddlewareManager(&config.Config{JWTSecretkey: "secret"})
+	m := NewMiddlewareManager(&config.Config{JWTSecretkey: "secret"}, nil)
 	userID := uuid.New()
 	token, _ := util.CreateJWT("secret", util.Payload{UserID: userID, Role: "user"}, time.Hour)
 

@@ -94,7 +94,7 @@ func main() {
 	permissionHandler := handler.NewPermissionHandler(createPermissionsUC, deletePermissionUC)
 
 	//middleware
-	middleware := middleware.NewMiddlewareManager(cfg)
+	middleware := middleware.NewMiddlewareManager(cfg, permissionRepo)
 
 	//router setup
 	router := router.NewRoutes(mux, middleware, homeHandler, searchHandler, tourHandler, userHandler, bookingHandler, agencyHandler, memberHandler, permissionHandler)

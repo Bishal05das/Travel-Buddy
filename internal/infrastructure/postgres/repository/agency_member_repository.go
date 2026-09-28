@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
@@ -82,24 +83,40 @@ func (h *agencyMemberRepositoryDB) UpdateMember(ctx context.Context, member *dom
 	return nil
 }
 
-func (h *agencyMemberRepositoryDB) DeleteMember(ctx context.Context, memberID uuid.UUID) error {
-	query := `DELETE FROM agency_members WHERE member_id=$1;`
-	res, err := h.db.ExecContext(ctx, query, memberID)
+func (h *agencyMemberRepositoryDB) DeleteMember(ctx context.Context, memberID uuid.UUID, agencyScope *uuid.UUID) error {
+	query := `DELETE FROM agency_members WHERE member_id=$1 AND ($2::uuid IS NULL OR agency_id=$2);`
+	res, err := h.db.ExecContext(ctx, query, memberID, agencyScope)
 	if err != nil {
 		return err
 	}
 	return requireAffected(res, "member not found")
 }
 
-func (h *agencyMemberRepositoryDB) GetRoleIDFromMemberIDForUpdate(ctx context.Context, memberID uuid.UUID) (*int, error) {
+func (h *agencyMemberRepositoryDB) GetRoleIDFromMemberIDForUpdate(ctx context.Context, memberID uuid.UUID, agencyScope *uuid.UUID) (*int, error) {
 	var roleID int
 
-	query := `SELECT role_id FROM agency_members WHERE member_id = $1 FOR UPDATE;`
-	err := h.executor(ctx).QueryRowxContext(ctx, query, memberID).Scan(&roleID)
+	query := `SELECT role_id FROM agency_members WHERE member_id = $1 AND ($2::uuid IS NULL OR agency_id=$2) FOR UPDATE;`
+	err := h.executor(ctx).QueryRowxContext(ctx, query, memberID, agencyScope).Scan(&roleID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, errors.New("member not found")
+	}
 	if err != nil {
 		return nil, err
 	}
 	return &roleID, nil
+}
+
+func (h *agencyMemberRepositoryDB) GetPermissionIDs(ctx context.Context, memberID uuid.UUID) ([]int, error) {
+	query := `
+	SELECT rp.permission_id
+	FROM agency_members m
+	JOIN role_permissions rp ON rp.role_id = m.role_id
+	WHERE m.member_id = $1;`
+	ids := []int{}
+	if err := sqlx.SelectContext(ctx, h.executor(ctx), &ids, query, memberID); err != nil {
+		return nil, err
+	}
+	return ids, nil
 }
 
 func (h *agencyMemberRepositoryDB) FindMember(ctx context.Context, email string) (*domain.AgencyMember, error) {

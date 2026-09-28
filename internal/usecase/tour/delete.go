@@ -3,6 +3,7 @@ package tourusecase
 import (
 	"context"
 
+	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
 	"github.com/google/uuid"
 )
@@ -17,6 +18,6 @@ func NewDeleteTourUseCase(repo port.TourRepository) port.DeleteTour {
 	}
 }
 
-func (uc *deleteTourUseCase) Execute(ctx context.Context, tourID uuid.UUID) error {
-	return uc.repo.DeleteTour(ctx, tourID)
+func (uc *deleteTourUseCase) Execute(ctx context.Context, actor domain.Actor, tourID uuid.UUID) error {
+	return uc.repo.DeleteTour(ctx, tourID, actor.AgencyScope())
 }

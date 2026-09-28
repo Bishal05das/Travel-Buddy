@@ -8,19 +8,19 @@ import (
 )
 
 type MockCreateMember struct {
-	ExecuteFunc func(ctx context.Context, req *domain.CreateMemberRequest) error
+	ExecuteFunc func(ctx context.Context, actor domain.Actor, req *domain.CreateMemberRequest) error
 }
 
-func (m *MockCreateMember) Execute(ctx context.Context, req *domain.CreateMemberRequest) error {
-	return m.ExecuteFunc(ctx, req)
+func (m *MockCreateMember) Execute(ctx context.Context, actor domain.Actor, req *domain.CreateMemberRequest) error {
+	return m.ExecuteFunc(ctx, actor, req)
 }
 
 type MockDeleteMember struct {
-	ExecuteFunc func(ctx context.Context, id uuid.UUID) error
+	ExecuteFunc func(ctx context.Context, actor domain.Actor, id uuid.UUID) error
 }
 
-func (m *MockDeleteMember) Execute(ctx context.Context, id uuid.UUID) error {
-	return m.ExecuteFunc(ctx, id)
+func (m *MockDeleteMember) Execute(ctx context.Context, actor domain.Actor, id uuid.UUID) error {
+	return m.ExecuteFunc(ctx, actor, id)
 }
 
 type MockListMember struct {
@@ -32,11 +32,11 @@ func (m *MockListMember) Execute(ctx context.Context, agencyID uuid.UUID) ([]*do
 }
 
 type MockUpdatePermission struct {
-	ExecuteFunc func(ctx context.Context, memberID uuid.UUID, req *domain.UpdatePermissionRequest) error
+	ExecuteFunc func(ctx context.Context, actor domain.Actor, memberID uuid.UUID, req *domain.UpdatePermissionRequest) error
 }
 
-func (m *MockUpdatePermission) Execute(ctx context.Context, memberID uuid.UUID, req *domain.UpdatePermissionRequest) error {
-	return m.ExecuteFunc(ctx, memberID, req)
+func (m *MockUpdatePermission) Execute(ctx context.Context, actor domain.Actor, memberID uuid.UUID, req *domain.UpdatePermissionRequest) error {
+	return m.ExecuteFunc(ctx, actor, memberID, req)
 }
 
 type MockLoginMember struct {

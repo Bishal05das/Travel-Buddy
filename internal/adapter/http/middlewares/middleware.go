@@ -1,13 +1,18 @@
 package middleware
 
-import "github.com/bishal05das/travelbuddy/config"
+import (
+	"github.com/bishal05das/travelbuddy/config"
+	"github.com/bishal05das/travelbuddy/internal/usecase/port"
+)
 
 type MiddlewareManager struct {
-	cfg *config.Config
+	cfg        *config.Config
+	authorizer port.Authorizer
 }
 
-func NewMiddlewareManager(cfg *config.Config) *MiddlewareManager {
+func NewMiddlewareManager(cfg *config.Config, authorizer port.Authorizer) *MiddlewareManager {
 	return &MiddlewareManager{
-		cfg: cfg,
+		cfg:        cfg,
+		authorizer: authorizer,
 	}
 }

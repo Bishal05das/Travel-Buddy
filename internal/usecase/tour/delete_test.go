@@ -83,7 +83,7 @@ func TestDeleteTourUseCase(t *testing.T) {
 				}
 			}
 			usecase := tourusecase.NewDeleteTourUseCase(repo)
-			err := usecase.Execute(context.Background(), tt.tourID)
+			err := usecase.Execute(context.Background(), domain.Actor{Role: domain.RoleSuper}, tt.tourID)
 			if tt.expectErr && err == nil {
 				t.Fatalf("expected error,got nil")
 			}

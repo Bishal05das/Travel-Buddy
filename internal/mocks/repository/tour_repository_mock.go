@@ -102,11 +102,11 @@ func (m *MockTourRepository) UpdateTour(ctx context.Context, t *domain.Tour) err
 	return nil
 }
 
-func (m *MockTourRepository) DeleteTour(ctx context.Context, tourID uuid.UUID) error {
+func (m *MockTourRepository) DeleteTour(ctx context.Context, tourID uuid.UUID, agencyScope *uuid.UUID) error {
 	if m.err != nil {
 		return m.err
 	}
-	if _, ok := m.tours[tourID]; !ok {
+	if tour, ok := m.tours[tourID]; !ok || !inScope(tour, agencyScope) {
 		return errTourNotFound
 	}
 	delete(m.tours, tourID)
@@ -141,14 +141,18 @@ func (m *MockTourRepository) UpdateAvailableSeats(ctx context.Context, tourID uu
 	return nil
 }
 
-func (m *MockTourRepository) UpdateTourStatus(ctx context.Context, tourID uuid.UUID, status string) error {
+func (m *MockTourRepository) UpdateTourStatus(ctx context.Context, tourID uuid.UUID, status string, agencyScope *uuid.UUID) error {
 	if m.err != nil {
 		return m.err
 	}
 	tour, ok := m.tours[tourID]
-	if !ok {
+	if !ok || !inScope(tour, agencyScope) {
 		return errTourNotFound
 	}
 	tour.Status = status
 	return nil
+}
+
+func inScope(tour *domain.Tour, agencyScope *uuid.UUID) bool {
+	return agencyScope == nil || tour.AgencyID == *agencyScope
 }

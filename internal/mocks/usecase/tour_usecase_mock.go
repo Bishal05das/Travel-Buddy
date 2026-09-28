@@ -33,11 +33,11 @@ func (m *MockListTour) Execute(ctx context.Context, agencyID uuid.UUID, page, li
 }
 
 type MockUpdateTourStatus struct {
-	ExecuteFunc func(ctx context.Context, tourID uuid.UUID, status string) error
+	ExecuteFunc func(ctx context.Context, actor domain.Actor, tourID uuid.UUID, status string) error
 }
 
-func (m *MockUpdateTourStatus) Execute(ctx context.Context, tourID uuid.UUID, status string) error {
-	return m.ExecuteFunc(ctx, tourID, status)
+func (m *MockUpdateTourStatus) Execute(ctx context.Context, actor domain.Actor, tourID uuid.UUID, status string) error {
+	return m.ExecuteFunc(ctx, actor, tourID, status)
 }
 
 type MockUpdateTour struct {
@@ -49,9 +49,9 @@ func (m *MockUpdateTour) Execute(ctx context.Context, tour *domain.Tour) error {
 }
 
 type MockDeleteTour struct {
-	ExecuteFunc func(ctx context.Context, id uuid.UUID) error
+	ExecuteFunc func(ctx context.Context, actor domain.Actor, id uuid.UUID) error
 }
 
-func (m *MockDeleteTour) Execute(ctx context.Context, id uuid.UUID) error {
-	return m.ExecuteFunc(ctx, id)
+func (m *MockDeleteTour) Execute(ctx context.Context, actor domain.Actor, id uuid.UUID) error {
+	return m.ExecuteFunc(ctx, actor, id)
 }
