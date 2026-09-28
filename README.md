@@ -158,6 +158,20 @@ go run cmd/api/main.go
 
 ---
 
+# 🖥 Web app
+
+A Next.js frontend lives in [`frontend/`](frontend/README.md). With the API
+running on port 3000:
+
+```
+cd frontend
+cp .env.example .env.local
+npm install
+npm run dev   # http://localhost:3001
+```
+
+---
+
 # 🐳 Running with Docker
 
 Build and run using Docker Compose:
