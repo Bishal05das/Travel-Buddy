@@ -76,29 +76,24 @@ func (h *TourHandler) Create(w http.ResponseWriter, r *http.Request) {
 	agencyID, err := uuid.Parse(agencyIDStr)
 
 	if err != nil {
-		fmt.Println(err)
 		util.SendData(w, "invalid agency_id", http.StatusBadRequest)
 		return
 	}
-	startDateStr := strings.TrimSpace(r.FormValue("start_date"))
-	startDate, err := time.Parse(time.RFC3339, startDateStr)
+	startDate, err := parseDate(r.FormValue("start_date"))
 	if err != nil {
-		fmt.Println(err)
-		util.SendData(w, "invalid start_date, use YYYY-MM-DD", http.StatusBadRequest)
+		util.SendData(w, "invalid start_date, use YYYY-MM-DD or RFC3339", http.StatusBadRequest)
 		return
 	}
 
-	endDateStr := strings.TrimSpace(r.FormValue("end_date"))
-	endDate, err := time.Parse(time.RFC3339, endDateStr)
+	endDate, err := parseDate(r.FormValue("end_date"))
 	if err != nil {
-		util.SendData(w, "invalid end_date, use YYYY-MM-DD", http.StatusBadRequest)
+		util.SendData(w, "invalid end_date, use YYYY-MM-DD or RFC3339", http.StatusBadRequest)
 		return
 	}
 
-	lastEnrollmentDateStr := strings.TrimSpace(r.FormValue("last_enrollment_date"))
-	lastEnrollmentDate, err := time.Parse(time.RFC3339, lastEnrollmentDateStr)
+	lastEnrollmentDate, err := parseDate(r.FormValue("last_enrollment_date"))
 	if err != nil {
-		util.SendData(w, "invalid last_enrollment_date, use YYYY-MM-DD", http.StatusBadRequest)
+		util.SendData(w, "invalid last_enrollment_date, use YYYY-MM-DD or RFC3339", http.StatusBadRequest)
 		return
 	}
 
@@ -314,7 +309,6 @@ func (h *TourHandler) Update(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt:          time.Now(),
 	}
 	err = h.updateUC.Execute(r.Context(), tour)
-	fmt.Println(err)
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
@@ -343,4 +337,13 @@ func (h *TourHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	util.SendData(w, "Status Updated Successfully", http.StatusOK)
+}
+
+// parseDate accepts either a plain date (YYYY-MM-DD) or a full RFC3339 timestamp.
+func parseDate(v string) (time.Time, error) {
+	v = strings.TrimSpace(v)
+	if t, err := time.Parse(time.DateOnly, v); err == nil {
+		return t, nil
+	}
+	return time.Parse(time.RFC3339, v)
 }

@@ -2,6 +2,7 @@ package tourusecase
 
 import (
 	"context"
+	"errors"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
 	"github.com/google/uuid"
 )
@@ -17,5 +18,10 @@ func NewUpdateTourStatusUseCase(repo port.TourRepository) port.UpdateTourStatus 
 }
 
 func (uc *updateTourStatusUseCase) Execute(ctx context.Context, tourID uuid.UUID, status string) error {
+	switch status {
+	case "open", "closed", "cancelled":
+	default:
+		return errors.New("status must be one of: open, closed, cancelled")
+	}
 	return uc.repo.UpdateTourStatus(ctx, tourID, status)
 }

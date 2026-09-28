@@ -53,7 +53,7 @@ func (h *tourRepositoryDB) ListTour(ctx context.Context, agencyID uuid.UUID, pag
 	offset := (page - 1) * limit
 
 	var tours []*domain.Tour
-	query := `SELECT t.tour_id,t.name,t.start_date,t.end_date,t.available_seat,t.description,t.last_enrollment_date,t.price,t.discount,t.status,COALESCE(ti.image_path,'') AS image_path FROM tours t ` + activeTourImageJoin + ` WHERE t.agency_id=$1 ORDER BY t.start_date DESC LIMIT $2 OFFSET $3;`
+	query := `SELECT t.tour_id,t.agency_id,t.name,t.start_date,t.end_date,t.available_seat,t.description,t.last_enrollment_date,t.price,t.discount,t.status,COALESCE(ti.image_path,'') AS image_path FROM tours t ` + activeTourImageJoin + ` WHERE t.agency_id=$1 ORDER BY t.start_date DESC LIMIT $2 OFFSET $3;`
 	err := h.db.SelectContext(ctx, &tours, query, agencyID, limit, offset)
 	if err != nil {
 		return nil, err
@@ -76,8 +76,10 @@ func (h *tourRepositoryDB) Count(ctx context.Context, agencyID uuid.UUID) (int, 
 }
 
 func (h *tourRepositoryDB) UpdateTour(ctx context.Context, t *domain.Tour) error {
-	query := `UPDATE tours SET agency_id=$1,name=$2,start_date=$3,end_date=$4,available_seat=$5,description=$6,last_enrollment_date=$7,price=$8,discount=$9,updated_at=$10 WHERE tour_id=$11;`
-	res, err := h.db.ExecContext(ctx, query, t.AgencyID, t.Name, t.StartDate, t.EndDate, t.AvailableSeat, t.Description, t.LastEnrollmentDate, t.Price, t.Discount, t.UpdatedAt, t.TourID)
+	// agency_id is part of the filter, not the SET list: a tour can only be
+	// updated through the agency that owns it and can never be moved.
+	query := `UPDATE tours SET name=$1,start_date=$2,end_date=$3,available_seat=$4,description=$5,last_enrollment_date=$6,price=$7,discount=$8,updated_at=$9 WHERE tour_id=$10 AND agency_id=$11;`
+	res, err := h.db.ExecContext(ctx, query, t.Name, t.StartDate, t.EndDate, t.AvailableSeat, t.Description, t.LastEnrollmentDate, t.Price, t.Discount, t.UpdatedAt, t.TourID, t.AgencyID)
 	if err != nil {
 		return err
 	}
@@ -90,18 +92,18 @@ func (h *tourRepositoryDB) UpdateTour(ctx context.Context, t *domain.Tour) error
 
 func (h *tourRepositoryDB) DeleteTour(ctx context.Context, tourID uuid.UUID) error {
 	query := `DELETE FROM tours WHERE tour_id=$1;`
-	_, err := h.db.ExecContext(ctx, query, tourID)
+	res, err := h.db.ExecContext(ctx, query, tourID)
 	if err != nil {
 		return err
 	}
-	return nil
+	return requireAffected(res, "tour not found")
 }
 
 func (h *tourRepositoryDB) GetByID(ctx context.Context, tourID uuid.UUID) (*domain.Tour, error) {
-	query := `SELECT t.agency_id,t.name,t.start_date,t.end_date,t.available_seat,t.description,t.last_enrollment_date,t.price,t.discount,t.status,COALESCE(ti.image_path,'') FROM tours t ` + activeTourImageJoin + ` WHERE t.tour_id=$1;`
+	query := `SELECT t.tour_id,t.agency_id,t.name,t.start_date,t.end_date,t.available_seat,t.description,t.last_enrollment_date,t.price,t.discount,t.status,COALESCE(ti.image_path,'') FROM tours t ` + activeTourImageJoin + ` WHERE t.tour_id=$1;`
 
 	tour := &domain.Tour{}
-	err := h.executor(ctx).QueryRowxContext(ctx, query, tourID).Scan(&tour.AgencyID, &tour.Name, &tour.StartDate, &tour.EndDate, &tour.AvailableSeat, &tour.Description, &tour.LastEnrollmentDate, &tour.Price, &tour.Discount, &tour.Status, &tour.ImagePath)
+	err := h.executor(ctx).QueryRowxContext(ctx, query, tourID).Scan(&tour.TourID, &tour.AgencyID, &tour.Name, &tour.StartDate, &tour.EndDate, &tour.AvailableSeat, &tour.Description, &tour.LastEnrollmentDate, &tour.Price, &tour.Discount, &tour.Status, &tour.ImagePath)
 	if err == sql.ErrNoRows {
 		return nil, errors.New("tour not found")
 	}
@@ -134,9 +136,11 @@ func (h *tourRepositoryDB) GetByIDForUpdate(ctx context.Context, tourID uuid.UUI
 
 func (h *tourRepositoryDB) UpdateTourStatus(ctx context.Context, tourID uuid.UUID, status string) error {
 	query := `UPDATE tours SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE tour_id= $2;`
-	_, err := h.executor(ctx).ExecContext(ctx, query, status, tourID)
-	return err
-
+	res, err := h.executor(ctx).ExecContext(ctx, query, status, tourID)
+	if err != nil {
+		return err
+	}
+	return requireAffected(res, "tour not found")
 }
 
 func (h *tourRepositoryDB) executor(ctx context.Context) sqlx.ExtContext {
