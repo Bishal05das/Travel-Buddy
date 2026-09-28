@@ -44,7 +44,7 @@ type BookingRequestByUser struct {
 	TotalPrice     int       `json:"total_price" validate:"required,gt=0"`
 	Status         string    `json:"status" validate:"omitempty,oneof=pending confirmed cancelled"`
 	Method         string    `json:"method" validate:"required,oneof=bkash bank nagad"`
-	TransactionId  string    `json:"transaction_id" validate:"required,omitempty,min=5,max=120"`
+	TransactionId  string    `json:"transaction_id" validate:"required,min=5,max=120"`
 }
 
 func (r *BookingRequestByUser) SetTourID(tourID uuid.UUID) {
@@ -69,7 +69,7 @@ type BookingRequestByAdmin struct {
 	TotalPrice     int       `json:"total_price" validate:"required,gt=0"`
 	Status         string    `json:"status" validate:"omitempty,oneof=pending confirmed cancelled"`
 	Method         string    `json:"method" validate:"required,oneof=bkash bank nagad"`
-	TransactionId  string    `json:"transaction_id" validate:"required,omitempty,min=5,max=120"`
+	TransactionId  string    `json:"transaction_id" validate:"required,min=5,max=120"`
 
 	CustomerName  string `json:"customer_name" validate:"required,min=2,max=120"`
 	CustomerEmail string `json:"customer_email" validate:"required,email"`
@@ -86,6 +86,7 @@ func (r *BookingRequestByAdmin) ToCommand(memberID *uuid.UUID) *BookingCommand {
 		NumberOfPeople: r.NumberOfPeople,
 		Method:         r.Method,
 		TransactionId:  r.TransactionId,
+		TotalPrice:     r.TotalPrice,
 		MemberID:       memberID,
 		GuestInfo: &GuestCustomer{
 			Name:  r.CustomerName,

@@ -34,8 +34,10 @@ func (h *BookingHandler) CreateBookingByUser(w http.ResponseWriter, r *http.Requ
 }
 
 func (h *BookingHandler) CreateBookingByAdmin(w http.ResponseWriter, r *http.Request) {
+	// Guest bookings are made by agency members; tokens never carry an
+	// "admin" role, which made this endpoint unreachable.
 	handleCreateBooking[domain.BookingRequestByAdmin](
-		h, w, r, "admin",
+		h, w, r, "member",
 	)
 }
 
@@ -43,7 +45,7 @@ func handleCreateBooking[T any, PT BookingRequest[T]](h *BookingHandler, w http.
 	idStr := r.PathValue("tour_id")
 	tourID, err := uuid.Parse(idStr)
 	if err != nil {
-		http.Error(w, "invalid agency id", http.StatusBadRequest)
+		http.Error(w, "invalid tour id", http.StatusBadRequest)
 		return
 	}
 	payload, err := util.GetPayload(r)

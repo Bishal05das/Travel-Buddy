@@ -39,16 +39,18 @@ func (uc *createbookingusecase) Execute(ctx context.Context, req *domain.Booking
 		if tour.Status != "open" {
 			return errors.New("tour is not open for booking")
 		}
-		if tour.AvailableSeat <= req.NumberOfPeople {
-			return errors.New("Not enough seats available")
+		if req.NumberOfPeople < 1 {
+			return errors.New("number of people must be at least 1")
+		}
+		if tour.AvailableSeat < req.NumberOfPeople {
+			return errors.New("not enough seats available")
 		}
 		if time.Now().After(tour.LastEnrollmentDate) {
 			return errors.New("enrollment deadline has passed")
 		}
-		//calculate price with discount
+		//calculate price with discount for the whole group
 		receivedPrice := req.TotalPrice
-		totalDiscount := (tour.Price * tour.Discount) / 100
-		calculatedPrice := tour.Price - totalDiscount
+		calculatedPrice := tour.UnitPrice() * req.NumberOfPeople
 		if receivedPrice != calculatedPrice {
 			return errors.New("price mismatch, please check the price and try again")
 		}
@@ -61,7 +63,7 @@ func (uc *createbookingusecase) Execute(ctx context.Context, req *domain.Booking
 				return err
 			}
 		} else if req.MemberID != nil {
-			if req.GuestInfo.Name == "" || req.GuestInfo.Email == "" || req.GuestInfo.Phone == "" {
+			if req.GuestInfo == nil || req.GuestInfo.Name == "" || req.GuestInfo.Email == "" || req.GuestInfo.Phone == "" {
 				return errors.New("customer details required for guest booking")
 			}
 			customer := &domain.Customer{
@@ -74,7 +76,7 @@ func (uc *createbookingusecase) Execute(ctx context.Context, req *domain.Booking
 			}
 			customerID = customer.CustomerID
 		} else {
-			return errors.New("either user or member must be sppecified")
+			return errors.New("either user or member must be specified")
 		}
 
 		booking := &domain.Booking{

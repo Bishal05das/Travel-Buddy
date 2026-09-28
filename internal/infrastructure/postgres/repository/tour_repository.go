@@ -115,16 +115,19 @@ func (h *tourRepositoryDB) GetByID(ctx context.Context, tourID uuid.UUID) (*doma
 
 func (h *tourRepositoryDB) UpdateAvailableSeats(ctx context.Context, tourID uuid.UUID, seats int) error {
 	query := `UPDATE tours SET available_seat = $1, updated_at = CURRENT_TIMESTAMP WHERE tour_id = $2;`
-	_, err := h.executor(ctx).ExecContext(ctx, query, seats, tourID)
-	return err
+	res, err := h.executor(ctx).ExecContext(ctx, query, seats, tourID)
+	if err != nil {
+		return err
+	}
+	return requireAffected(res, "tour not found")
 }
 
 func (h *tourRepositoryDB) GetByIDForUpdate(ctx context.Context, tourID uuid.UUID) (*domain.Tour, error) {
 	// SELECT ... FOR UPDATE locks the row
-	query := `SELECT agency_id,name,start_date,end_date,available_seat,description,last_enrollment_date,price,discount,status FROM tours WHERE tour_id=$1 FOR UPDATE;`
+	query := `SELECT tour_id,agency_id,name,start_date,end_date,available_seat,description,last_enrollment_date,price,discount,status FROM tours WHERE tour_id=$1 FOR UPDATE;`
 
 	tour := &domain.Tour{}
-	err := h.executor(ctx).QueryRowxContext(ctx, query, tourID).Scan(&tour.AgencyID, &tour.Name, &tour.StartDate, &tour.EndDate, &tour.AvailableSeat, &tour.Description, &tour.LastEnrollmentDate, &tour.Price, &tour.Discount, &tour.Status)
+	err := h.executor(ctx).QueryRowxContext(ctx, query, tourID).Scan(&tour.TourID, &tour.AgencyID, &tour.Name, &tour.StartDate, &tour.EndDate, &tour.AvailableSeat, &tour.Description, &tour.LastEnrollmentDate, &tour.Price, &tour.Discount, &tour.Status)
 	if err == sql.ErrNoRows {
 		return nil, errors.New("tour not found")
 	}

@@ -23,6 +23,11 @@ type Tour struct {
 	UpdatedAt          time.Time `json:"updated_at" db:"updated_at"`
 }
 
+// UnitPrice is the per-person price after applying the percentage discount.
+func (t *Tour) UnitPrice() int {
+	return t.Price - (t.Price*t.Discount)/100
+}
+
 type CreateTourRequest struct {
 	AgencyID           uuid.UUID `json:"agency_id" validate:"required,uuid"`
 	Name               string    `json:"name" validate:"required,min=3,max=200"`
