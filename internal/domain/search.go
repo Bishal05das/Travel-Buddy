@@ -21,7 +21,7 @@ type TourSearchFilter struct {
 type TourSearchResponse struct {
 	TourID             uuid.UUID `json:"tour_id" db:"tour_id"`
 	AgencyID           uuid.UUID `json:"agency_id" db:"agency_id"`
-	AgencyName         string
+	AgencyName         string    `json:"agency_name"`
 	Name               string    `json:"name" db:"name"`
 	StartDate          time.Time `json:"start_date" db:"start_date"`
 	EndDate            time.Time `json:"end_date" db:"end_date"`
