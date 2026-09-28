@@ -1,10 +1,15 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
+	"time"
 
 	"github.com/bishal05das/travelbuddy/config"
 	"github.com/bishal05das/travelbuddy/internal/adapter/http/handler"
@@ -36,7 +41,10 @@ func main() {
 		fmt.Println("DB Migration failed:", err)
 		os.Exit(1)
 	}
-	newHandler := middleware.Cors(mux)
+	defer dbCon.Close()
+
+	// 10 MB multipart uploads plus room for the other form fields.
+	newHandler := middleware.Cors(middleware.LimitBody(11 << 20)(mux))
 	txManager := repository.NewTxManager(dbCon)
 
 	//Repository
@@ -100,10 +108,36 @@ func main() {
 	router := router.NewRoutes(mux, middleware, homeHandler, searchHandler, tourHandler, userHandler, bookingHandler, agencyHandler, memberHandler, permissionHandler)
 	router.RegisterRoutes()
 
-	fmt.Println("Listening to server on port ", cfg.HttpPort)
-	addr := ":" + strconv.Itoa(cfg.HttpPort)
-	err = http.ListenAndServe(addr, newHandler)
-	if err != nil {
-		fmt.Println(fmt.Println("Server failed to start:", err))
+	srv := &http.Server{
+		Addr:              ":" + strconv.Itoa(cfg.HttpPort),
+		Handler:           newHandler,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
+
+	serverErr := make(chan error, 1)
+	go func() {
+		fmt.Println("Listening to server on port ", cfg.HttpPort)
+		serverErr <- srv.ListenAndServe()
+	}()
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	select {
+	case err := <-serverErr:
+		if !errors.Is(err, http.ErrServerClosed) {
+			fmt.Println("Server failed to start:", err)
+			os.Exit(1)
+		}
+	case <-stop:
+		fmt.Println("Shutting down...")
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			fmt.Println("Graceful shutdown failed:", err)
+		}
 	}
 }

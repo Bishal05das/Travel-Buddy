@@ -26,7 +26,10 @@ type Config struct {
 	HttpPort     int
 	JWTSecretkey string
 	JWTTTL       time.Duration
-	DB           *DBConfig
+	// TrustProxyHeaders makes the rate limiter use X-Real-IP /
+	// X-Forwarded-For. Enable only behind a reverse proxy that sets them.
+	TrustProxyHeaders bool
+	DB                *DBConfig
 }
 
 func loadConfig() {
@@ -67,6 +70,15 @@ func loadConfig() {
 			os.Exit(1)
 		}
 		jwtTTL = d
+	}
+	trustProxyHeaders := false
+	if v := os.Getenv("TRUST_PROXY_HEADERS"); v != "" {
+		b, err := strconv.ParseBool(v)
+		if err != nil {
+			fmt.Println("TRUST_PROXY_HEADERS must be a boolean")
+			os.Exit(1)
+		}
+		trustProxyHeaders = b
 	}
 	host := os.Getenv("DBHOST")
 	if host == "" {
@@ -109,11 +121,12 @@ func loadConfig() {
 		os.Exit(1)
 	}
 	configurations = &Config{
-		Version:      version,
-		ServiceName:  serviceName,
-		HttpPort:     port,
-		JWTSecretkey: jwtSecretKey,
-		JWTTTL:       jwtTTL,
+		Version:           version,
+		ServiceName:       serviceName,
+		HttpPort:          port,
+		JWTSecretkey:      jwtSecretKey,
+		JWTTTL:            jwtTTL,
+		TrustProxyHeaders: trustProxyHeaders,
 		DB: &DBConfig{
 			Host:          host,
 			Port:          dbprt,

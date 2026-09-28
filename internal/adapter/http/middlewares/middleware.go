@@ -8,11 +8,13 @@ import (
 type MiddlewareManager struct {
 	cfg        *config.Config
 	authorizer port.Authorizer
+	limiter    *ipStore
 }
 
 func NewMiddlewareManager(cfg *config.Config, authorizer port.Authorizer) *MiddlewareManager {
 	return &MiddlewareManager{
 		cfg:        cfg,
 		authorizer: authorizer,
+		limiter:    newIPStore(),
 	}
 }
