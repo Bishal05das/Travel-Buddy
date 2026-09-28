@@ -334,7 +334,7 @@ func TestMemberLoginHandler(t *testing.T) {
 					return &token, nil
 				}
 			},
-			expectedStatus: http.StatusCreated,
+			expectedStatus: http.StatusOK,
 		},
 		{
 			name:           "invalid json",

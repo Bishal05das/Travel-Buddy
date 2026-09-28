@@ -128,8 +128,8 @@ func (h *MemberHandler) MemberLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	token, err := h.loginUC.Execute(r.Context(), &req)
 	if err != nil {
-		util.SendData(w, err.Error(), http.StatusInternalServerError)
+		sendLoginError(w, err)
 		return
 	}
-	util.SendData(w, token, http.StatusCreated)
+	util.SendData(w, token, http.StatusOK)
 }

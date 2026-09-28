@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"time"
 
@@ -48,6 +49,10 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		Phone:    req.Phone,
 	}
 	err = h.createUC.Execute(r.Context(), &newUser)
+	if errors.Is(err, domain.ErrEmailTaken) {
+		http.Error(w, err.Error(), http.StatusConflict)
+		return
+	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -72,17 +77,17 @@ func (h *UserHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	token, err := h.loginUC.Execute(r.Context(), &reqLogin)
 	if err != nil {
-		util.SendData(w, err.Error(), http.StatusInternalServerError)
+		sendLoginError(w, err)
 		return
 	}
-	util.SendData(w, token, http.StatusCreated)
+	util.SendData(w, token, http.StatusOK)
 }
 
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("user_id")
 	userID, err := uuid.Parse(idStr)
 	if err != nil {
-		http.Error(w, "invalid agency id", http.StatusBadRequest)
+		http.Error(w, "invalid user id", http.StatusBadRequest)
 		return
 	}
 	err = h.deleteUC.Execute(r.Context(), userID)
@@ -90,14 +95,14 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	util.SendData(w, "Successfully Deleted User", http.StatusCreated)
+	util.SendData(w, "Successfully Deleted User", http.StatusOK)
 }
 
 func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("user_id")
 	userID, err := uuid.Parse(idStr)
 	if err != nil {
-		http.Error(w, "invalid agency id", http.StatusBadRequest)
+		http.Error(w, "invalid user id", http.StatusBadRequest)
 		return
 	}
 	var req domain.UpdateUserReq
@@ -121,9 +126,23 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.updateUC.Execute(r.Context(), user)
+	if errors.Is(err, domain.ErrEmailTaken) {
+		util.SendData(w, err.Error(), http.StatusConflict)
+		return
+	}
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	util.SendData(w, "Succesfully Updated User", http.StatusOK)
+}
+
+// sendLoginError maps bad credentials to 401 and anything else to 500
+// without exposing internal error details.
+func sendLoginError(w http.ResponseWriter, err error) {
+	if errors.Is(err, domain.ErrInvalidCredentials) {
+		util.SendData(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+	util.SendData(w, "internal server error", http.StatusInternalServerError)
 }

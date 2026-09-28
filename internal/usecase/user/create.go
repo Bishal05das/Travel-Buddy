@@ -25,7 +25,7 @@ func (uc *CreateUserUseCase) Execute(ctx context.Context, user *domain.User) err
 		return err
 	}
 	if usr != nil {
-		return errors.New("email already exist")
+		return domain.ErrEmailTaken
 	}
 
 	hashedPassword, err := util.HashPassword(user.Password)

@@ -118,7 +118,7 @@ func TestUserLoginHandler(t *testing.T) {
 					return &token, nil
 				}
 			},
-			expectedStatus: http.StatusCreated,
+			expectedStatus: http.StatusOK,
 		},
 
 		{
@@ -140,6 +140,19 @@ func TestUserLoginHandler(t *testing.T) {
 				}
 			},
 			expectedStatus: http.StatusInternalServerError,
+		},
+		{
+			name: "invalid credentials",
+			body: `{
+				"email":"test@test.com",
+				"password":"12345678"
+			}`,
+			mockUsecase: func(m *mocks.MockLoginUser) {
+				m.ExecuteFunc = func(ctx context.Context, r *domain.ReqLogin) (*string, error) {
+					return nil, domain.ErrInvalidCredentials
+				}
+			},
+			expectedStatus: http.StatusUnauthorized,
 		},
 	}
 
@@ -185,7 +198,7 @@ func TestDeleteUserHandler(t *testing.T) {
 					return nil
 				}
 			},
-			expectedStatus: http.StatusCreated,
+			expectedStatus: http.StatusOK,
 		},
 
 		{
