@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:15
+    image: postgres:17-alpine
     environment:
       POSTGRES_USER: ${DBUSER}
       POSTGRES_PASSWORD: ${DBPASSWORD}
@@ -8,7 +8,7 @@ services:
     ports:
       - "${DBPORT}:5432"
     volumes:
-      - tour_data:/var/lib/postgresql/data
+      - tour_data_pg17:/var/lib/postgresql/data
     networks:
       - tour_network
 
@@ -26,7 +26,9 @@ services:
 
 
 volumes:
+  # Retain the PostgreSQL 15 volume for rollback after migration.
   tour_data:
+  tour_data_pg17:
 
 networks:
   tour_network:
