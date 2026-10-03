@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAsync } from "@/hooks/useAsync";
-import { createTour, getTour, updateTour } from "@/lib/endpoints";
+import { createTour, getTour, updateTour, updateTourImage } from "@/lib/endpoints";
+import { ImageEditor } from "../ImageEditor";
 import { formToUpdate, TourForm, tourToForm } from "../tours/TourForm";
 import { ButtonLink } from "../ui/Button";
 import { Alert, EmptyState, ErrorState, LoadingState } from "../ui/Feedback";
@@ -69,6 +70,13 @@ export function EditTour({ id }: { id: string }) {
     <div className="space-y-4">
       <BackLink />
       <h2 className="text-lg font-semibold">Edit {tour.name}</h2>
+      <ImageEditor
+        key={tour.tour_id}
+        label="Tour cover image"
+        imagePath={tour.image_path}
+        permission="tour:update"
+        onSave={(form) => updateTourImage(agencyId, tour.tour_id, form)}
+      />
       <TourForm
         mode="edit"
         initial={tourToForm(tour)}

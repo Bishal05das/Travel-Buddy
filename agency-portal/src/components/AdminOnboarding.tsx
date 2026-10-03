@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useAsync } from "@/hooks/useAsync";
+import { CUSTOMER_URL } from "@/lib/config";
 import { createAgency, listPermissions } from "@/lib/endpoints";
 import { MemberForm } from "./members/MemberForm";
 import { RequireRole } from "./RequireRole";
@@ -16,7 +17,7 @@ export function AdminOnboarding() {
     <RequireRole roles={["super"]}>
       {() => (
         <div>
-          <PageHeader title="Onboard an agency" description="Create the agency, then its first staff account. That person can manage the agency from then on." />
+          <PageHeader title="Onboard an agency" description="Create the agency, then its owner account. The owner can manage the agency and its staff." />
           <Onboarding />
         </div>
       )}
@@ -35,7 +36,7 @@ function Onboarding() {
         {agency ? (
           <Alert tone="success">
             <strong>{agency.name}</strong> was created.{" "}
-            <Link href={`/agencies/${agency.id}`} className="underline">
+            <Link href={`${CUSTOMER_URL}/agencies/${agency.id}`} className="underline">
               View its page
             </Link>
           </Alert>
@@ -44,13 +45,13 @@ function Onboarding() {
         )}
       </Card>
       <Card className={agency ? "" : "opacity-60"}>
-        <h2 className="mb-4 font-semibold">2. First staff account</h2>
+        <h2 className="mb-4 font-semibold">2. Agency owner account</h2>
         {!agency ? (
           <p className="text-sm text-slate-500">Create the agency first.</p>
         ) : memberEmail ? (
           <div className="space-y-3">
             <Alert tone="success">
-              {memberEmail} can now log in as agency staff and manage {agency.name}.
+              {memberEmail} can now log in as the agency owner and manage {agency.name}.
             </Alert>
             <Button
               variant="secondary"
@@ -132,7 +133,7 @@ function FirstMember({ agencyId, onCreated }: { agencyId: string; onCreated: (em
   return (
     <div className="space-y-3">
       <p className="text-sm text-slate-600">All permissions are selected so this person can run the agency and add colleagues.</p>
-      <MemberForm agencyId={agencyId} permissions={permissions.data ?? []} defaultAll onCreated={onCreated} />
+      <MemberForm agencyId={agencyId} permissions={permissions.data ?? []} owner onCreated={onCreated} />
     </div>
   );
 }

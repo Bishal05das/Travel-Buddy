@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { createBooking } from "@/lib/endpoints";
+import { createGuestBooking } from "@/lib/endpoints";
 import { formatMoney, unitPrice } from "@/lib/format";
 import type { Booking, PaymentMethod, Tour } from "@/lib/types";
 import { Button } from "../ui/Button";
@@ -11,12 +11,13 @@ import { Input, Select } from "../ui/Field";
 
 const MAX_PEOPLE_PER_BOOKING = 20;
 
-/** Books a tour for the logged-in customer. */
+/** Books a walk-in guest on behalf of the agency. */
 export function BookingForm({ tour, onBooked }: { tour: Tour; onBooked: () => void }) {
   const maxPeople = Math.min(tour.available_seat, MAX_PEOPLE_PER_BOOKING);
   const [people, setPeople] = useState(1);
   const [method, setMethod] = useState<PaymentMethod>("bkash");
   const [transactionId, setTransactionId] = useState("");
+  const [customer, setCustomer] = useState({ name: "", email: "", phone: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -28,6 +29,9 @@ export function BookingForm({ tour, onBooked }: { tour: Tour; onBooked: () => vo
     const e: Record<string, string> = {};
     if (!Number.isInteger(people) || people < 1 || people > maxPeople) e.people = `Choose between 1 and ${maxPeople} people.`;
     if (transactionId.trim().length < 5) e.transactionId = "Enter the transaction ID from your payment (at least 5 characters).";
+    if (customer.name.trim().length < 2) e.name = "Enter the customer's name.";
+    if (!/^\S+@\S+\.\S+$/.test(customer.email)) e.email = "Enter a valid email address.";
+    if (!/^\+[1-9]\d{6,14}$/.test(customer.phone)) e.phone = "Use international format, e.g. +8801712345678.";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -39,7 +43,12 @@ export function BookingForm({ tour, onBooked }: { tour: Tour; onBooked: () => vo
     setSubmitError(null);
     try {
       const input = { number_of_people: people, total_price: total, method, transaction_id: transactionId.trim() };
-      const result = await createBooking(tour.tour_id, input);
+      const result = await createGuestBooking(tour.tour_id, {
+        ...input,
+        customer_name: customer.name.trim(),
+        customer_email: customer.email.trim(),
+        customer_phone: customer.phone.trim(),
+      });
       setBooked(result);
       onBooked();
     } catch (err) {
@@ -58,8 +67,8 @@ export function BookingForm({ tour, onBooked }: { tour: Tour; onBooked: () => vo
             It&apos;s <strong>pending</strong> until the agency verifies the payment of {formatMoney(booked.total_price)}.
           </p>
         </Alert>
-        <Link href="/bookings" className="text-sm font-medium text-teal-700 hover:underline">
-          View my bookings →
+        <Link href="/dashboard/bookings" className="text-sm font-medium text-teal-700 hover:underline">
+          View agency bookings →
         </Link>
       </div>
     );
@@ -67,6 +76,17 @@ export function BookingForm({ tour, onBooked }: { tour: Tour; onBooked: () => vo
 
   return (
     <form onSubmit={submit} className="space-y-4" noValidate>
+      <>
+        <Input label="Customer name" value={customer.name} error={errors.name} onChange={(e) => setCustomer({ ...customer, name: e.target.value })} />
+        <Input label="Customer email" type="email" value={customer.email} error={errors.email} onChange={(e) => setCustomer({ ...customer, email: e.target.value })} />
+        <Input
+          label="Customer phone"
+          value={customer.phone}
+          error={errors.phone}
+          placeholder="+8801712345678"
+          onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
+        />
+      </>
       <Input
         label="Number of people"
         type="number"
@@ -97,7 +117,7 @@ export function BookingForm({ tour, onBooked }: { tour: Tour; onBooked: () => vo
       </div>
       {submitError && <Alert tone="error">{submitError}</Alert>}
       <Button type="submit" loading={submitting} className="w-full">
-        Book now
+        Book for guest
       </Button>
     </form>
   );

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAsync } from "@/hooks/useAsync";
+import { CUSTOMER_URL } from "@/lib/config";
 import { agencyBookings, listAgencyTours } from "@/lib/endpoints";
 import { ButtonLink } from "../ui/Button";
 import { Spinner } from "../ui/Feedback";
@@ -22,7 +23,7 @@ export function Overview() {
       </div>
       <div className="flex flex-wrap gap-2">
         <ButtonLink href="/dashboard/tours/new">Create a tour</ButtonLink>
-        <ButtonLink href={`/agencies/${agencyId}`} variant="secondary">
+        <ButtonLink href={`${CUSTOMER_URL}/agencies/${agencyId}`} variant="secondary">
           View public agency page
         </ButtonLink>
       </div>

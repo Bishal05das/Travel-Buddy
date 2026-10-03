@@ -14,16 +14,17 @@ const blank = { name: "", email: "", phone: "", password: "", role_name: "" };
 export function MemberForm({
   agencyId,
   permissions,
-  defaultAll = false,
+  owner = false,
   onCreated,
 }: {
   agencyId: string;
   permissions: Permission[];
-  defaultAll?: boolean;
+  owner?: boolean;
   onCreated: (email: string) => void;
 }) {
-  const [v, setV] = useState(blank);
-  const [selected, setSelected] = useState<number[]>(defaultAll ? permissions.map((p) => p.permission_id) : []);
+  const initialValues = { ...blank, role_name: owner ? "Owner" : "" };
+  const [v, setV] = useState(initialValues);
+  const [selected, setSelected] = useState<number[]>(owner ? permissions.map((p) => p.permission_id) : []);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -37,6 +38,7 @@ export function MemberForm({
     if (!/^\+[1-9]\d{6,14}$/.test(v.phone)) e.phone = "Use international format, e.g. +8801712345678.";
     if (v.password.length < 8 || v.password.length > 64) e.password = "Use 8 to 64 characters.";
     if (v.role_name.trim().length < 2) e.role_name = "Describe the role, e.g. Manager.";
+    if (!owner && v.role_name.trim().toLowerCase() === "owner") e.role_name = "Owner is reserved for the agency's owner account. Choose a staff role.";
     if (selected.length === 0) e.permissions = "Choose at least one permission.";
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -50,7 +52,7 @@ export function MemberForm({
     try {
       await createMember(agencyId, { ...v, name: v.name.trim(), email: v.email.trim(), role_name: v.role_name.trim(), permissions: selected });
       onCreated(v.email.trim());
-      setV(blank);
+      setV(initialValues);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Could not add the member.");
     } finally {
@@ -62,7 +64,7 @@ export function MemberForm({
     <form onSubmit={submit} className="space-y-4" noValidate>
       <div className="grid gap-4 sm:grid-cols-2">
         <Input label="Full name" value={v.name} error={errors.name} onChange={set("name")} />
-        <Input label="Role title" placeholder="e.g. Manager, Sales" value={v.role_name} error={errors.role_name} onChange={set("role_name")} />
+        <Input label="Role title" placeholder="e.g. Manager, Sales" value={v.role_name} error={errors.role_name} onChange={set("role_name")} readOnly={owner} />
         <Input label="Email" type="email" value={v.email} error={errors.email} onChange={set("email")} />
         <Input label="Phone" type="tel" placeholder="+8801712345678" value={v.phone} error={errors.phone} onChange={set("phone")} />
         <Input
@@ -75,10 +77,14 @@ export function MemberForm({
           onChange={set("password")}
         />
       </div>
-      <PermissionPicker permissions={permissions} selected={selected} onChange={setSelected} error={errors.permissions} />
+      {owner ? (
+        <p className="text-sm text-slate-600">The agency owner has full agency access, including adding and removing staff. This account cannot be removed.</p>
+      ) : (
+        <PermissionPicker permissions={permissions} selected={selected} onChange={setSelected} error={errors.permissions} />
+      )}
       {submitError && <Alert tone="error">{submitError}</Alert>}
       <Button type="submit" loading={submitting}>
-        Add member
+        {owner ? "Create agency owner" : "Add member"}
       </Button>
     </form>
   );
