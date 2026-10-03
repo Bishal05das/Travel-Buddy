@@ -10,6 +10,7 @@ type AgencyMember struct {
 	Email    string    `json:"email" db:"email"`
 	Phone    string    `json:"phone" db:"phone"`
 	Password string    `json:"-" db:"password"`
+	IsOwner  bool      `json:"is_owner" db:"is_owner"`
 }
 
 type CreateMemberRequest struct {
@@ -27,7 +28,20 @@ type ListMemberResponse struct {
 	Name        string    `json:"name" db:"name"`
 	Email       string    `json:"email" db:"email"`
 	Phone       string    `json:"phone" db:"phone"`
+	RoleName    string    `json:"role_name" db:"role_name"`
+	IsOwner     bool      `json:"is_owner" db:"is_owner"`
 	Permissions []int     `json:"permissions"`
+}
+
+type MemberProfile struct {
+	MemberID   uuid.UUID `json:"member_id" db:"member_id"`
+	AgencyID   uuid.UUID `json:"agency_id" db:"agency_id"`
+	AgencyName string    `json:"agency_name" db:"agency_name"`
+	Name       string    `json:"name" db:"name"`
+	Email      string    `json:"email" db:"email"`
+	Phone      string    `json:"phone" db:"phone"`
+	RoleName   string    `json:"role_name" db:"role_name"`
+	IsOwner    bool      `json:"is_owner" db:"is_owner"`
 }
 
 type UpdatePermissionRequest struct {

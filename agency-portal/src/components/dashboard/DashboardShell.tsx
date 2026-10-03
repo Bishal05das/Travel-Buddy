@@ -30,6 +30,7 @@ const tabs = [
   { href: "/dashboard/tours", label: "Tours" },
   { href: "/dashboard/bookings", label: "Bookings" },
   { href: "/dashboard/members", label: "Team" },
+  { href: "/dashboard/settings", label: "Settings" },
 ];
 
 export function DashboardShell({ children }: { children: ReactNode }) {
@@ -48,7 +49,7 @@ function Shell({ session, children }: { session: Session; children: ReactNode })
       <div className="mb-6">
         <p className="text-sm text-slate-500">Agency dashboard</p>
         <h1 className="text-2xl font-semibold">{agency.data?.name ?? " "}</h1>
-        <nav className="mt-4 flex gap-1 border-b border-slate-200" aria-label="Dashboard">
+        <nav className="mt-4 flex flex-wrap gap-1 border-b border-slate-200" aria-label="Dashboard">
           {tabs.map((t) => {
             const active = t.href === "/dashboard" ? pathname === t.href : pathname.startsWith(t.href);
             return (

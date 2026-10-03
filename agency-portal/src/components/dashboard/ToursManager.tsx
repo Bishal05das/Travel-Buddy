@@ -116,6 +116,11 @@ export function ToursManager() {
                             <ButtonLink href={`/dashboard/tours/${t.tour_id}/edit`} variant="ghost" size="sm">
                               Edit
                             </ButtonLink>
+                            {t.status === "open" && (
+                              <ButtonLink href={`/tours/${t.tour_id}`} variant="ghost" size="sm">
+                                Guest booking
+                              </ButtonLink>
+                            )}
                             {t.status === "open" ? (
                               <Button variant="ghost" size="sm" disabled={busy === t.tour_id} onClick={() => changeStatus(t, "closed")}>
                                 Close

@@ -158,17 +158,39 @@ go run cmd/api/main.go
 
 ---
 
-# 🖥 Web app
+# 🖥 Web apps
 
-A Next.js frontend lives in [`frontend/`](frontend/README.md). With the API
-running on port 3000:
+The customer site and agency portal are separate Next.js applications. They can
+run on different servers and both call the same Go API.
 
-```
+| Application | Folder | Local URL | Users |
+|---|---|---|---|
+| Customer site | [`frontend/`](frontend/README.md) | http://localhost:3001 | Tour browsing, registration, customer bookings |
+| Agency portal | [`agency-portal/`](agency-portal/README.md) | http://localhost:3003 | Agency staff dashboard, guest bookings, platform admin onboarding |
+| Go API | `cmd/api/` | `http://localhost:${HTTP_PORT}` | Shared backend |
+
+Start the API, then start each frontend in its own terminal:
+
+```bash
 cd frontend
 cp .env.example .env.local
-npm install
-npm run dev   # http://localhost:3001
+npm ci
+npm run dev
 ```
+
+```bash
+cd agency-portal
+cp .env.example .env.local
+npm ci
+npm run dev
+```
+
+Both apps read `NEXT_PUBLIC_API_URL` at build time. Set it to your API URL
+in each app's `.env.local`; for example, use `http://localhost:3002` if
+`HTTP_PORT=3002`. The frontends use separate browser sessions because they
+run on different origins. Set `NEXT_PUBLIC_AGENCY_PORTAL_URL` on the customer
+site and `NEXT_PUBLIC_CUSTOMER_URL` on the portal when deploying them to
+different hosts.
 
 ---
 
@@ -184,6 +206,11 @@ This will start:
 
 * Go API service
 * PostgreSQL database
+
+Both Compose files use `postgres:17-alpine` with the `tour_data_pg17` data
+volume. The previous PostgreSQL 15 `tour_data` volume is retained for rollback.
+Existing PostgreSQL 15 data needs a dump and restore into the new volume;
+starting Compose alone does not migrate it.
 
 ---
 
@@ -224,6 +251,7 @@ or `POST /members/login`. The **Access** column lists who may call each route
 | GET | `/agency/{agency_id}/tours/list?page=&limit=` | public |
 | POST | `/agency/{agency_id}/tours` (multipart, `image` file) | `tour:create` |
 | PUT | `/agency/{agency_id}/tours/{tour_id}` | `tour:update` |
+| PUT | `/agency/{agency_id}/tours/{tour_id}/image` (multipart, `image` file) | `tour:update`; own agency, non-cancelled tours |
 | PATCH | `/tours/{tour_id}/tour-status` (body: `"open"`/`"closed"`/`"cancelled"`) | `tour:update` |
 | DELETE | `/tours/{tour_id}` | `tour:delete` |
 | POST | `/users` | public |
@@ -239,12 +267,14 @@ or `POST /members/login`. The **Access** column lists who may call each route
 | POST | `/me/bookings/{booking_id}/cancel` | role `user` (own bookings) |
 | POST | `/agency` (multipart, `image` file) | super |
 | PUT | `/agency/{agency_id}` | `agency:update` |
-| DELETE | `/agency/{agency_id}` | `agency:delete` |
+| PUT | `/agency/{agency_id}/image` (multipart, `image` file) | `agency:update` |
+| DELETE | `/agency/{agency_id}` | `agency:delete`; blocked when the agency has an owner |
 | POST | `/members/{agency_id}` | `member:create` |
 | GET | `/members/{agency_id}` | `member:read` |
-| PUT | `/members/{member_id}/permissions` | `member:update` |
-| DELETE | `/members/{member_id}` | `member:delete` |
+| PUT | `/members/{member_id}/permissions` | `member:update`; owner access is protected |
+| DELETE | `/members/{member_id}` | `member:delete`; owners cannot be deleted |
 | POST | `/members/login` | public |
+| GET | `/members/me` | signed-in member; no team-read permission required |
 | POST, DELETE | `/permissions`, `/permissions/{id}` | super |
 | GET | `/images/{path}` | public (files only, no directory listing) |
 
@@ -301,8 +331,14 @@ Access tokens are HS256 JWTs signed with `JWT_SECRET_KEY`. They expire after
 
 * **super** (`users.role = 'super'`): the platform administrator. Creates
   agencies, manages the permission catalogue, can act on any agency, and
-  creates each agency's first member.
-* **member**: an agency staff account, limited to its own agency. Each route
+  creates each agency's owner. Owner deletion and access changes are blocked
+  even for this role.
+* **owner** (`agency_members.is_owner = true`): logs in as a member and has
+  full access within their own agency, including adding and removing staff.
+  Ownership is separate from editable role titles and permission grants. No
+  current account can delete an owner or change their access; a system-creator
+  override is not implemented. Agency/role deletion cannot cascade to an owner.
+* **member**: an agency staff account, limited to its own agency. Each management route
   requires a permission (`tour:create`, `member:update`, …) granted through the
   member's role. Permissions are checked against the database on every request,
   so revoking one applies immediately. A member cannot grant permissions they
@@ -313,14 +349,29 @@ The permissions the routes use are seeded by migration `000015`. List them with
 `SELECT permission_id, name FROM permissions;` to find the ids to pass as
 `permissions` when creating members.
 
+The portal shows the signed-in member's name and owner/staff status in its
+header, with a **My profile** link for email, phone, role, and agency details.
+
+Agency owners and staff can upload or replace the agency image under
+**Settings** and tour covers under **Tours → Edit** in the portal. Both controls
+preview JPG, PNG and WebP images up to 10 MB. Staff need `agency:update` for
+agency images and `tour:update` for tour images; owners have both permissions.
+
+Restart the API after updating to apply migration `000019`. For existing
+agencies, it marks the earliest member with an `Owner` role as the owner, or
+the earliest member overall if no role is named `Owner` (case-insensitive).
+Review existing role titles before applying this migration if your owner was
+not the first member. New owners created through the API are marked explicitly.
+
 ### Bootstrapping a new environment
 
 1. Register an account with `POST /users`.
 2. Promote it once in the database:
    `UPDATE users SET role = 'super' WHERE email = 'admin@example.com';`
-3. Log in, create an agency with `POST /agency`, then create its first
-   member (for example a manager holding every permission) with
-   `POST /members/{agency_id}`. That member can manage the agency from then on.
+3. Log in, create an agency with `POST /agency`, then create its owner with
+   `POST /members/{agency_id}` using `role_name: "Owner"` and the permission
+   ids. The portal onboarding form sets this automatically. Only a platform
+   admin may create this owner account; each agency has at most one owner.
 
 ---
 

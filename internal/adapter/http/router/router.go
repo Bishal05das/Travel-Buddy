@@ -103,6 +103,10 @@ func (r *Router) RegisterRoutes() {
 		"PUT /agency/{agency_id}/tours/{tour_id}",
 		r.protected(http.HandlerFunc(r.tourHandler.Update), m.RequirePermission("tour", "update")),
 	)
+	r.mux.Handle(
+		"PUT /agency/{agency_id}/tours/{tour_id}/image",
+		r.protected(http.HandlerFunc(r.tourHandler.UpdateImage), m.RequirePermission("tour", "update")),
+	)
 
 	r.mux.Handle(
 		"PATCH /tours/{tour_id}/tour-status",
@@ -187,6 +191,10 @@ func (r *Router) RegisterRoutes() {
 		"PUT /agency/{agency_id}",
 		r.protected(http.HandlerFunc(r.agencyHandler.UpdateAgency), m.RequirePermission("agency", "update")),
 	)
+	r.mux.Handle(
+		"PUT /agency/{agency_id}/image",
+		r.protected(http.HandlerFunc(r.agencyHandler.UpdateImage), m.RequirePermission("agency", "update")),
+	)
 
 	r.mux.Handle(
 		"DELETE /agency/{agency_id}",
@@ -194,6 +202,10 @@ func (r *Router) RegisterRoutes() {
 	)
 
 	// MEMBERS
+	r.mux.Handle(
+		"GET /members/me",
+		r.protected(http.HandlerFunc(r.memberHandler.GetMyProfile), m.RequireRole(domain.RoleMember)),
+	)
 	r.mux.Handle(
 		"POST /members/{agency_id}",
 		r.protected(http.HandlerFunc(r.memberHandler.CreateMember), m.RequirePermission("member", "create")),

@@ -43,17 +43,19 @@ func (h *permissionRepositoryDB) ListPermissions(ctx context.Context) ([]domain.
 }
 
 // MemberHasPermission reports whether the member belongs to agencyID and
-// their role grants resource:action. It reads current data on every call,
+// they own the agency or their role grants resource:action. It reads current data on every call,
 // so revoked permissions and deleted members take effect immediately.
 func (h *permissionRepositoryDB) MemberHasPermission(ctx context.Context, memberID, agencyID uuid.UUID, resource, action string) (bool, error) {
 	query := `
 	SELECT EXISTS (
 		SELECT 1
 		FROM agency_members m
-		JOIN role_permissions rp ON rp.role_id = m.role_id
-		JOIN permissions p ON p.permission_id = rp.permission_id
 		WHERE m.member_id = $1 AND m.agency_id = $2
-		  AND p.resource = $3 AND p.action = $4
+		  AND (m.is_owner OR EXISTS (
+			SELECT 1 FROM role_permissions rp
+			JOIN permissions p ON p.permission_id=rp.permission_id
+			WHERE rp.role_id=m.role_id AND p.resource=$3 AND p.action=$4
+		  ))
 	);`
 	var ok bool
 	err := h.executor(ctx).QueryRowxContext(ctx, query, memberID, agencyID, resource, action).Scan(&ok)

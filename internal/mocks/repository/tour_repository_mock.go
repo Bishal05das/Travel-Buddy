@@ -14,6 +14,22 @@ var _ port.TourRepository = (*MockTourRepository)(nil)
 
 var errTourNotFound = errors.New("tour not found")
 
+func (m *MockTourRepository) UpdateTourImage(ctx context.Context, agencyID, tourID uuid.UUID, imagePath string) (string, error) {
+	if m.err != nil {
+		return "", m.err
+	}
+	t := m.tours[tourID]
+	if t == nil || t.AgencyID != agencyID {
+		return "", domain.ErrImageTargetNotFound
+	}
+	if t.Status == "cancelled" {
+		return "", domain.ErrTourCancelled
+	}
+	old := t.ImagePath
+	t.ImagePath = imagePath
+	return old, nil
+}
+
 // MockTourRepository is an in-memory port.TourRepository for use case tests.
 type MockTourRepository struct {
 	tours map[uuid.UUID]*domain.Tour

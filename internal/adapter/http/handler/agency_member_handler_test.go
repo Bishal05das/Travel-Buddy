@@ -76,7 +76,7 @@ func TestCreateMemberHandler(t *testing.T) {
 			mockUC := &mocks.MockCreateMember{}
 			tt.mockUsecase(mockUC)
 
-			h := handler.NewMemberHandler(mockUC, nil, nil, nil, nil)
+			h := handler.NewMemberHandler(mockUC, nil, nil, nil, nil, nil)
 
 			req := httptest.NewRequest(
 				http.MethodPost,
@@ -141,7 +141,7 @@ func TestDeleteMemberHandler(t *testing.T) {
 			mockUC := &mocks.MockDeleteMember{}
 			tt.mockUsecase(mockUC)
 
-			h := handler.NewMemberHandler(nil, mockUC, nil, nil, nil)
+			h := handler.NewMemberHandler(nil, mockUC, nil, nil, nil, nil)
 
 			req := httptest.NewRequest(http.MethodDelete, "/members/"+tt.memberID, nil)
 			req.SetPathValue("member_id", tt.memberID)
@@ -213,7 +213,7 @@ func TestListMemberHandler(t *testing.T) {
 			mockUC := &mocks.MockListMember{}
 			tt.mockUsecase(mockUC)
 
-			h := handler.NewMemberHandler(nil, nil, mockUC, nil, nil)
+			h := handler.NewMemberHandler(nil, nil, mockUC, nil, nil, nil)
 
 			req := httptest.NewRequest(
 				http.MethodGet,
@@ -292,7 +292,7 @@ func TestUpdateMemberPermissionsHandler(t *testing.T) {
 			mockUC := &mocks.MockUpdatePermission{}
 			tt.mockUsecase(mockUC)
 
-			h := handler.NewMemberHandler(nil, nil, nil, mockUC, nil)
+			h := handler.NewMemberHandler(nil, nil, nil, mockUC, nil, nil)
 
 			req := httptest.NewRequest(
 				http.MethodPut,
@@ -370,7 +370,7 @@ func TestMemberLoginHandler(t *testing.T) {
 			mockUC := &mocks.MockLoginMember{}
 			tt.mockUsecase(mockUC)
 
-			h := handler.NewMemberHandler(nil, nil, nil, nil, mockUC)
+			h := handler.NewMemberHandler(nil, nil, nil, nil, mockUC, nil)
 
 			req := httptest.NewRequest(
 				http.MethodPost,

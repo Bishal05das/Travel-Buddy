@@ -123,9 +123,12 @@ function MemberRow({
           <p className="text-sm text-slate-500">
             {member.email} · {member.phone}
           </p>
-          {!editing && <p className="mt-2 text-xs text-slate-600">{permissionNames(member.permissions, all)}</p>}
+          <p className="mt-1 text-sm font-medium text-teal-800">{member.is_owner ? "Agency owner" : member.role_name}</p>
+          {member.is_owner ? (
+            <p className="mt-2 text-xs text-slate-600">Full agency access. This account cannot be removed or have its permissions changed.</p>
+          ) : !editing && <p className="mt-2 text-xs text-slate-600">{permissionNames(member.permissions, all)}</p>}
         </div>
-        {!editing && !isSelf && (
+        {!editing && !isSelf && !member.is_owner && (
           <div className="flex gap-1">
             <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
               Edit permissions
@@ -136,7 +139,7 @@ function MemberRow({
           </div>
         )}
       </div>
-      {editing && (
+      {editing && !member.is_owner && (
         <div className="mt-4 space-y-3">
           <PermissionPicker permissions={all} selected={selected} onChange={setSelected} />
           <div className="flex gap-2">

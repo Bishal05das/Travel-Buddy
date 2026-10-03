@@ -108,13 +108,5 @@ function BookingPanel({ tour, onBooked }: { tour: Tour; onBooked: () => void }) 
     );
   }
   if (session.role === "user") return <BookingForm tour={tour} onBooked={onBooked} />;
-  if (session.role === "member" && session.agencyId === tour.agency_id) {
-    return (
-      <div className="space-y-3">
-        <p className="text-sm text-slate-600">Book this tour for a walk-in customer.</p>
-        <BookingForm tour={tour} guest onBooked={onBooked} />
-      </div>
-    );
-  }
   return <Alert tone="info">Log in with a customer account to book this tour.</Alert>;
 }

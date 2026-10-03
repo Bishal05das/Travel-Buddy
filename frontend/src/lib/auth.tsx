@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
+import { AGENCY_PORTAL_URL } from "./config";
 import { clearToken, decodeSession, getToken, setToken, subscribe, type Session } from "./session";
 
 const noopSubscribe = () => () => {};
@@ -37,9 +38,8 @@ export function useAuthActions() {
 export function homeFor(session: Session): string {
   switch (session.role) {
     case "member":
-      return "/dashboard";
     case "super":
-      return "/admin";
+      return `${AGENCY_PORTAL_URL}/login`;
     default:
       return "/bookings";
   }

@@ -69,13 +69,46 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:3000
+          NEXT_PUBLIC_AGENCY_PORTAL_URL: http://localhost:3003
+
       - name: Type-check
         run: npm run typecheck
+
+  agency-portal:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: agency-portal
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: agency-portal/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
 
       - name: Build
         run: npm run build
         env:
           NEXT_PUBLIC_API_URL: http://localhost:3000
+          NEXT_PUBLIC_CUSTOMER_URL: http://localhost:3001
+
+      - name: Type-check
+        run: npm run typecheck
 
   build-and-push:
     # Images are only published on demand, and only from tested code.
