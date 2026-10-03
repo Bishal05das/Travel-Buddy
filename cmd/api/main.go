@@ -70,6 +70,7 @@ func main() {
 	listTourUC := tourusecase.NewListTourUseCase(tourRepo)
 	deleteTourUC := tourusecase.NewDeleteTourUseCase(tourRepo)
 	updateTourUC := tourusecase.NewUpdateTourUseCase(tourRepo)
+	updateTourImageUC := tourusecase.NewUpdateTourImageUseCase(tourRepo)
 	updateTourStatusUC := tourusecase.NewUpdateTourStatusUseCase(txManager, tourRepo, bookingRepo, paymentRepo)
 
 	createuserUC := userusecase.NewCreateUserUseCase(userRepo)
@@ -86,10 +87,12 @@ func main() {
 	deleteAgencyUC := agencyusecase.NewDeleteAgencyUseCase(agencyRepo)
 	updateAgencyUC := agencyusecase.NewUpdateAgencyUseCase(agencyRepo)
 	getAgencyUC := agencyusecase.NewGetAgencyUseCase(agencyRepo)
+	updateAgencyImageUC := agencyusecase.NewUpdateAgencyImageUseCase(agencyRepo)
 
 	createMemberUC := memberusecase.NewCreateAgencyMemberUseCase(txManager, memberRepo, roleRepo)
 	deleteMemberUC := memberusecase.NewDeleteAgencyMemberUseCase(memberRepo)
 	listMemberUC := memberusecase.NewListAgencyMemberUseCase(memberRepo)
+	profileUC := memberusecase.NewGetAgencyMemberProfileUseCase(memberRepo)
 	LoginMemberUC := memberusecase.NewMemberLoginUseCase(memberRepo, cfg)
 
 	updatePermissionUC := memberusecase.NewUpdatePermissionUseCase(txManager, memberRepo, roleRepo)
@@ -100,11 +103,11 @@ func main() {
 	//handler
 	homeHandler := handler.NewHomeHandler(homeUC)
 	searchHandler := handler.NewSearchHandler(searchUC)
-	tourHandler := handler.NewTourHandler(createTourUC, getTourUC, listTourUC, updateTourUC, updateTourStatusUC, deleteTourUC)
+	tourHandler := handler.NewTourHandler(createTourUC, getTourUC, listTourUC, updateTourUC, updateTourStatusUC, deleteTourUC, updateTourImageUC)
 	userHandler := handler.NewUserHandler(createuserUC, loginUserUC, deleteUserUC, updateUserUC)
 	bookingHandler := handler.NewBookingHandler(createBookingUC, listBookingsUC, getBookingUC, updateBookingStatusUC, cancelMyBookingUC)
-	agencyHandler := handler.NewAgencyHandler(createAgencyUC, updateAgencyUC, deleteAgencyUC, getAgencyUC)
-	memberHandler := handler.NewMemberHandler(createMemberUC, deleteMemberUC, listMemberUC, updatePermissionUC, LoginMemberUC)
+	agencyHandler := handler.NewAgencyHandler(createAgencyUC, updateAgencyUC, deleteAgencyUC, getAgencyUC, updateAgencyImageUC)
+	memberHandler := handler.NewMemberHandler(createMemberUC, deleteMemberUC, listMemberUC, updatePermissionUC, LoginMemberUC, profileUC)
 	permissionHandler := handler.NewPermissionHandler(createPermissionsUC, deletePermissionUC, listPermissionsUC)
 
 	//middleware

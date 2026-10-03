@@ -17,6 +17,7 @@ type TourRepository interface {
 	ListTour(ctx context.Context, agencyID uuid.UUID, page, limit int) ([]*domain.Tour, error)
 	Count(ctx context.Context, agencyID uuid.UUID) (int, error)
 	UpdateTour(ctx context.Context, t *domain.Tour) error
+	UpdateTourImage(ctx context.Context, agencyID, tourID uuid.UUID, imagePath string) (string, error)
 	// agencyScope, when non-nil, restricts the change to tours of that agency.
 	DeleteTour(ctx context.Context, tourID uuid.UUID, agencyScope *uuid.UUID) error
 	GetByID(ctx context.Context, tourID uuid.UUID) (*domain.Tour, error)
@@ -45,6 +46,7 @@ type UserRepository interface {
 
 type AgencyMemberRepository interface {
 	CreateMember(ctx context.Context, member *domain.AgencyMember) error
+	GetMemberProfile(ctx context.Context, memberID, agencyID uuid.UUID) (*domain.MemberProfile, error)
 	ListMember(ctx context.Context, agencyID uuid.UUID) ([]*domain.ListMemberResponse, error)
 	UpdateMember(ctx context.Context, member *domain.AgencyMember) error
 	DeleteMember(ctx context.Context, memberID uuid.UUID, agencyScope *uuid.UUID) error

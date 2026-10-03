@@ -24,9 +24,10 @@ type TourHandler struct {
 	updateUC       port.UpdateTour
 	updateStatusUC port.UpdateTourStatus
 	deleteUC       port.DeleteTour
+	imageUC        port.UpdateTourImage
 }
 
-func NewTourHandler(createUC port.CreateTour, getUC port.GetTour, listUC port.ListTour, updateUC port.UpdateTour, updateStatusUC port.UpdateTourStatus, deleteUC port.DeleteTour) *TourHandler {
+func NewTourHandler(createUC port.CreateTour, getUC port.GetTour, listUC port.ListTour, updateUC port.UpdateTour, updateStatusUC port.UpdateTourStatus, deleteUC port.DeleteTour, imageUC port.UpdateTourImage) *TourHandler {
 	return &TourHandler{
 		createUC:       createUC,
 		getUC:          getUC,
@@ -34,6 +35,7 @@ func NewTourHandler(createUC port.CreateTour, getUC port.GetTour, listUC port.Li
 		updateUC:       updateUC,
 		updateStatusUC: updateStatusUC,
 		deleteUC:       deleteUC,
+		imageUC:        imageUC,
 	}
 }
 

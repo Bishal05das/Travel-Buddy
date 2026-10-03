@@ -32,6 +32,14 @@ type UpdateTour interface {
 	Execute(ctx context.Context, tour *domain.Tour) error
 }
 
+type UpdateTourImage interface {
+	Execute(ctx context.Context, actor domain.Actor, agencyID, tourID uuid.UUID, imagePath string) (string, error)
+}
+
+type UpdateAgencyImage interface {
+	Execute(ctx context.Context, actor domain.Actor, agencyID uuid.UUID, imagePath string) (string, error)
+}
+
 type DeleteTour interface {
 	Execute(ctx context.Context, actor domain.Actor, tourID uuid.UUID) error
 }
@@ -105,6 +113,10 @@ type DeleteAgencyMember interface {
 
 type ListAgencyMember interface {
 	Execute(ctx context.Context, agencyID uuid.UUID) ([]*domain.ListMemberResponse, error)
+}
+
+type GetAgencyMemberProfile interface {
+	Execute(ctx context.Context, actor domain.Actor) (*domain.MemberProfile, error)
 }
 
 type LoginMember interface {

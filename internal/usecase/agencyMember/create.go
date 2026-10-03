@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/usecase/port"
@@ -25,6 +26,10 @@ func NewCreateAgencyMemberUseCase(txManager port.TxManager, agencyMemberRepo por
 }
 
 func (uc *CreateAgencyMemberUseCase) Execute(ctx context.Context, actor domain.Actor, req *domain.CreateMemberRequest) error {
+	isOwner := strings.EqualFold(strings.TrimSpace(req.RoleName), "owner")
+	if isOwner && !actor.IsSuper() {
+		return domain.ErrOwnerCreationForbidden
+	}
 	if scope := actor.AgencyScope(); scope != nil && *scope != req.AgencyID {
 		return errors.New("cannot create members for another agency")
 	}
@@ -58,6 +63,7 @@ func (uc *CreateAgencyMemberUseCase) Execute(ctx context.Context, actor domain.A
 			Email:    req.Email,
 			Phone:    req.Phone,
 			Password: hashedPassword,
+			IsOwner:  isOwner,
 		}
 		if err := uc.agencyMemberRepo.CreateMember(txCtx, &member); err != nil {
 			return fmt.Errorf("create member: %w", err)

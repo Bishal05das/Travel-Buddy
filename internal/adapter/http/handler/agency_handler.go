@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -20,14 +21,16 @@ type AgencyHandler struct {
 	updateUC port.UpdateAgency
 	deleteUC port.DeleteAgency
 	getUC    port.GetAgency
+	imageUC  port.UpdateAgencyImage
 }
 
-func NewAgencyHandler(createUC port.CreateAgency, updateUC port.UpdateAgency, deleteUC port.DeleteAgency, getUC port.GetAgency) *AgencyHandler {
+func NewAgencyHandler(createUC port.CreateAgency, updateUC port.UpdateAgency, deleteUC port.DeleteAgency, getUC port.GetAgency, imageUC port.UpdateAgencyImage) *AgencyHandler {
 	return &AgencyHandler{
 		createUC: createUC,
 		updateUC: updateUC,
 		deleteUC: deleteUC,
 		getUC:    getUC,
+		imageUC:  imageUC,
 	}
 }
 
@@ -133,6 +136,10 @@ func (h *AgencyHandler) DeleteAgency(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err = h.deleteUC.Execute(r.Context(), agencyID)
+	if errors.Is(err, domain.ErrOwnerProtected) {
+		util.SendData(w, err.Error(), http.StatusForbidden)
+		return
+	}
 	if err != nil {
 		util.SendData(w, err.Error(), http.StatusBadRequest)
 		return

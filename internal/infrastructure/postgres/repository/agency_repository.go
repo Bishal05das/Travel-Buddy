@@ -77,6 +77,16 @@ func (h *agencyRepositoryDB) UpdateAgencyImage(
 	if err != nil {
 		return "", fmt.Errorf("begin tx: %w", err)
 	}
+	defer tx.Rollback()
+
+	// Serialize replacements, including the first upload for an agency.
+	var id uuid.UUID
+	if err := tx.QueryRowContext(ctx, `SELECT agency_id FROM agency WHERE agency_id=$1 FOR UPDATE`, agencyID).Scan(&id); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", domain.ErrImageTargetNotFound
+		}
+		return "", err
+	}
 
 	var oldPath string
 	const deactivateQ = `
@@ -193,6 +203,9 @@ func (h *agencyRepositoryDB) DeleteAgency(ctx context.Context, agencyID uuid.UUI
 	query := `DELETE FROM agency WHERE agency_id=$1;`
 	res, err := h.db.ExecContext(ctx, query, agencyID)
 	var pqErr *pq.Error
+	if errors.As(err, &pqErr) && pqErr.Constraint == "agency_owner_protected" {
+		return domain.ErrOwnerProtected
+	}
 	if errors.As(err, &pqErr) && pqErr.Code == "23503" { // foreign_key_violation
 		// Tours (and through them bookings and payments) are deliberately not
 		// cascaded, so booking history cannot be wiped by deleting an agency.
