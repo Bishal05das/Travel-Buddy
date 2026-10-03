@@ -31,6 +31,7 @@ type HomeAgency struct {
 	Address    string    `json:"address"`
 	Rating     float64   `json:"rating"`
 	TotalTours int64     `json:"total_tours"`
+	ImagePath  string    `json:"image_path"`
 }
 
 type HomeResponse struct {

@@ -89,11 +89,14 @@ func (r *homeRepositoryDB) GetTopAgencies(ctx context.Context, limit int) ([]dom
 			a.name,
 			COALESCE(a.address, ''),
 			a.rating,
-			COUNT(t.tour_id) AS total_tours
+			COUNT(t.tour_id) AS total_tours,
+			COALESCE(MAX(ai.image_path), '') AS image_path
 		FROM agency a
 		LEFT JOIN tours t
 			ON a.agency_id = t.agency_id
 			AND t.status = 'open'
+		LEFT JOIN agency_images ai
+			ON ai.agency_id = a.agency_id AND ai.is_active = TRUE AND ai.deleted_at IS NULL
 		WHERE a.is_active = true
 		GROUP BY a.agency_id, a.name, a.address, a.rating
 		ORDER BY a.rating DESC, total_tours DESC
@@ -110,7 +113,7 @@ func (r *homeRepositoryDB) GetTopAgencies(ctx context.Context, limit int) ([]dom
 		var ag domain.HomeAgency
 		if err := rows.Scan(
 			&ag.AgencyID, &ag.Name, &ag.Address,
-			&ag.Rating, &ag.TotalTours,
+			&ag.Rating, &ag.TotalTours, &ag.ImagePath,
 		); err != nil {
 			return nil, err
 		}
