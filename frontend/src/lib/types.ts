@@ -57,6 +57,7 @@ export interface HomeAgency {
   address: string;
   rating: number;
   total_tours: number;
+  image_path: string;
 }
 
 export interface HomeData {

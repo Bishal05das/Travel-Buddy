@@ -2,7 +2,10 @@ package repository_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -12,9 +15,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bishal05das/travelbuddy/internal/adapter/http/handler"
 	"github.com/bishal05das/travelbuddy/internal/domain"
 	"github.com/bishal05das/travelbuddy/internal/infrastructure/postgres/repository"
 	agencyusecase "github.com/bishal05das/travelbuddy/internal/usecase/agency"
+	homeusecase "github.com/bishal05das/travelbuddy/internal/usecase/home"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -170,6 +175,50 @@ func TestImageReplacementIntegration(t *testing.T) {
 			t.Fatalf("agency scope check: %v", err)
 		}
 	}
+	t.Run("home includes current agency images without inflating tour counts", func(t *testing.T) {
+		current, err := agencies.GetAgency(ctx, agencyID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		// A deleted image can still have is_active=true; it must be ignored.
+		if _, err := db.ExecContext(ctx, `INSERT INTO agency_images (agency_id, image_path, is_active, deleted_at) VALUES ($1, 'images/agencies/deleted.png', TRUE, CURRENT_TIMESTAMP)`, agencyID); err != nil {
+			t.Fatal(err)
+		}
+		inactiveID := uuid.New()
+		if _, err := db.ExecContext(ctx, `INSERT INTO agency (agency_id, name, is_active, rating) VALUES ($1, 'Inactive Agency', FALSE, 5)`, inactiveID); err != nil {
+			t.Fatal(err)
+		}
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, "/home", nil).WithContext(ctx)
+		handler.NewHomeHandler(homeusecase.NewHomeUseCase(repository.NewHomeRepositoryDB(db))).GetHome(rec, req)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("home response: %d %s", rec.Code, rec.Body.String())
+		}
+		var response struct {
+			Success bool                `json:"success"`
+			Data    domain.HomeResponse `json:"data"`
+		}
+		if err := json.Unmarshal(rec.Body.Bytes(), &response); err != nil {
+			t.Fatal(err)
+		}
+		if !response.Success || len(response.Data.TopAgencies) != 2 {
+			t.Fatalf("expected two active agencies: %+v", response)
+		}
+		for _, agency := range response.Data.TopAgencies {
+			switch agency.AgencyID {
+			case agencyID:
+				if agency.ImagePath != current.ImagePath || agency.TotalTours != 1 {
+					t.Fatalf("current image or tour count mismatch: %+v", agency)
+				}
+			case otherAgencyID:
+				if agency.ImagePath != "" || agency.TotalTours != 0 {
+					t.Fatalf("agency without an image or tours: %+v", agency)
+				}
+			default:
+				t.Fatalf("unexpected agency: %+v", agency)
+			}
+		}
+	})
 	if err := tours.UpdateTourStatus(ctx, tour.TourID, "cancelled", &agencyID); err != nil {
 		t.Fatal(err)
 	}

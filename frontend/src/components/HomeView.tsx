@@ -5,6 +5,7 @@ import { useAsync } from "@/hooks/useAsync";
 import { getHome } from "@/lib/endpoints";
 import { SearchBox } from "./SearchBox";
 import { TourCard, TourGrid } from "./tours/TourCard";
+import { TourImage } from "./tours/TourImage";
 import { EmptyState, ErrorState, LoadingState } from "./ui/Feedback";
 
 export function HomeView() {
@@ -62,13 +63,16 @@ export function HomeView() {
                   <Link
                     key={a.agency_id}
                     href={`/agencies/${a.agency_id}`}
-                    className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md"
+                    className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
                   >
-                    <p className="font-semibold text-slate-900">{a.name}</p>
-                    {a.address && <p className="text-sm text-slate-500">{a.address}</p>}
-                    <p className="mt-2 text-sm text-slate-600">
-                      ★ {a.rating.toFixed(1)} · {a.total_tours} open {a.total_tours === 1 ? "tour" : "tours"}
-                    </p>
+                    <TourImage path={a.image_path} alt={a.name} className="h-40 w-full" />
+                    <div className="p-4">
+                      <p className="font-semibold text-slate-900">{a.name}</p>
+                      {a.address && <p className="text-sm text-slate-500">{a.address}</p>}
+                      <p className="mt-2 text-sm text-slate-600">
+                        ★ {a.rating.toFixed(1)} · {a.total_tours} open {a.total_tours === 1 ? "tour" : "tours"}
+                      </p>
+                    </div>
                   </Link>
                 ))}
               </div>
