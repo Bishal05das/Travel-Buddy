@@ -14,6 +14,7 @@ interface DashboardContextValue {
   agencyId: string;
   session: Session;
   agency?: Agency;
+  reloadAgency: () => void;
 }
 
 const DashboardContext = createContext<DashboardContextValue | null>(null);
@@ -45,7 +46,7 @@ function Shell({ session, children }: { session: Session; children: ReactNode })
   if (!agencyId) return <EmptyState title="Your account isn't linked to an agency." description="Log out and back in, or contact your agency." />;
 
   return (
-    <DashboardContext.Provider value={{ agencyId, session, agency: agency.data }}>
+    <DashboardContext.Provider value={{ agencyId, session, agency: agency.data, reloadAgency: agency.reload }}>
       <div className="mb-6">
         <p className="text-sm text-slate-500">Agency dashboard</p>
         <h1 className="text-2xl font-semibold">{agency.data?.name ?? " "}</h1>

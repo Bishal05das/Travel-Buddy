@@ -45,6 +45,8 @@ to create the first platform admin, then use `/admin` to onboard an agency and
 its owner. Owners manage staff at `/dashboard/members`.
 
 Use **Settings** (`/dashboard/settings`) to upload or replace the agency image.
+The dashboard also shows the current agency image with a **Set agency image**
+or **Edit agency image** button that opens these settings.
 On **Tours → Edit**, use **Tour cover image → Replace image → Save image** to
 replace a tour's cover without changing its other details. Both controls preview
 the selected image and accept JPG, PNG and WebP files up to 10 MB. Owners have
