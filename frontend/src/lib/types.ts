@@ -76,11 +76,13 @@ export interface SearchTour {
   price: number;
   discount: number;
   status: TourStatus;
+  image_path: string;
 }
 
 export interface SearchResult {
   Tours: SearchTour[];
   Agencies: Agency[];
+  Meta: Page<SearchTour>["Meta"];
 }
 
 export interface Page<T> {
