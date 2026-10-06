@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -23,11 +24,23 @@ func (h *SearchHandler) Search(w http.ResponseWriter, r *http.Request) {
 
 	var filter domain.TourSearchFilter
 	filter.Query = q.Get("q")
-	filter.Limit = 20
-	filter.Offset = 0
 
 	// Malformed filters are rejected instead of silently becoming 0 / zero time.
 	var err error
+	if raw := q.Get("page"); raw != "" {
+		filter.Page, err = strconv.Atoi(raw)
+		if err != nil || filter.Page < 1 {
+			http.Error(w, "page must be a positive integer", http.StatusBadRequest)
+			return
+		}
+	}
+	if raw := q.Get("limit"); raw != "" {
+		filter.Limit, err = strconv.Atoi(raw)
+		if err != nil || filter.Limit < 1 {
+			http.Error(w, "limit must be a positive integer", http.StatusBadRequest)
+			return
+		}
+	}
 	if filter.MinPrice, err = parseOptionalFloat(q.Get("min_price")); err != nil {
 		http.Error(w, "invalid min_price", http.StatusBadRequest)
 		return
@@ -45,8 +58,16 @@ func (h *SearchHandler) Search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := filter.Prepare(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 	result, err := h.uc.Execute(r.Context(), filter)
 	if err != nil {
+		if errors.Is(err, domain.ErrInvalidSearchFilter) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}

@@ -246,7 +246,7 @@ or `POST /members/login`. The **Access** column lists who may call each route
 | Method | Path | Access |
 |---|---|---|
 | GET | `/home` | public |
-| GET | `/search?q=&min_price=&max_price=&start_date=&end_date=` | public |
+| GET | `/search?q=&min_price=&max_price=&start_date=&end_date=&page=&limit=` | public |
 | GET | `/tours/{tour_id}` | public |
 | GET | `/agency/{agency_id}/tours/list?page=&limit=` | public |
 | POST | `/agency/{agency_id}/tours` (multipart, `image` file) | `tour:create` |
@@ -277,6 +277,14 @@ or `POST /members/login`. The **Access** column lists who may call each route
 | GET | `/members/me` | signed-in member; no team-read permission required |
 | POST, DELETE | `/permissions`, `/permissions/{id}` | super |
 | GET | `/images/{path}` | public (files only, no directory listing) |
+
+Search supports case-insensitive, typo-tolerant matching across tour names,
+descriptions and agency names. Every search word must match; words can appear in
+any order or across these fields. Exact names rank before partial and fuzzy
+matches. Price filters use the discounted booking price. Only active agencies
+and their tours appear. Queries accept up to 200 characters and 8 words;
+`page` defaults to 1 and `limit` defaults to 20 (maximum 50). Responses include
+tour images and pagination totals in `Meta`.
 
 The booking `total_price` must equal `(price - price * discount / 100) * number_of_people`.
 

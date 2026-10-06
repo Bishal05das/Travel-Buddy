@@ -16,8 +16,15 @@ func NewSearchUseCase(repo port.SearchRepository) *searchUseCase {
 }
 
 func (uc *searchUseCase) Execute(ctx context.Context, filter domain.TourSearchFilter) (*domain.SearchResult, error) {
+	if err := filter.Prepare(); err != nil {
+		return nil, err
+	}
 
 	tours, err := uc.repo.SearchTours(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	count, err := uc.repo.CountTours(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -26,9 +33,14 @@ func (uc *searchUseCase) Execute(ctx context.Context, filter domain.TourSearchFi
 	if err != nil {
 		return nil, err
 	}
+	totalPages := count / filter.Limit
+	if count%filter.Limit != 0 {
+		totalPages++
+	}
 
 	return &domain.SearchResult{
 		Tours:    tours,
 		Agencies: agencies,
+		Meta:     domain.SearchMeta{Page: filter.Page, Limit: filter.Limit, TotalCount: count, TotalPage: totalPages},
 	}, nil
 }

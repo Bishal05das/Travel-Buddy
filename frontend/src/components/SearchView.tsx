@@ -11,14 +11,29 @@ import { Button } from "./ui/Button";
 import { EmptyState, ErrorState, LoadingState } from "./ui/Feedback";
 import { Input } from "./ui/Field";
 import { PageHeader } from "./ui/PageHeader";
+import { Pagination } from "./ui/Pagination";
 
-type Filters = Required<SearchParams>;
+type Filters = Required<Omit<SearchParams, "page" | "limit">>;
 
-export function SearchView({ filters }: { filters: Filters }) {
+export function SearchView({ filters, page, limit }: { filters: Filters; page: number; limit: number }) {
   const router = useRouter();
   const [form, setForm] = useState<Filters>(filters);
   const [formError, setFormError] = useState<string | null>(null);
-  const { data, error, loading, reload } = useAsync(() => searchTours(filters), [JSON.stringify(filters)]);
+  const { data, error, loading, reload } = useAsync(
+    () => searchTours({ ...filters, page, limit }),
+    [JSON.stringify(filters), page, limit],
+  );
+
+  function navigate(nextFilters: Filters, nextPage = 1) {
+    const query = new URLSearchParams(
+      Object.entries(nextFilters)
+        .map(([key, value]) => [key, value.trim()])
+        .filter(([, value]) => value !== ""),
+    );
+    if (nextPage > 1) query.set("page", String(nextPage));
+    if (limit !== 20) query.set("limit", String(limit));
+    router.push(`/search${query.size ? `?${query}` : ""}`);
+  }
 
   function apply(e: React.FormEvent) {
     e.preventDefault();
@@ -31,8 +46,7 @@ export function SearchView({ filters }: { filters: Filters }) {
       return;
     }
     setFormError(null);
-    const q = new URLSearchParams(Object.entries(form).filter(([, v]) => v.trim() !== ""));
-    router.push(`/search${q.size ? `?${q}` : ""}`);
+    navigate(form);
   }
 
   const set = (key: keyof Filters) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [key]: e.target.value });
@@ -84,32 +98,40 @@ export function SearchView({ filters }: { filters: Filters }) {
           )}
           <section>
             <h2 className="mb-3 text-lg font-semibold">
-              Tours <span className="text-sm font-normal text-slate-500">({data.Tours.length})</span>
+              Tours <span className="text-sm font-normal text-slate-500">({data.Meta.TotalCount})</span>
             </h2>
             {data.Tours.length === 0 ? (
               <EmptyState
-                title="No tours match your search"
-                description={hasFilters ? "Try a different keyword or widen the price and date range." : undefined}
+                title={data.Meta.TotalCount > 0 ? "No tours on this page" : "No tours match your search"}
+                description={data.Meta.TotalCount === 0 && hasFilters ? "Try a different keyword or widen the price and date range." : undefined}
+                action={data.Meta.TotalCount > 0 ? <Button onClick={() => navigate(filters)}>Back to first page</Button> : undefined}
               />
             ) : (
-              <TourGrid>
-                {data.Tours.map((t) => (
-                  <TourCard
-                    key={t.tour_id}
-                    tour={{
-                      id: t.tour_id,
-                      name: t.name,
-                      agencyName: t.agency_name,
-                      startDate: t.start_date,
-                      endDate: t.end_date,
-                      price: unitPrice(t),
-                      originalPrice: t.price,
-                      seats: t.available_seat,
-                      status: t.status,
-                    }}
-                  />
-                ))}
-              </TourGrid>
+              <div className="space-y-4">
+                <p className="text-sm text-slate-500">
+                  Showing {(data.Meta.Page - 1) * data.Meta.Limit + 1}–{(data.Meta.Page - 1) * data.Meta.Limit + data.Tours.length} of {data.Meta.TotalCount} tours
+                </p>
+                <TourGrid>
+                  {data.Tours.map((t) => (
+                    <TourCard
+                      key={t.tour_id}
+                      tour={{
+                        id: t.tour_id,
+                        name: t.name,
+                        agencyName: t.agency_name,
+                        startDate: t.start_date,
+                        endDate: t.end_date,
+                        price: unitPrice(t),
+                        originalPrice: t.price,
+                        seats: t.available_seat,
+                        status: t.status,
+                        imagePath: t.image_path,
+                      }}
+                    />
+                  ))}
+                </TourGrid>
+                <Pagination page={data.Meta.Page} totalPages={data.Meta.TotalPage} onChange={(nextPage) => navigate(filters, nextPage)} />
+              </div>
             )}
           </section>
         </div>

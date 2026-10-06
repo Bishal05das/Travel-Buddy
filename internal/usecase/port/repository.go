@@ -103,5 +103,6 @@ type Authorizer interface {
 
 type SearchRepository interface {
 	SearchTours(ctx context.Context, filter domain.TourSearchFilter) ([]domain.TourSearchResponse, error)
+	CountTours(ctx context.Context, filter domain.TourSearchFilter) (int, error)
 	SearchAgencies(ctx context.Context, query string, limit int) ([]domain.Agency, error)
 }

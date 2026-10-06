@@ -33,6 +33,8 @@ export interface SearchParams {
   max_price?: string;
   start_date?: string;
   end_date?: string;
+  page?: number;
+  limit?: number;
 }
 export const searchTours = (p: SearchParams) => api.get<SearchResult>(`/search${query({ ...p })}`);
 
